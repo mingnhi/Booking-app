@@ -7,7 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 @Module({
   // imports: [MongooseModule.forRoot('mongodb://localhost:27017/flutterproject')],
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGO_URL as string),
   ],
   controllers: [AppController],

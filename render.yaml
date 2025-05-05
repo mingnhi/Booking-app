@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: nestjs-app
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: DATABASE_HOST
+        value: localhost
+      - key: DATABASE_PORT
+        value: 3306
+      - key: DATABASE_USERNAME
+        value: mingnhee
+      - key: DATABASE_PASSWORD
+        value: 12070123Aa@
+      - key: DATABASE_NAME
+        value: flutterproject

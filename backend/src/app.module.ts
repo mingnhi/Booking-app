@@ -4,10 +4,7 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/flutterproject', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }),
+    MongooseModule.forRoot('mongodb://localhost:27017/flutterproject'),
   ],
   controllers: [AppController],
   providers: [AppService],

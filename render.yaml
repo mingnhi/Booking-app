@@ -6,14 +6,10 @@ services:
     rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
-    envVars:
+   envVars:
       - key: DATABASE_HOST
         value: localhost
       - key: DATABASE_PORT
-        value: 3306
-      - key: DATABASE_USERNAME
-        value: mingnhee
-      - key: DATABASE_PASSWORD
-        value: 12070123Aa@
-      - key: DATABASE_NAME
-        value: flutterproject
+        value: 27017 # Cổng mặc định của MongoDB
+      - key: DATABASE_URI
+        value: mongodb://localhost:27017/flutterproject

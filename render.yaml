@@ -3,10 +3,10 @@ services:
     name: nestjs-app
     env: node
     plan: free
-    rootDir: backend
+    # rootDir: backend
     # buildCommand: npm install && npm run 
-    buildCommand: ls -al && cd backend && ls -al && npm install && npm run build
-    startCommand: npm run start:prod
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
     envVars:
       - key: DATABASE_HOST
         value: localhost

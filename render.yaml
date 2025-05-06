@@ -3,14 +3,13 @@ services:
     name: nestjs-app
     env: node
     plan: free
-    # rootDir: backend
-    # buildCommand: npm install && npm run 
-    buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npm run start:prod
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
     envVars:
       - key: DATABASE_HOST
         value: localhost
       - key: DATABASE_PORT
-        value: 27017 # Cổng mặc định của MongoDB
+        value: 27017
       - key: DATABASE_URI
         value: mongodb://localhost:27017/flutterproject

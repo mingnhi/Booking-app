@@ -18,7 +18,6 @@ import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('trip')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@SetMetadata('roles', ['admin'])
 export class TripController {
   constructor(private readonly tripService: TripService) {}
   @SetMetadata('roles', ['admin'])

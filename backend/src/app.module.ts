@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { LocationModule } from './location/location.module';
 import { TripModule } from './trip/trip.module';
 import { SeatModule } from './seat/seat.module';
+import { TicketModule } from './ticket/ticket.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -25,6 +26,7 @@ import { SeatModule } from './seat/seat.module';
     LocationModule,
     TripModule,
     SeatModule,
+    TicketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

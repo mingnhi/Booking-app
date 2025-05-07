@@ -7,7 +7,7 @@ import { LoginDto } from './dto/login.dto';
 import { UsersService } from 'src/users/user.service';
 
 interface RequestWithUser extends Request {
-  user?: { userId: string };// Vì MongoDB dùng string (ObjectId)
+  user?: { userId: string }; // Vì MongoDB dùng string (ObjectId)
 }
 
 @Controller('auth')
@@ -15,7 +15,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UsersService,
-  ) { }
+  ) {}
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {

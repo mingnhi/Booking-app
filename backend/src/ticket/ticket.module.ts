@@ -12,5 +12,6 @@ import { Ticket, TicketSchema } from './ticket.schema';
   ],
   controllers: [TicketController],
   providers: [TicketService],
+  exports: [TicketService],
 })
 export class TicketModule {}

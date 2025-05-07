@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -10,6 +9,7 @@ import { LocationModule } from './location/location.module';
 import { TripModule } from './trip/trip.module';
 import { SeatModule } from './seat/seat.module';
 import { TicketModule } from './ticket/ticket.module';
+import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -27,6 +27,7 @@ import { TicketModule } from './ticket/ticket.module';
     TripModule,
     SeatModule,
     TicketModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

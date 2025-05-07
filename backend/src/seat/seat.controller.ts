@@ -10,7 +10,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { SeatService } from './seat.service';
-import { CreateSeatDto } from './dto/create-seat.dto';
+// import { CreateSeatDto } from './dto/create-seat.dto';
 import { UpdateSeatDto } from './dto/update-seat.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -20,11 +20,11 @@ import { RolesGuard } from 'src/auth/roles.guard';
 export class SeatController {
   constructor(private readonly seatService: SeatService) {}
 
-  @SetMetadata('roles', ['admin'])
-  @Post()
-  createSeat(@Body() createSeatDto: CreateSeatDto) {
-    return this.seatService.create(createSeatDto);
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Post()
+  // createSeat(@Body() createSeatDto: CreateSeatDto) {
+  //   return this.seatService.create(createSeatDto);
+  // }
 
   @SetMetadata('roles', ['user', 'admin'])
   @Get()
@@ -38,15 +38,15 @@ export class SeatController {
     return this.seatService.findOne(id);
   }
 
-  @SetMetadata('roles', ['admin'])
-  @Put(':id')
-  updateSeat(@Param('id') id: string, @Body() updateSeatDto: UpdateSeatDto) {
-    return this.seatService.update(id, updateSeatDto);
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Put(':id')
+  // updateSeat(@Param('id') id: string, @Body() updateSeatDto: UpdateSeatDto) {
+  //   return this.seatService.update(id, updateSeatDto);
+  // }
 
-  @SetMetadata('roles', ['admin'])
-  @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.seatService.remove(id);
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Delete(':id')
+  // delete(@Param('id') id: string) {
+  //   return this.seatService.remove(id);
+  // }
 }

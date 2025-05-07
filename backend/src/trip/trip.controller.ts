@@ -1,18 +1,14 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
   Param,
-  Post,
-  Put,
   Query,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { TripService } from './trip.service';
-import { CreateTripDto } from './dto/create-trip.dto';
-import { UpdateTripDto } from './dto/update-trip.dto';
+// import { CreateTripDto } from './dto/create-trip.dto';
+// import { UpdateTripDto } from './dto/update-trip.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 
@@ -20,11 +16,11 @@ import { RolesGuard } from 'src/auth/roles.guard';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TripController {
   constructor(private readonly tripService: TripService) {}
-  @SetMetadata('roles', ['admin'])
-  @Post()
-  createTrip(@Body() createTripDto: CreateTripDto) {
-    return this.tripService.create(createTripDto);
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Post()
+  // createTrip(@Body() createTripDto: CreateTripDto) {
+  //   return this.tripService.create(createTripDto);
+  // }
 
   @SetMetadata('roles', ['user', 'admin'])
   @Get()
@@ -47,15 +43,15 @@ export class TripController {
     return this.tripService.findOne(id);
   }
 
-  @SetMetadata('roles', ['admin'])
-  @Put(':id')
-  updateTrip(@Param('id') id: string, @Body() updateTripDto: UpdateTripDto) {
-    return this.tripService.update(id, updateTripDto);
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Put(':id')
+  // updateTrip(@Param('id') id: string, @Body() updateTripDto: UpdateTripDto) {
+  //   return this.tripService.update(id, updateTripDto);
+  // }
 
-  @SetMetadata('roles', ['admin'])
-  @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.tripService.remove(id);
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Delete(':id')
+  // delete(@Param('id') id: string) {
+  //   return this.tripService.remove(id);
+  // }
 }

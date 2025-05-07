@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Param,
-  Delete,
   Put,
   UseGuards,
   SetMetadata,
@@ -20,17 +19,17 @@ import { RolesGuard } from 'src/auth/roles.guard';
 export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
-  @SetMetadata('roles', ['user', 'admin'])
+  @SetMetadata('roles', ['user'])
   @Post()
   createTicket(@Body() dto: CreateTicketDto) {
     return this.ticketService.create(dto);
   }
 
-  @SetMetadata('roles', ['admin'])
-  @Get()
-  getAll() {
-    return this.ticketService.findAll();
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Get()
+  // getAll() {
+  //   return this.ticketService.findAll();
+  // }
 
   @SetMetadata('roles', ['user', 'admin'])
   @Get(':id')
@@ -44,9 +43,9 @@ export class TicketController {
     return this.ticketService.update(id, dto);
   }
 
-  @SetMetadata('roles', ['admin'])
-  @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.ticketService.remove(id);
-  }
+  // @SetMetadata('roles', ['admin'])
+  // @Delete(':id')
+  // delete(@Param('id') id: string) {
+  //   return this.ticketService.remove(id);
+  // }
 }

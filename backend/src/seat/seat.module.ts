@@ -12,5 +12,6 @@ import { UsersModule } from 'src/users/users.module';
   ],
   controllers: [SeatController],
   providers: [SeatService],
+  exports: [SeatService],
 })
 export class SeatModule {}

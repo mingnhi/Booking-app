@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/home_service.dart';
+import 'customer_nav_bar.dart'; // Import CustomNavBar
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -9,20 +10,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+  AnimationController? _animationController;
+  Animation<double>? _fadeAnimation;
+  int _selectedIndex = 0; // Chỉ số hiện tại của thanh điều hướng
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 1000),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-    _animationController.forward();
+    // Khởi tạo AnimationController và FadeAnimation an toàn
+    Future.microtask(() {
+      if (mounted) {
+        _animationController = AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1000),
+        );
+        _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+        );
+        _animationController!.forward();
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final homeService = Provider.of<HomeService>(context, listen: false);
       homeService.fetchHomeData(context);
@@ -31,29 +39,48 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _animationController?.dispose();
     super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/home'); // Điều hướng đến Tìm kiếm
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/trip/search'); // Điều hướng đến Vé của tôi
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/my-tickets'); // Điều hướng đến Thông báo
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/auth/profile'); // Điều hướng đến Tài khoản
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      extendBody: true, // Extend gradient behind bottom navigation bar
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(
-          'Đặt Vé Xe',
-          style: GoogleFonts.robotoCondensed(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.white,
-          ),
+        title: Image.asset(
+          'assets/images/vexere_logo.png', // Đường dẫn đến hình ảnh logo
+          height: 40, // Chiều cao logo
+          fit: BoxFit.contain, // Điều chỉnh kích thước hình ảnh
         ),
         backgroundColor: Colors.blueAccent.shade100.withOpacity(0.8),
         elevation: 0,
+        automaticallyImplyLeading: false, // Xóa nút quay lại
         actions: [
           IconButton(
-            icon: Icon(Icons.person, color: Colors.white),
+            icon: const Icon(Icons.person, color: Colors.white),
             onPressed: () => Navigator.pushNamed(context, '/auth/profile'),
           ),
         ],
@@ -72,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: Consumer<HomeService>(
             builder: (context, homeService, _) {
               if (homeService.isLoading) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (homeService.errorMessage != null) {
                 return Center(
@@ -97,15 +124,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 );
               }
+              if (_fadeAnimation == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
               return SingleChildScrollView(
                 child: FadeTransition(
-                  opacity: _fadeAnimation,
+                  opacity: _fadeAnimation!,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Container(
-                        padding: EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 24.0),
+                        padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 24.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -117,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               'Tìm chuyến xe phù hợp với bạn ngay hôm nay',
                               style: GoogleFonts.poppins(
@@ -125,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 fontSize: 16,
                               ),
                             ),
-                            SizedBox(height: 24),
+                            const SizedBox(height: 24),
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
@@ -133,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blueAccent.shade400,
                                   foregroundColor: Colors.white,
-                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -152,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                         child: Text(
                           'Chuyến đi nổi bật',
                           style: GoogleFonts.roboto(
@@ -164,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       Container(
                         height: 280,
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: homeService.featuredTrips.length,
@@ -172,20 +202,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             final trip = homeService.featuredTrips[index];
                             return Container(
                               width: 240,
-                              margin: EdgeInsets.symmetric(horizontal: 8.0),
+                              margin: const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Card(
                                 elevation: 12,
                                 shadowColor: Colors.blueAccent.withOpacity(0.3),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
-                                  side: BorderSide(color: Colors.blueAccent.shade100.withOpacity(0.5), width: 1),
+                                  side: BorderSide(
+                                      color: Colors.blueAccent.shade100.withOpacity(0.5), width: 1),
                                 ),
                                 color: Colors.white.withOpacity(0.95),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     ClipRRect(
-                                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                                       child: Container(
                                         height: 160,
                                         width: double.infinity,
@@ -198,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       ),
                                     ),
                                     Padding(
-                                      padding: EdgeInsets.all(16.0),
+                                      padding: const EdgeInsets.all(16.0),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
@@ -211,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                          SizedBox(height: 8),
+                                          const SizedBox(height: 8),
                                           Text(
                                             'Giá: ${trip.price.toStringAsFixed(0)} VNĐ',
                                             style: GoogleFonts.poppins(
@@ -220,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                          SizedBox(height: 8),
+                                          const SizedBox(height: 8),
                                           Text(
                                             'Khởi hành: ${trip.departureTime.hour}:${trip.departureTime.minute.toString().padLeft(2, '0')}',
                                             style: GoogleFonts.poppins(
@@ -239,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                         child: Text(
                           'Địa điểm phổ biến',
                           style: GoogleFonts.roboto(
@@ -250,11 +281,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: GridView.builder(
                           shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 16.0,
                             mainAxisSpacing: 16.0,
@@ -268,14 +299,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               shadowColor: Colors.blueAccent.withOpacity(0.3),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
-                                side: BorderSide(color: Colors.blueAccent.shade100.withOpacity(0.5), width: 1),
+                                side: BorderSide(
+                                    color: Colors.blueAccent.shade100.withOpacity(0.5), width: 1),
                               ),
                               color: Colors.white.withOpacity(0.95),
                               child: InkWell(
                                 onTap: () {},
                                 borderRadius: BorderRadius.circular(20),
                                 child: Padding(
-                                  padding: EdgeInsets.all(12.0),
+                                  padding: const EdgeInsets.all(12.0),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -284,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         color: Colors.blueAccent.shade400,
                                         size: 32,
                                       ),
-                                      SizedBox(height: 8),
+                                      const SizedBox(height: 8),
                                       Text(
                                         location.location,
                                         style: GoogleFonts.poppins(
@@ -295,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      SizedBox(height: 4),
+                                      const SizedBox(height: 4),
                                       Text(
                                         'ID: ${location.id}',
                                         style: GoogleFonts.poppins(
@@ -311,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           },
                         ),
                       ),
-                      SizedBox(height: 80),
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),
@@ -323,7 +355,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blueAccent.shade400,
         onPressed: () => Navigator.pushNamed(context, '/trip/search'),
-        child: Icon(Icons.search, color: Colors.white),
+        child: const Icon(Icons.search, color: Colors.white),
+      ),
+      bottomNavigationBar: CustomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }

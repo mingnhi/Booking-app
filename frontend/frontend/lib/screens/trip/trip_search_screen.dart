@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/trip_service.dart';
 import '../../services/location_service.dart';
+import '../home/customer_nav_bar.dart'; // Import CustomNavBar
 
 class TripSearchScreen extends StatefulWidget {
   @override
@@ -13,8 +14,9 @@ class TripSearchScreen extends StatefulWidget {
 class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerProviderStateMixin {
   String? _departureId;
   String? _arrivalId;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+  AnimationController? _animationController;
+  Animation<double>? _fadeAnimation;
+  int _selectedIndex = 0; // Chỉ số hiện tại của thanh điều hướng
 
   @override
   void initState() {
@@ -24,26 +26,53 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
       statusBarColor: Colors.blueAccent.shade100,
       statusBarIconBrightness: Brightness.light,
     ));
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 1000),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-    _animationController.forward();
+
+    // Khởi tạo AnimationController và FadeAnimation
+    Future.microtask(() {
+      if (mounted) {
+        _animationController = AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1000),
+        );
+
+        _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+        );
+
+        _animationController!.forward();
+      }
+    });
+
     Provider.of<LocationService>(context, listen: false).fetchLocations();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _animationController?.dispose();
     // Reset status bar when leaving screen
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
     ));
     super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/home'); // Điều hướng đến Vé của tôi
+        break;
+      case 1:
+        break;
+      case 2:
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/auth/profile'); // Điều hướng đến Tài khoản
+        break;
+    }
   }
 
   @override
@@ -53,20 +82,14 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
       extendBody: true, // Extend gradient behind bottom navigation bar
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(
-          'Tìm Kiếm Chuyến Đi',
-          style: GoogleFonts.robotoCondensed(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.white,
-          ),
+        title: Image.asset(
+          'assets/images/vexere_logo.png', // Đường dẫn đến hình ảnh logo
+          height: 40, // Chiều cao logo
+          fit: BoxFit.contain, // Điều chỉnh kích thước hình ảnh
         ),
         backgroundColor: Colors.blueAccent.shade100.withOpacity(0.8),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false, // Xóa nút quay lại
       ),
       body: Container(
         height: MediaQuery.of(context).size.height, // Full screen height
@@ -83,7 +106,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
           child: Consumer2<TripService, LocationService>(
             builder: (context, tripService, locationService, _) {
               if (locationService.isLoading) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (locationService.locations.isEmpty) {
                 return Center(
@@ -97,10 +120,13 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                   ),
                 );
               }
+              if (_fadeAnimation == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
               return SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
                 child: FadeTransition(
-                  opacity: _fadeAnimation,
+                  opacity: _fadeAnimation!,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -112,7 +138,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Chọn điểm đi và điểm đến để bắt đầu',
                         style: GoogleFonts.poppins(
@@ -120,7 +146,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                           fontSize: 16,
                         ),
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       Card(
                         elevation: 12,
                         shadowColor: Colors.blueAccent.withOpacity(0.3),
@@ -130,7 +156,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                         ),
                         color: Colors.white.withOpacity(0.95),
                         child: Padding(
-                          padding: EdgeInsets.all(16.0),
+                          padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
                               DropdownButtonFormField<String>(
@@ -161,7 +187,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                 }).toList(),
                                 onChanged: (value) => setState(() => _departureId = value),
                               ),
-                              SizedBox(height: 16),
+                              const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
                                 value: _arrivalId,
                                 decoration: InputDecoration(
@@ -190,7 +216,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                 }).toList(),
                                 onChanged: (value) => setState(() => _arrivalId = value),
                               ),
-                              SizedBox(height: 24),
+                              const SizedBox(height: 24),
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
@@ -202,7 +228,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blueAccent.shade400,
                                     foregroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -221,7 +247,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                           ),
                         ),
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       Text(
                         'Kết Quả Tìm Kiếm',
                         style: GoogleFonts.roboto(
@@ -230,9 +256,9 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                           color: Colors.blueGrey.shade800,
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       tripService.isLoading
-                          ? Center(child: CircularProgressIndicator())
+                          ? const Center(child: CircularProgressIndicator())
                           : tripService.trips.isEmpty
                           ? Center(
                         child: Text(
@@ -245,21 +271,22 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                       )
                           : ListView.builder(
                         shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: tripService.trips.length,
                         itemBuilder: (context, index) {
                           final trip = tripService.trips[index];
                           return Card(
-                            margin: EdgeInsets.symmetric(vertical: 8.0),
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
                             elevation: 10,
                             shadowColor: Colors.blueAccent.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(color: Colors.blueAccent.shade100.withOpacity(0.5), width: 1),
+                              side: BorderSide(
+                                  color: Colors.blueAccent.shade100.withOpacity(0.5), width: 1),
                             ),
                             color: Colors.white.withOpacity(0.95),
                             child: ListTile(
-                              contentPadding: EdgeInsets.all(16.0),
+                              contentPadding: const EdgeInsets.all(16.0),
                               leading: Icon(
                                 Icons.directions_bus,
                                 color: Colors.blueAccent.shade400,
@@ -276,7 +303,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Giá: ${trip.price.toStringAsFixed(0)} VNĐ',
                                     style: GoogleFonts.poppins(
@@ -284,7 +311,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                       fontSize: 14,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Khởi hành: ${trip.departureTime.hour}:${trip.departureTime.minute.toString().padLeft(2, '0')}',
                                     style: GoogleFonts.poppins(
@@ -305,6 +332,10 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
             },
           ),
         ),
+      ),
+      bottomNavigationBar: CustomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }

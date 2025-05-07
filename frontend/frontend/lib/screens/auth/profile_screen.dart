@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
+import '../home/customer_nav_bar.dart'; // Import CustomNavBar
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -10,25 +11,33 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+  AnimationController? _animationController;
+  Animation<double>? _fadeAnimation;
+  int _selectedIndex = 3; // Chỉ số hiện tại của thanh điều hướng (Tài khoản)
 
   @override
   void initState() {
     super.initState();
     // Set status bar to match gradient's top color
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.blueAccent.shade100,
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.blueAccent,
       statusBarIconBrightness: Brightness.light,
     ));
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 1000),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-    _animationController.forward();
+
+    // Khởi tạo AnimationController và FadeAnimation an toàn
+    Future.microtask(() {
+      if (mounted) {
+        _animationController = AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 1000),
+        );
+        _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+        );
+        _animationController!.forward();
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authService = Provider.of<AuthService>(context, listen: false);
       authService.getProfile();
@@ -37,13 +46,33 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _animationController?.dispose();
     // Reset status bar when leaving screen
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
     ));
     super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/home'); // Điều hướng đến Tìm kiếm
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/trip/search'); // Điều hướng đến Vé của tôi
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/my-tickets'); // Điều hướng đến Thông báo
+        break;
+      case 3:
+      // Đã ở ProfileScreen, không cần điều hướng
+        break;
+    }
   }
 
   @override
@@ -53,19 +82,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       extendBody: true, // Extend gradient behind bottom navigation bar
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(
-          'Hồ Sơ Người Dùng',
-          style: GoogleFonts.robotoCondensed(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.white,
-          ),
+        title: Image.asset(
+          'assets/images/vexere_logo.png', // Đường dẫn đến hình ảnh logo
+          height: 40, // Chiều cao logo
+          fit: BoxFit.contain, // Điều chỉnh kích thước hình ảnh
         ),
         backgroundColor: Colors.blueAccent.shade100.withOpacity(0.8),
         elevation: 0,
+        automaticallyImplyLeading: false, // Xóa nút quay lại
         actions: [
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.white),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               await Provider.of<AuthService>(context, listen: false).logout();
               Navigator.pushReplacementNamed(context, '/auth/login');
@@ -75,11 +102,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       ),
       body: Container(
         height: MediaQuery.of(context).size.height, // Full screen height
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blueAccent.shade100, Colors.white],
+            colors: [Colors.blueAccent, Colors.white],
           ),
         ),
         child: SafeArea(
@@ -88,12 +115,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           child: Consumer<AuthService>(
             builder: (context, authService, _) {
               if (authService.isLoading) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (authService.errorMessage != null) {
                 return Center(
                   child: FadeTransition(
-                    opacity: _fadeAnimation,
+                    opacity: _fadeAnimation!,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -105,13 +132,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () => Navigator.pushReplacementNamed(context, '/auth/login'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueAccent.shade400,
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -141,14 +168,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   ),
                 );
               }
+              if (_fadeAnimation == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
               return SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
                 child: FadeTransition(
-                  opacity: _fadeAnimation,
+                  opacity: _fadeAnimation!,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(height: 16), // Additional spacing below AppBar
+                      const SizedBox(height: 16), // Additional spacing below AppBar
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.blue.shade50,
@@ -158,7 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           color: Colors.blueAccent.shade400,
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
                         authService.currentUser!.fullName,
                         style: GoogleFonts.poppins(
@@ -174,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           color: Colors.grey.shade600,
                         ),
                       ),
-                      SizedBox(height: 32),
+                      const SizedBox(height: 32),
                       Card(
                         elevation: 12,
                         shadowColor: Colors.blueAccent.withOpacity(0.3),
@@ -184,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         ),
                         color: Colors.white.withOpacity(0.95),
                         child: Padding(
-                          padding: EdgeInsets.all(24.0),
+                          padding: const EdgeInsets.all(24.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -193,13 +223,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                                 title: 'Email',
                                 value: authService.currentUser!.email,
                               ),
-                              SizedBox(height: 16),
+                              const SizedBox(height: 16),
                               _buildProfileItem(
                                 icon: Icons.phone,
                                 title: 'Số Điện Thoại',
                                 value: authService.currentUser!.phoneNumber ?? 'Không có dữ liệu',
                               ),
-                              SizedBox(height: 16),
+                              const SizedBox(height: 16),
                               _buildProfileItem(
                                 icon: Icons.admin_panel_settings,
                                 title: 'Vai Trò',
@@ -209,7 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           ),
                         ),
                       ),
-                      SizedBox(height: 32),
+                      const SizedBox(height: 32),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -220,7 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.redAccent,
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -235,6 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           ),
                         ),
                       ),
+                      const SizedBox(height: 80), // Thêm khoảng cách dưới cùng để tránh bị che bởi NavBar
                     ],
                   ),
                 ),
@@ -242,6 +273,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             },
           ),
         ),
+      ),
+      bottomNavigationBar: CustomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
@@ -259,7 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           color: Colors.blueAccent.shade400,
           size: 24,
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   color: Colors.blueGrey.shade800,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 value,
                 style: GoogleFonts.poppins(

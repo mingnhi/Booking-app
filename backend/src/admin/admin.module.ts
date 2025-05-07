@@ -7,7 +7,7 @@ import { SeatModule } from 'src/seat/seat.module';
 import { TicketModule } from 'src/ticket/ticket.module';
 
 @Module({
-  imports: [UsersModule, TripModule, SeatModule, TicketModule],
+  imports: [UsersModule, TripModule, SeatModule, TicketModule, UsersModule],
   controllers: [AdminController],
   providers: [AdminService],
 })

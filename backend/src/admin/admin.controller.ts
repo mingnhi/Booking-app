@@ -20,6 +20,8 @@ import { CreateTripDto } from 'src/trip/dto/create-trip.dto';
 import { UpdateTripDto } from 'src/trip/dto/update-trip.dto';
 import { TicketService } from 'src/ticket/ticket.service';
 import { UpdateTicketDto } from 'src/ticket/dto/update-ticket.dto';
+import { UsersService } from 'src/users/user.service';
+import { Users } from 'src/users/users.schema';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,6 +32,7 @@ export class AdminController {
     private readonly seatService: SeatService,
     private readonly tripService: TripService,
     private readonly ticketService: TicketService,
+    private readonly userService: UsersService,
   ) {}
   @Post('seat')
   createSeat(@Body() createSeatDto: CreateSeatDto) {
@@ -88,5 +91,18 @@ export class AdminController {
   @Delete('ticket/:id')
   deleteTicket(@Param('id') id: string) {
     return this.ticketService.remove(id);
+  }
+  @Get('users')
+  async getAllUser() {
+    return this.userService.findAll();
+  }
+  @Put('users/:id')
+  async updateUser(@Param('id') id: string, @Body() updateData: Partial<Users>) {
+    return this.userService.update(id, updateData);
+  }
+  @Delete('users/:id')
+  async deleteUser(@Param('id') id: string) {
+    await this.userService.delete(id);
+    return { message: 'xoá người dùng thành công' };
   }
 }

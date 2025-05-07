@@ -56,21 +56,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   void _onItemTapped(int index) {
+    if (index == _selectedIndex) return; // Prevent redundant navigation
     setState(() {
       _selectedIndex = index;
     });
     switch (index) {
       case 0:
-        Navigator.pushNamed(context, '/home'); // Điều hướng đến Tìm kiếm
+        Navigator.pushReplacementNamed(context, '/home');
         break;
       case 1:
-        Navigator.pushNamed(context, '/trip/search'); // Điều hướng đến Vé của tôi
+        Navigator.pushReplacementNamed(context, '/trip/search');
         break;
       case 2:
-        Navigator.pushNamed(context, '/my-tickets'); // Điều hướng đến Thông báo
+        Navigator.pushReplacementNamed(context, '/my-tickets');
         break;
       case 3:
-      // Đã ở ProfileScreen, không cần điều hướng
+      // Already on ProfileScreen, no action needed
         break;
     }
   }

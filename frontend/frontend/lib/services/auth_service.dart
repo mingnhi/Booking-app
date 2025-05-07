@@ -1,4 +1,3 @@
-/* lib/services/auth_service.dart */
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,10 +6,15 @@ import '../models/auth.dart';
 
 class AuthService extends ChangeNotifier {
   final String baseUrl = 'https://booking-app-1-bzfs.onrender.com';
-  final _storage = FlutterSecureStorage();
+  final _storage = FlutterSecureStorage(); // Vẫn giữ private
   bool isLoading = false;
   String? errorMessage;
   User? currentUser;
+
+  // Thêm phương thức public để lấy token
+  Future<String?> getToken() async {
+    return await _storage.read(key: 'accessToken');
+  }
 
   Future<LoginResponse?> login(String email, String password) async {
     isLoading = true;

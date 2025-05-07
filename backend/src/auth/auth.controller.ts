@@ -4,14 +4,18 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UsersService } from 'src/users/user.service';
 
 interface RequestWithUser extends Request {
-  user?: { userId: string }; // Vì MongoDB dùng string (ObjectId)
+  user?: { userId: string };// Vì MongoDB dùng string (ObjectId)
 }
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UsersService,
+  ) { }
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
@@ -39,7 +43,12 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() req: RequestWithUser) {
-    return req.user;
+  async getProfile(@Req() req: RequestWithUser) {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new Error('User ID not found in request');
+    }
+    const user = await this.userService.findById(userId);
+    return user;
   }
 }

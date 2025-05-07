@@ -80,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     SizedBox(height: 8),
                     Text(
                       'Chào mừng bạn đến với ứng dụng đặt vé xe',
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.roboto(
                         fontSize: 16,
                         color: Colors.grey.shade600,
                       ),

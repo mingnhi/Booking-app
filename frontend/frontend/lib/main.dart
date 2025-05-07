@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/screens/auth/login_screen.dart';
 import 'package:frontend/screens/auth/profile_screen.dart';
 import 'package:frontend/screens/auth/register_screen.dart';
@@ -15,6 +14,7 @@ import 'package:frontend/screens/trip/trip_detail_screen.dart';
 import 'package:frontend/screens/trip/trip_edit_screen.dart';
 import 'package:frontend/screens/trip/trip_list_screen.dart';
 import 'package:frontend/screens/trip/trip_search_screen.dart';
+import 'package:frontend/screens/wait/waiting_vexere_screen.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/services/home_service.dart';
 import 'package:frontend/services/location_service.dart';
@@ -22,18 +22,12 @@ import 'package:frontend/services/seat_service.dart';
 import 'package:frontend/services/trip_service.dart';
 import 'package:provider/provider.dart';
 
-
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final _storage = FlutterSecureStorage();
-
-  Future<String> _getInitialRoute() async {
-    final token = await _storage.read(key: 'accessToken');
-    return token != null ? '/home' : '/auth/login';
-  }
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -47,16 +41,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Ứng dụng đặt vé xe',
-        home: FutureBuilder<String>(
-          future: _getInitialRoute(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            return snapshot.data == '/home' ? HomeScreen() : LoginScreen();
-          },
-        ),
+        initialRoute: '/splash', // Đặt VexereScreen làm màn hình khởi động
         routes: {
+          '/splash': (context) => const WaitingVexereScreen(),
           '/auth/login': (context) => LoginScreen(),
           '/auth/register': (context) => RegisterScreen(),
           '/auth/profile': (context) => ProfileScreen(),

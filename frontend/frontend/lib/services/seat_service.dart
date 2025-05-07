@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/seat.dart';
 
 class SeatService extends ChangeNotifier {
-  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com '; // Thay bằng URL backend thực tế
+  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com'; // Thay bằng URL backend thực tế
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Seat> seats = [];

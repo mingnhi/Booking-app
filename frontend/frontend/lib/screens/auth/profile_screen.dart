@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
@@ -15,6 +16,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
+    // Set status bar to match gradient's top color
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.blueAccent.shade100,
+      statusBarIconBrightness: Brightness.light,
+    ));
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 1000),
@@ -32,6 +38,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   @override
   void dispose() {
     _animationController.dispose();
+    // Reset status bar when leaving screen
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
     super.dispose();
   }
 
@@ -39,11 +50,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      extendBody: true, // Extend gradient behind bottom navigation bar
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           'Hồ Sơ Người Dùng',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.robotoCondensed(
             fontWeight: FontWeight.bold,
             fontSize: 20,
             color: Colors.white,
@@ -62,6 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         ],
       ),
       body: Container(
+        height: MediaQuery.of(context).size.height, // Full screen height
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -215,8 +228,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           ),
                           child: Text(
                             'Đăng Xuất',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
+                            style: GoogleFonts.roboto(
+                              fontSize: 18,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

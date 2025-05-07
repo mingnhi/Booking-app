@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       appBar: AppBar(
         title: Text(
           'Đặt Vé Xe',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.robotoCondensed(
             fontWeight: FontWeight.bold,
             fontSize: 20,
             color: Colors.white,
@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       Container(
                         padding: EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 24.0),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               'Khám phá hành trình!',
@@ -155,8 +155,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                         child: Text(
                           'Chuyến đi nổi bật',
-                          style: GoogleFonts.poppins(
-                            fontSize: 24,
+                          style: GoogleFonts.roboto(
+                            fontSize: 30,
                             fontWeight: FontWeight.bold,
                             color: Colors.blueGrey.shade800,
                           ),
@@ -242,8 +242,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                         child: Text(
                           'Địa điểm phổ biến',
-                          style: GoogleFonts.poppins(
-                            fontSize: 24,
+                          style: GoogleFonts.roboto(
+                            fontSize: 30,
                             fontWeight: FontWeight.bold,
                             color: Colors.blueGrey.shade800,
                           ),

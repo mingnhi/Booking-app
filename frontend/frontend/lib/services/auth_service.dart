@@ -1,3 +1,4 @@
+/* lib/services/auth_service.dart */
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -5,10 +6,11 @@ import 'package:flutter/foundation.dart';
 import '../models/auth.dart';
 
 class AuthService extends ChangeNotifier {
-  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com';
+  final String baseUrl = 'http://localhost:3000';
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   String? errorMessage;
+  User? currentUser;
 
   Future<LoginResponse?> login(String email, String password) async {
     isLoading = true;
@@ -30,7 +32,9 @@ class AuthService extends ChangeNotifier {
       }
     } catch (e) {
       print('Error logging in: $e');
-      errorMessage = e.toString().contains('Login failed') ? jsonDecode(e.toString().split(' - ')[1])['message'] : e.toString();
+      errorMessage = e.toString().contains('Login failed')
+          ? jsonDecode(e.toString().split(' - ')[1])['message']
+          : e.toString();
       return null;
     } finally {
       isLoading = false;
@@ -55,7 +59,9 @@ class AuthService extends ChangeNotifier {
       }
     } catch (e) {
       print('Error registering: $e');
-      errorMessage = e.toString().contains('Registration failed') ? jsonDecode(e.toString().split(' - ')[1])['message'] : e.toString();
+      errorMessage = e.toString().contains('Registration failed')
+          ? jsonDecode(e.toString().split(' - ')[1])['message']
+          : e.toString();
       return false;
     } finally {
       isLoading = false;
@@ -68,14 +74,21 @@ class AuthService extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      notifyListeners();
+      return null;
+    }
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/auth/profile'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        return User.fromJson(jsonDecode(response.body));
+        print('Profile Response: ${response.body}'); // Log để kiểm tra
+        currentUser = User.fromJson(jsonDecode(response.body));
+        return currentUser;
       } else {
         throw Exception('Failed to get profile: ${response.statusCode} - ${response.body}');
       }
@@ -94,7 +107,12 @@ class AuthService extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     final refreshToken = await _storage.read(key: 'refreshToken');
-    if (refreshToken == null) throw Exception('No refresh token found');
+    if (refreshToken == null) {
+      errorMessage = 'No refresh token found';
+      isLoading = false;
+      notifyListeners();
+      return null;
+    }
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/refresh'),
@@ -122,6 +140,7 @@ class AuthService extends ChangeNotifier {
   Future<void> logout() async {
     await _storage.delete(key: 'accessToken');
     await _storage.delete(key: 'refreshToken');
+    currentUser = null;
     notifyListeners();
   }
 }

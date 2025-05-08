@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../services/trip_service.dart';
 import '../../services/location_service.dart';
 import '../../services/auth_service.dart';
-import '../home/customer_nav_bar.dart'; // Import CustomNavBar
+import '../home/customer_nav_bar.dart';
+import '../../models/trip.dart';
 
 class TripSearchScreen extends StatefulWidget {
   @override
@@ -15,21 +17,21 @@ class TripSearchScreen extends StatefulWidget {
 class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerProviderStateMixin {
   String? _departureId;
   String? _arrivalId;
+  DateTime? _departureTime;
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
   int _selectedIndex = 1; // Default to TripSearchScreen
+  List<Trip> _searchResults = [];
 
   @override
   void initState() {
     super.initState();
-    // Set status bar to match gradient's top color
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: const Color(0xFF2474E5).withOpacity(0.8),
       statusBarIconBrightness: Brightness.light,
     ));
 
-    // Khởi tạo AnimationController và FadeAnimation
-    Future.microtask(() {
+    Future.microtask(() async {
       if (mounted) {
         _animationController = AnimationController(
           vsync: this,
@@ -39,6 +41,10 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
           CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
         );
         _animationController!.forward();
+
+        // Đợi fetchLocations hoàn thành
+        final locationService = Provider.of<LocationService>(context, listen: false);
+        await locationService.fetchLocations();
       }
     });
 
@@ -48,7 +54,6 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
   @override
   void dispose() {
     _animationController?.dispose();
-    // Reset status bar when leaving screen
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
@@ -57,7 +62,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
   }
 
   void _onItemTapped(int index) {
-    if (index == _selectedIndex) return; // Prevent redundant navigation
+    if (index == _selectedIndex) return;
     setState(() {
       _selectedIndex = index;
     });
@@ -66,7 +71,6 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
         Navigator.pushReplacementNamed(context, '/home');
         break;
       case 1:
-      // Already on TripSearchScreen, no action needed
         break;
       case 2:
         Navigator.pushReplacementNamed(context, '/my-tickets');
@@ -74,6 +78,49 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
       case 3:
         Navigator.pushReplacementNamed(context, '/auth/profile');
         break;
+    }
+  }
+
+  Future<void> _searchTrips() async {
+    final tripService = Provider.of<TripService>(context, listen: false);
+    final locationService = Provider.of<LocationService>(context, listen: false);
+    try {
+      if (locationService.locations.isEmpty) {
+        throw Exception('No locations available for search');
+      }
+
+      // Lấy tên địa điểm dựa trên ID, xử lý trường hợp không tìm thấy
+      String? departureLocation = _departureId != null
+          ? locationService.locations.firstWhere(
+            (loc) => loc.id == _departureId,
+        orElse: () => throw Exception('Departure location not found for ID: $_departureId'),
+      ).location
+          : null;
+      String? arrivalLocation = _arrivalId != null
+          ? locationService.locations.firstWhere(
+            (loc) => loc.id == _arrivalId,
+        orElse: () => throw Exception('Arrival location not found for ID: $_arrivalId'),
+      ).location
+          : null;
+
+      if (departureLocation == null || arrivalLocation == null) {
+        throw Exception('Could not find location names for the selected IDs');
+      }
+
+      final results = await tripService.searchTrips(
+        departureLocation: departureLocation,
+        arrivalLocation: arrivalLocation,
+        departureTime: _departureTime,
+      );
+      setState(() {
+        _searchResults = results;
+        print('Search results: $_searchResults'); // Debug log
+      });
+    } catch (e) {
+      setState(() {
+        _searchResults = [];
+      });
+      print('Error searching trips in UI: $e'); // Debug log
     }
   }
 
@@ -125,7 +172,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Image.asset(
-                            'assets/images/vexere_logo.png', // Placeholder for logo
+                            'assets/images/vexere_logo.png',
                             height: 40,
                           ),
                           Text(
@@ -233,16 +280,40 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                 onChanged: (value) => setState(() => _arrivalId = value),
                               ),
                               const SizedBox(height: 16),
+                              ListTile(
+                                title: Text('Ngày đi'),
+                                subtitle: Text(
+                                  _departureTime != null
+                                      ? DateFormat('dd/MM/yyyy').format(_departureTime!)
+                                      : 'Chọn ngày',
+                                ),
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime.now(),
+                                    lastDate: DateTime(2100),
+                                  );
+                                  if (picked != null) {
+                                    setState(() {
+                                      _departureTime = DateTime(
+                                        picked.year,
+                                        picked.month,
+                                        picked.day,
+                                      );
+                                    });
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 16),
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   onPressed: _departureId != null && _arrivalId != null
-                                      ? () async {
-                                    // Placeholder action (no navigation to /trip/search)
-                                  }
+                                      ? () => _searchTrips()
                                       : null,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFD4A017), // Yellow button
+                                    backgroundColor: const Color(0xFFD4A017),
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(
@@ -262,6 +333,76 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                             ],
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (_searchResults.isNotEmpty)
+                        Text(
+                          'Kết quả tìm kiếm (${_searchResults.length} chuyến đi)',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      if (_searchResults.isEmpty && !tripService.isLoading)
+                        Center(
+                          child: Text(
+                            'Không tìm thấy chuyến đi phù hợp.',
+                            style: GoogleFonts.poppins(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      if (tripService.isLoading)
+                        const Center(child: CircularProgressIndicator()),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: _searchResults.length,
+                        itemBuilder: (context, index) {
+                          final trip = _searchResults[index];
+                          return Card(
+                            margin: EdgeInsets.symmetric(vertical: 8),
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.all(16),
+                              title: Text(
+                                '${trip.departureLocation} → ${trip.arrivalLocation}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Thời gian đi: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.departureTime)}',
+                                    style: GoogleFonts.poppins(fontSize: 14),
+                                  ),
+                                  Text(
+                                    'Thời gian đến: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.arrivalTime)}',
+                                    style: GoogleFonts.poppins(fontSize: 14),
+                                  ),
+                                  Text(
+                                    'Giá: ${trip.price} VNĐ',
+                                    style: GoogleFonts.poppins(fontSize: 14),
+                                  ),
+                                  Text(
+                                    'Loại xe: ${trip.busType} - Tổng ghế: ${trip.totalSeats}',
+                                    style: GoogleFonts.poppins(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                              onTap: () => Navigator.pushNamed(context, '/trip/detail/${trip.id}'),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

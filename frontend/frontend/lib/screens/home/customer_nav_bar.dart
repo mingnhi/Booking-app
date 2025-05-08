@@ -23,11 +23,7 @@ class _CustomNavBarState extends State<CustomNavBar> {
     return SafeArea(
       child: BottomNavigationBar(
         currentIndex: widget.currentIndex,
-        onTap: (index) {
-          if (index != widget.currentIndex) {
-            widget.onTap(index);
-          }
-        },
+        onTap: widget.onTap,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF2474E5),

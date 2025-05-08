@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/ticket_service.dart';
+import '../home/customer_nav_bar.dart';
+
 
 class TicketCreateScreen extends StatefulWidget {
   const TicketCreateScreen({super.key});
@@ -22,6 +24,12 @@ class _TicketCreateScreenState extends State<TicketCreateScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tạo vé mới'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -30,14 +38,14 @@ class _TicketCreateScreenState extends State<TicketCreateScreen> {
           child: Column(
             children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Trip ID'),
+                decoration: const InputDecoration(labelText: 'Mã chuyến (Trip ID)'),
                 onChanged: (value) => tripId = value,
-                validator: (value) => value!.isEmpty ? 'Vui lòng nhập Trip ID' : null,
+                validator: (value) => value!.isEmpty ? 'Vui lòng nhập mã chuyến' : null,
               ),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Seat ID'),
+                decoration: const InputDecoration(labelText: 'Mã ghế (Seat ID)'),
                 onChanged: (value) => seatId = value,
-                validator: (value) => value!.isEmpty ? 'Vui lòng nhập Seat ID' : null,
+                validator: (value) => value!.isEmpty ? 'Vui lòng nhập mã ghế' : null,
               ),
               DropdownButtonFormField<String>(
                 value: ticketStatus,
@@ -78,6 +86,20 @@ class _TicketCreateScreenState extends State<TicketCreateScreen> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: CustomNavBar(
+        currentIndex: 2, // Đảm bảo index là 2
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.pushReplacementNamed(context, '/home');
+          } else if (index == 1) {
+            Navigator.pushReplacementNamed(context, '/trip/search');
+          } else if (index == 2) {
+            Navigator.pushReplacementNamed(context, '/tickets');
+          } else if (index == 3) {
+            Navigator.pushReplacementNamed(context, '/auth/profile');
+          }
+        },
       ),
     );
   }

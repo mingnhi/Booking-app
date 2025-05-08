@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/location.dart';
 import 'package:provider/provider.dart';
 import '../../services/trip_service.dart';
 import '../../services/seat_service.dart';
+import '../../services/location_service.dart';
 
 class TripDetailScreen extends StatelessWidget {
   final String id;
@@ -12,15 +14,22 @@ class TripDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Chi tiết chuyến đi')),
-      body: Consumer2<TripService, SeatService>(
-        builder: (context, tripService, seatService, _) {
-          if (tripService.isLoading || seatService.isLoading) return Center(child: CircularProgressIndicator());
+      body: Consumer3<TripService, SeatService, LocationService>(
+        builder: (context, tripService, seatService, locationService, _) {
+          if (tripService.isLoading || seatService.isLoading || locationService.isLoading) {
+            return Center(child: CircularProgressIndicator());
+          }
           final trip = tripService.trips.firstWhere((t) => t.id == id);
+          final location = locationService.locations.firstWhere(
+                (loc) => loc.id == trip.locationId,
+            orElse: () => Location(id: trip.locationId, location: 'Unknown'),
+          );
           return Padding(
             padding: EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Địa điểm: ${location.location}'),
                 Text('Điểm đi: ${trip.departureLocation}'),
                 Text('Điểm đến: ${trip.arrivalLocation}'),
                 Text('Thời gian đi: ${trip.departureTime}'),

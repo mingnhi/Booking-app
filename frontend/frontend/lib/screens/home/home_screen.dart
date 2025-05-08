@@ -45,8 +45,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final homeService = Provider.of<HomeService>(context, listen: false);
-      homeService.fetchHomeData(context);
+      if (mounted) {
+        final homeService = Provider.of<HomeService>(context, listen: false);
+        homeService.fetchHomeData(context);
+      }
     });
   }
 
@@ -63,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     });
     switch (index) {
       case 0:
+      // Đã ở Home, không cần làm gì
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/trip/search');

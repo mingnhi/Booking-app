@@ -84,10 +84,7 @@ class MyApp extends StatelessWidget {
           '/auth/profile': (context) => ProfileScreen(),
           '/home': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
-            if (authService.isAdmin()) {
-              return const AdminDashboard();
-            }
-            return HomeScreen();
+            return authService.isAdmin() ? const AdminDashboard() : HomeScreen();
           },
           '/admin': (context) => const AdminDashboard(),
           '/admin/seats': (context) => const SeatManagementScreen(),
@@ -97,8 +94,8 @@ class MyApp extends StatelessWidget {
           '/location': (context) => LocationListScreen(),
           '/location/create': (context) => LocationCreateScreen(),
           '/location/edit/:id': (context) {
-            final id = ModalRoute.of(context)!.settings.arguments;
-            if (id is String && id.isNotEmpty) {
+            final id = ModalRoute.of(context)!.settings.arguments as String?;
+            if (id != null && id.isNotEmpty) {
               return LocationEditScreen(id: id);
             }
             return const Scaffold(body: Center(child: Text('ID địa điểm không hợp lệ')));
@@ -106,16 +103,16 @@ class MyApp extends StatelessWidget {
           '/trip': (context) => TripListScreen(),
           '/trip/search': (context) => TripSearchScreen(),
           '/trip/detail/:id': (context) {
-            final id = ModalRoute.of(context)!.settings.arguments;
-            if (id is String && id.isNotEmpty) {
+            final id = ModalRoute.of(context)!.settings.arguments as String?;
+            if (id != null && id.isNotEmpty) {
               return TripDetailScreen(id: id);
             }
             return const Scaffold(body: Center(child: Text('ID chuyến đi không hợp lệ')));
           },
           '/trip/create': (context) => TripCreateForm(),
           '/trip/edit/:id': (context) {
-            final id = ModalRoute.of(context)!.settings.arguments;
-            if (id is String && id.isNotEmpty) {
+            final id = ModalRoute.of(context)!.settings.arguments as String?;
+            if (id != null && id.isNotEmpty) {
               return TripEditForm(tripData: {'_id': id});
             }
             return const Scaffold(body: Center(child: Text('ID chuyến đi không hợp lệ')));
@@ -123,13 +120,15 @@ class MyApp extends StatelessWidget {
           '/seat': (context) => SeatListScreen(),
           '/seat/create': (context) => SeatCreateScreen(),
           '/seat/edit/:id': (context) {
-            final id = ModalRoute.of(context)!.settings.arguments;
-            if (id is String && id.isNotEmpty) {
+            final id = ModalRoute.of(context)!.settings.arguments as String?;
+            if (id != null && id.isNotEmpty) {
               return SeatEditScreen(id: id);
             }
             return const Scaffold(body: Center(child: Text('ID ghế không hợp lệ')));
           },
           '/tickets': (context) => const TicketListScreen(),
+          '/ticket/create': (context) => const TicketCreateScreen(),
+          // '/ticket/edit/:id': (context) => const TicketEditScreen(),
         },
         onUnknownRoute: (settings) {
           return MaterialPageRoute(

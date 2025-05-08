@@ -9,97 +9,148 @@ class LocationService extends ChangeNotifier {
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Location> locations = [];
+  String? errorMessage;
+
+  void safeNotifyListeners() {
+    try {
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print('Error in LocationService notifyListeners: $e');
+    }
+  }
 
   Future<void> fetchLocations() async {
     isLoading = true;
-    notifyListeners();
+    errorMessage = null;
+    safeNotifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      safeNotifyListeners();
+      return;
+    }
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/location'),
+        Uri.parse('$baseUrl/admin/Location'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        locations = (jsonDecode(response.body) as List).map((e) => Location.fromJson(e)).toList();
+        final List<dynamic> data = jsonDecode(response.body);
+        locations = data.map((e) => Location.fromJson(e)).toList();
       } else {
-        throw Exception('Failed to fetch locations: ${response.statusCode} - ${response.body}');
+        errorMessage = 'Failed to fetch locations: ${response.statusCode} - ${response.body}';
       }
     } catch (e) {
-      print('Error fetching locations: $e');
+      if (kDebugMode) print('Error fetching locations: $e');
+      errorMessage = 'Error fetching locations: $e';
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
   Future<Location?> createLocation(String location) async {
     isLoading = true;
-    notifyListeners();
+    errorMessage = null;
+    safeNotifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      safeNotifyListeners();
+      return null;
+    }
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/location'),
+        Uri.parse('$baseUrl/admin/Location'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'location': location}),
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return Location.fromJson(jsonDecode(response.body));
+        final newLocation = Location.fromJson(jsonDecode(response.body));
+        locations.add(newLocation);
+        return newLocation;
       } else {
-        throw Exception('Failed to create location: ${response.statusCode} - ${response.body}');
+        errorMessage = 'Failed to create location: ${response.statusCode} - ${response.body}';
+        return null;
       }
     } catch (e) {
-      print('Error creating location: $e');
+      if (kDebugMode) print('Error creating location: $e');
+      errorMessage = 'Error creating location: $e';
       return null;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
   Future<Location?> updateLocation(String id, String location) async {
     isLoading = true;
-    notifyListeners();
+    errorMessage = null;
+    safeNotifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      safeNotifyListeners();
+      return null;
+    }
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/location/$id'),
+        Uri.parse('$baseUrl/admin/Location/$id'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'location': location}),
       );
       if (response.statusCode == 200) {
-        return Location.fromJson(jsonDecode(response.body));
+        final updatedLocation = Location.fromJson(jsonDecode(response.body));
+        final index = locations.indexWhere((loc) => loc.id == id);
+        if (index != -1) locations[index] = updatedLocation;
+        return updatedLocation;
       } else {
-        throw Exception('Failed to update location: ${response.statusCode} - ${response.body}');
+        errorMessage = 'Failed to update location: ${response.statusCode} - ${response.body}';
+        return null;
       }
     } catch (e) {
-      print('Error updating location: $e');
+      if (kDebugMode) print('Error updating location: $e');
+      errorMessage = 'Error updating location: $e';
       return null;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
   Future<bool> deleteLocation(String id) async {
     isLoading = true;
-    notifyListeners();
+    errorMessage = null;
+    safeNotifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      safeNotifyListeners();
+      return false;
+    }
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/location/$id'),
+        Uri.parse('$baseUrl/admin/Location/$id'),
         headers: {'Authorization': 'Bearer $token'},
       );
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        locations.removeWhere((loc) => loc.id == id);
+        return true;
+      } else {
+        errorMessage = 'Failed to delete location: ${response.statusCode} - ${response.body}';
+        return false;
+      }
     } catch (e) {
-      print('Error deleting location: $e');
+      if (kDebugMode) print('Error deleting location: $e');
+      errorMessage = 'Error deleting location: $e';
       return false;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 }

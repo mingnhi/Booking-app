@@ -4,7 +4,6 @@ import {
   Get,
   Param,
   Post,
-  Query,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
@@ -32,11 +31,8 @@ export class TripController {
 
   @Post('search')
   searchTrips(@Body() body: any) {
-    return this.tripService.searchTrips(
-      body.departure_location,
-      body.arrival_location,
-      body.departure_time,
-    );
+    const { departure_location, arrival_location, departure_time } = body;
+    return this.tripService.searchTrips(departure_location, arrival_location, departure_time);
   }
   // @Get('search')
   // searchTrips(
@@ -51,16 +47,4 @@ export class TripController {
   getOne(@Param('id') id: string) {
     return this.tripService.findOne(id);
   }
-
-  // @SetMetadata('roles', ['admin'])
-  // @Put(':id')
-  // updateTrip(@Param('id') id: string, @Body() updateTripDto: UpdateTripDto) {
-  //   return this.tripService.update(id, updateTripDto);
-  // }
-
-  // @SetMetadata('roles', ['admin'])
-  // @Delete(':id')
-  // delete(@Param('id') id: string) {
-  //   return this.tripService.remove(id);
-  // }
 }

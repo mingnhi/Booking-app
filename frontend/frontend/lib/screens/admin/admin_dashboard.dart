@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/admin/location_management_screen.dart';
 import 'package:frontend/screens/admin/trip_management_screen.dart';
 import 'package:frontend/screens/admin/user_management_screen.dart';
 import 'package:frontend/screens/admin/ticket_management_screen.dart';
@@ -19,12 +20,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     const TripManagementScreen(),
     const TicketManagementScreen(),
     const UserManagementScreen(),
+    const LocationManagementScreen(),
   ];
 
   final List<String> _titles = [
     'Quản lý chuyến đi',
     'Quản lý vé',
     'Quản lý người dùng',
+    'Quản lý địa điểm',
   ];
 
   @override
@@ -107,6 +110,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 Navigator.pop(context);
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.directions_bus),
+              title: const Text('Quản lý địa điểm'),
+              selected: _selectedIndex == 3,
+              onTap: () {
+                setState(() {
+                  _selectedIndex = 3;
+                });
+                Navigator.pop(context);
+              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.home),
@@ -122,4 +136,3 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 }
-

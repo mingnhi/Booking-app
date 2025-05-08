@@ -436,4 +436,157 @@ class AdminService extends ChangeNotifier {
       throw e;
     }
   }
+
+  // Thêm các phương thức quản lý địa điểm
+  Future<List<dynamic>> getLocations() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final token = await _storage.read(key: 'accessToken');
+      if (token == null) {
+        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        isLoading = false;
+        notifyListeners();
+        return data;
+      } else {
+        throw Exception(
+          'Failed to load locations: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      isLoading = false;
+      error = e.toString();
+      notifyListeners();
+      print('Error in getLocations: $e');
+      return [];
+    }
+  }
+
+  Future<dynamic> createLocation(String locationName) async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final token = await _storage.read(key: 'accessToken');
+      if (token == null) {
+        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'location': locationName}),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        isLoading = false;
+        notifyListeners();
+        return data;
+      } else {
+        throw Exception(
+          'Failed to create location: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      isLoading = false;
+      error = e.toString();
+      notifyListeners();
+      print('Error in createLocation: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> updateLocation(String id, String locationName) async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final token = await _storage.read(key: 'accessToken');
+      if (token == null) {
+        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/location/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'location': locationName}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        isLoading = false;
+        notifyListeners();
+        return data;
+      } else {
+        throw Exception(
+          'Failed to update location: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      isLoading = false;
+      error = e.toString();
+      notifyListeners();
+      print('Error in updateLocation: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteLocation(String id) async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final token = await _storage.read(key: 'accessToken');
+      if (token == null) {
+        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/location/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        isLoading = false;
+        notifyListeners();
+      } else {
+        throw Exception(
+          'Failed to delete location: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      isLoading = false;
+      error = e.toString();
+      notifyListeners();
+      print('Error in deleteLocation: $e');
+      rethrow;
+    }
+  }
 }

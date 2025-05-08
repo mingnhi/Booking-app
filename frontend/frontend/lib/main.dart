@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/admin/location_management_screen.dart';
 import 'package:frontend/screens/auth/login_screen.dart';
 import 'package:frontend/screens/auth/profile_screen.dart';
 import 'package:frontend/screens/auth/register_screen.dart';
@@ -90,6 +91,15 @@ class MyApp extends StatelessWidget {
           '/admin/trips/edit/:id': (context) {
             final tripId = ModalRoute.of(context)!.settings.arguments as String;
             return TripEditForm(tripData: {'_id': tripId});
+          },
+          '/admin/locations': (context) => const LocationManagementScreen(),
+          '/admin/location/create': (context) => const LocationCreateScreen(),
+          '/admin/location/edit/:id': (context) {
+            final args =
+                ModalRoute.of(context)!.settings.arguments
+                    as Map<String, dynamic>?;
+            final id = args?['id'] ?? '';
+            return LocationEditScreen(id: id);
           },
         },
       ),

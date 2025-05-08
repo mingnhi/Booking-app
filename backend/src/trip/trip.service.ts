@@ -7,7 +7,7 @@ import { UpdateTripDto } from './dto/update-trip.dto';
 
 @Injectable()
 export class TripService {
-  constructor(@InjectModel(Trip.name) private tripModel: Model<TripDocument>) { }
+  constructor(@InjectModel(Trip.name) private tripModel: Model<TripDocument>) {}
 
   async create(createTripDto: CreateTripDto): Promise<Trip> {
     const trip = new this.tripModel(createTripDto);
@@ -84,5 +84,4 @@ export class TripService {
 
     return this.tripModel.find(query).exec();
   }
-
 }

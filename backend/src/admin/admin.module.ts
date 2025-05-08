@@ -5,9 +5,17 @@ import { UsersModule } from 'src/users/users.module';
 import { TripModule } from 'src/trip/trip.module';
 import { SeatModule } from 'src/seat/seat.module';
 import { TicketModule } from 'src/ticket/ticket.module';
+import { LocationModule } from 'src/location/location.module';
 
 @Module({
-  imports: [UsersModule, TripModule, SeatModule, TicketModule, UsersModule],
+  imports: [
+    UsersModule,
+    TripModule,
+    SeatModule,
+    TicketModule,
+    UsersModule,
+    LocationModule,
+  ],
   controllers: [AdminController],
   providers: [AdminService],
 })

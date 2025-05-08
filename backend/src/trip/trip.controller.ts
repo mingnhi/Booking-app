@@ -1,7 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
+  Post,
   Query,
   SetMetadata,
   UseGuards,
@@ -11,12 +13,11 @@ import { TripService } from './trip.service';
 // import { UpdateTripDto } from './dto/update-trip.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { Trip } from './trip.schema';
 
 @Controller('trip')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TripController {
-  constructor(private readonly tripService: TripService) {}
+  constructor(private readonly tripService: TripService) { }
   // @SetMetadata('roles', ['admin'])
   // @Post()
   // createTrip(@Body() createTripDto: CreateTripDto) {
@@ -29,15 +30,21 @@ export class TripController {
     return this.tripService.findAll();
   }
 
-  @SetMetadata('roles', ['user'])
-  @Get('search')
-  searchTrips(
-    @Query('departureLocation') departureLocation: string,
-    @Query('arrivalLocation') arrivalLocation: string,
-    @Query('departureDate') departureDate?: string,
-  ): Promise<Trip[]> {
-    return this.tripService.searchTrips(departureLocation, arrivalLocation, departureDate);
+  @Post('search')
+  searchTrips(@Body() body: any) {
+    return this.tripService.searchTrips(
+      body.departure_location,
+      body.arrival_location,
+      body.departure_time,
+    );
   }
+  // @Get('search')
+  // searchTrips(
+  //   @Query('departure') departureId: string,
+  //   @Query('arrival') arrivalId: string,
+  // ) {
+  //   return this.tripService.searchTrips(departureId, arrivalId);
+  // }
 
   @SetMetadata('roles', ['user', 'admin'])
   @Get(':id')

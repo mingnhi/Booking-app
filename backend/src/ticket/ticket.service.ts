@@ -11,8 +11,11 @@ export class TicketService {
     @InjectModel(Ticket.name) private ticketModel: Model<TicketDocument>,
   ) {}
 
-  async create(dto: CreateTicketDto): Promise<Ticket> {
-    const ticket = new this.ticketModel(dto);
+  async create(dto: CreateTicketDto, userId: string): Promise<Ticket> {
+    const ticket = new this.ticketModel({
+      ...dto,
+      user_id: userId,
+    });
     return ticket.save();
   }
 

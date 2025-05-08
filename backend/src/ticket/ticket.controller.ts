@@ -7,6 +7,7 @@ import {
   Put,
   UseGuards,
   SetMetadata,
+  Req,
 } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -21,8 +22,9 @@ export class TicketController {
 
   @SetMetadata('roles', ['user'])
   @Post()
-  createTicket(@Body() dto: CreateTicketDto) {
-    return this.ticketService.create(dto);
+  createTicket(@Body() dto: CreateTicketDto, @Req() req: any) {
+    const userId = req.user?.userId;
+    return this.ticketService.create(dto, userId);
   }
 
   // @SetMetadata('roles', ['admin'])

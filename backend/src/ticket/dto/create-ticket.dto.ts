@@ -2,9 +2,6 @@ import { IsMongoId, IsEnum } from 'class-validator';
 
 export class CreateTicketDto {
   @IsMongoId()
-  user_id: string;
-
-  @IsMongoId()
   trip_id: string;
 
   @IsMongoId()

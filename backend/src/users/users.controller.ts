@@ -1,4 +1,11 @@
-import { Body, Controller, Param, Put, SetMetadata, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  Put,
+  SetMetadata,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './user.service';
 import { Users } from './users.schema';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';

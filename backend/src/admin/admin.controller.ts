@@ -97,7 +97,10 @@ export class AdminController {
     return this.userService.findAll();
   }
   @Put('users/:id')
-  async updateUser(@Param('id') id: string, @Body() updateData: Partial<Users>) {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateData: Partial<Users>,
+  ) {
     return this.userService.update(id, updateData);
   }
   @Delete('users/:id')

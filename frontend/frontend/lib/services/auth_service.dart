@@ -30,13 +30,18 @@ class AuthService extends ChangeNotifier {
         final data = jsonDecode(response.body);
         await _storage.write(key: 'accessToken', value: data['accessToken']);
         await _storage.write(key: 'refreshToken', value: data['refresh_token']);
+        final loginResponse = LoginResponse.fromJson(data);
+        currentUser = loginResponse.user;
         return LoginResponse.fromJson(data);
       } else {
-        throw Exception('Login failed: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Login failed: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error logging in: $e');
-      errorMessage = e.toString().contains('Login failed')
+      errorMessage =
+      e.toString().contains('Login failed')
           ? jsonDecode(e.toString().split(' - ')[1])['message']
           : e.toString();
       return null;
@@ -44,6 +49,10 @@ class AuthService extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  bool isAdmin() {
+    return currentUser?.role == 'admin';
   }
 
   Future<bool> register(RegisterRequest request) async {
@@ -59,11 +68,14 @@ class AuthService extends ChangeNotifier {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
       } else {
-        throw Exception('Registration failed: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Registration failed: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error registering: $e');
-      errorMessage = e.toString().contains('Registration failed')
+      errorMessage =
+      e.toString().contains('Registration failed')
           ? jsonDecode(e.toString().split(' - ')[1])['message']
           : e.toString();
       return false;
@@ -94,7 +106,9 @@ class AuthService extends ChangeNotifier {
         currentUser = User.fromJson(jsonDecode(response.body));
         return currentUser;
       } else {
-        throw Exception('Failed to get profile: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to get profile: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error getting profile: $e');
@@ -127,9 +141,17 @@ class AuthService extends ChangeNotifier {
         final data = jsonDecode(response.body);
         await _storage.write(key: 'accessToken', value: data['accessToken']);
         await _storage.write(key: 'refreshToken', value: data['refresh_token']);
+
+        // Cập nhật thông tin người dùng nếu có
+        if (data['user'] != null) {
+          currentUser = User.fromJson(data['user']);
+        }
+
         return LoginResponse.fromJson(data);
       } else {
-        throw Exception('Failed to refresh token: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to refresh token: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error refreshing token: $e');

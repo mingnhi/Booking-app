@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/home_service.dart';
 import '../../services/auth_service.dart';
-import 'customer_nav_bar.dart'; // Import CustomNavBar
+import 'customer_nav_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,19 +14,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
   Animation<double>? _bounceAnimation;
-  int _selectedIndex = 0; // Chỉ số hiện tại của thanh điều hướng
+  int _selectedIndex = 0;
 
-  // Define the updated color scheme with the new primary color
-  static const Color primaryColor = Color(0xFF2474E5); // Vibrant Blue from rgb(36, 116, 229)
-  static const Color backgroundColor = Color(0xFFF9F9F9); // Off-White Background
-  static const Color primaryTextColor = Color(0xFF1A2525); // Deep Teal-Black
-  static const Color secondaryTextColor = Color(0xFF607D8B); // Muted Slate Gray
-  static const Color accentColor = Color(0xFFD4A017); // Muted Gold
+  static const Color primaryColor = Color(0xFF2474E5);
+  static const Color backgroundColor = Color(0xFFF9F9F9);
+  static const Color primaryTextColor = Color(0xFF1A2525);
+  static const Color secondaryTextColor = Color(0xFF607D8B);
+  static const Color accentColor = Color(0xFFD4A017);
 
   @override
   void initState() {
     super.initState();
-    // Khởi tạo AnimationController và Animations an toàn
     Future.microtask(() {
       if (mounted) {
         _animationController = AnimationController(
@@ -59,19 +57,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _onItemTapped(int index) {
-    if (index == _selectedIndex) return; // Prevent redundant navigation
+    if (index == _selectedIndex) return;
     setState(() {
       _selectedIndex = index;
     });
     switch (index) {
       case 0:
-      // Already on HomeScreen, no action needed
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/trip/search');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/my-tickets');
+        Navigator.pushReplacementNamed(context, '/tickets');
         break;
       case 3:
         Navigator.pushReplacementNamed(context, '/auth/profile');
@@ -132,7 +129,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Welcome Section
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 60.0),
@@ -170,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             width: 100,
                             height: 6,
                             decoration: BoxDecoration(
-                              color: primaryColor, // Updated to vibrant blue
+                              color: primaryColor,
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
@@ -191,11 +187,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               return Transform.scale(
                                 scale: _bounceAnimation!.value,
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    // Placeholder for future functionality (no navigation to /trip/search)
-                                  },
+                                  onPressed: () {},
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: primaryColor, // Updated to vibrant blue
+                                    backgroundColor: primaryColor,
                                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(30),
@@ -218,7 +212,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     ),
                     const SizedBox(height: 40),
-                    // Featured Trips Section (Horizontal Grid)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
                       child: Text(
@@ -235,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: homeService.featuredTrips.length > 2 ? 2 : homeService.featuredTrips.length, // Limit to 2 trips
+                        itemCount: homeService.featuredTrips.length > 2 ? 2 : homeService.featuredTrips.length,
                         itemBuilder: (context, index) {
                           final trip = homeService.featuredTrips[index];
                           return Container(
@@ -246,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               shadowColor: Colors.black12,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(color: primaryColor.withOpacity(0.3), width: 1), // Updated to vibrant blue
+                                side: BorderSide(color: primaryColor.withOpacity(0.3), width: 1),
                               ),
                               color: Colors.white,
                               child: Column(
@@ -257,11 +250,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     child: Container(
                                       height: 160,
                                       width: double.infinity,
-                                      color: primaryColor.withOpacity(0.05), // Updated to vibrant blue
+                                      color: primaryColor.withOpacity(0.05),
                                       child: Icon(
                                         Icons.directions_bus,
                                         size: 80,
-                                        color: primaryColor, // Updated to vibrant blue
+                                        color: primaryColor,
                                       ),
                                     ),
                                   ),
@@ -306,7 +299,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         },
                       ),
                     ),
-                    // Popular Locations Section (Horizontal Grid)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
                       child: Text(
@@ -323,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: homeService.locations.length > 4 ? 4 : homeService.locations.length, // Limit to 4 locations
+                        itemCount: homeService.locations.length > 4 ? 4 : homeService.locations.length,
                         itemBuilder: (context, index) {
                           final location = homeService.locations[index];
                           return Container(
@@ -334,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               shadowColor: Colors.black12,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(color: primaryColor.withOpacity(0.3), width: 1), // Updated to vibrant blue
+                                side: BorderSide(color: primaryColor.withOpacity(0.3), width: 1),
                               ),
                               color: Colors.white,
                               child: InkWell(
@@ -347,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     children: [
                                       Icon(
                                         Icons.location_on,
-                                        color: primaryColor, // Updated to vibrant blue
+                                        color: primaryColor,
                                         size: 40,
                                       ),
                                       const SizedBox(height: 12),

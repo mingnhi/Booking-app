@@ -18,13 +18,25 @@ export class TripService {
     return this.tripModel.find().exec();
   }
 
-  async searchTrips(departureId: string, arrivalId: string): Promise<Trip[]> {
-    return this.tripModel
-      .find({
-        departure_location: departureId,
-        arrival_location: arrivalId,
-      })
-      .exec();
+  // 
+  async searchTrips(departureLocation: string, arrivalLocation: string, departureDate?: string): Promise<Trip[]> {
+    const query: any = {
+      departure_location: departureLocation,
+      arrival_location: arrivalLocation,
+    };
+    if (departureDate) {
+      const startOfDay = new Date(departureDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(departureDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      query.departure_time = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    return this.tripModel.find(query).exec();
   }
 
   async findOne(id: string): Promise<Trip> {

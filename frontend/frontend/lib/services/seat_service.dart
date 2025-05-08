@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 import '../models/seat.dart';
 
 class SeatService extends ChangeNotifier {
-  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com'; // Thay bằng URL backend thực tế
+  final String baseUrl =
+      'https://booking-app-1-bzfs.onrender.com'; // Thay bằng URL backend thực tế
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Seat> seats = [];
@@ -16,13 +17,18 @@ class SeatService extends ChangeNotifier {
     final token = await _storage.read(key: 'accessToken');
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/seats'),
+        Uri.parse('$baseUrl/seat'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        seats = (jsonDecode(response.body) as List).map((e) => Seat.fromJson(e)).toList();
+        seats =
+            (jsonDecode(response.body) as List)
+                .map((e) => Seat.fromJson(e))
+                .toList();
       } else {
-        throw Exception('Failed to fetch seats: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to fetch seats: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error fetching seats: $e');
@@ -38,14 +44,19 @@ class SeatService extends ChangeNotifier {
     final token = await _storage.read(key: 'accessToken');
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/seats'),
-        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/seat'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(seat.toJson()),
       );
       if (response.statusCode == 200) {
         return Seat.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Failed to create seat: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to create seat: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error creating seat: $e');
@@ -62,14 +73,19 @@ class SeatService extends ChangeNotifier {
     final token = await _storage.read(key: 'accessToken');
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/seats/$id'),
-        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/seat/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(seat.toJson()),
       );
       if (response.statusCode == 200) {
         return Seat.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Failed to update seat: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to update seat: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error updating seat: $e');
@@ -86,7 +102,7 @@ class SeatService extends ChangeNotifier {
     final token = await _storage.read(key: 'accessToken');
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/seats/$id'),
+        Uri.parse('$baseUrl/seat/$id'),
         headers: {'Authorization': 'Bearer $token'},
       );
       return response.statusCode == 200;

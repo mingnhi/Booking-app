@@ -22,6 +22,9 @@ import { TicketService } from 'src/ticket/ticket.service';
 import { UpdateTicketDto } from 'src/ticket/dto/update-ticket.dto';
 import { UsersService } from 'src/users/user.service';
 import { Users } from 'src/users/users.schema';
+import { LocationService } from 'src/location/location.service';
+import { UpdateLocationDto } from 'src/location/dto/update-location.dto';
+import { CreateLocationDto } from 'src/location/dto/create-location.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,6 +36,7 @@ export class AdminController {
     private readonly tripService: TripService,
     private readonly ticketService: TicketService,
     private readonly userService: UsersService,
+    private readonly locationService: LocationService,
   ) {}
   @Post('seat')
   createSeat(@Body() createSeatDto: CreateSeatDto) {
@@ -107,5 +111,29 @@ export class AdminController {
   async deleteUser(@Param('id') id: string) {
     await this.userService.delete(id);
     return { message: 'xoá người dùng thành công' };
+  }
+  @Post('Location')
+  createLocation(@Body() dto: CreateLocationDto) {
+    return this.locationService.create(dto);
+  }
+
+  @Get('Location')
+  getAllLocation() {
+    return this.locationService.findAll();
+  }
+
+  @Get('Location/:id')
+  getOneLocation(@Param('id') id: string) {
+    return this.locationService.findOne(id);
+  }
+
+  @Put('location/:id')
+  updateLocation(@Param('id') id: string, @Body() dto: UpdateLocationDto) {
+    return this.locationService.update(id, dto);
+  }
+
+  @Delete('loaction/:id')
+  deleteLocation(@Param('id') id: string) {
+    return this.locationService.remove(id);
   }
 }

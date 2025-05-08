@@ -78,7 +78,7 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
         padding: const EdgeInsets.all(16),
         itemBuilder: (context, index) {
           final ticket = tickets[index];
-          final purchaseDate = DateTime.parse(ticket['purchaseDate']);
+          final purchaseDate = DateTime.parse(ticket['booked_at']);
           final formatter = DateFormat('dd/MM/yyyy HH:mm');
 
           return Card(
@@ -106,11 +106,11 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(ticket['status']),
+                          color: _getStatusColor(ticket['ticket_status']),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          _getStatusText(ticket['status']),
+                          _getStatusText(ticket['ticket_status']),
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 12,
@@ -120,30 +120,7 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
                     ],
                   ),
                   const Divider(),
-                  _buildInfoRow(
-                    Icons.person,
-                    'Người dùng: ${ticket['user'] != null ? ticket['user']['username'] ?? ticket['userId'] : ticket['userId']}',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                    Icons.directions_bus,
-                    'Chuyến đi: ${ticket['trip'] != null ? "${ticket['trip']['departureLocation']} → ${ticket['trip']['arrivalLocation']}" : ticket['tripId']}',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                    Icons.event_seat,
-                    'Ghế: ${ticket['seat'] != null ? ticket['seat']['seatNumber'] : ticket['seatId']}',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                    Icons.calendar_today,
-                    'Ngày mua: ${formatter.format(purchaseDate)}',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                    Icons.attach_money,
-                    'Giá: ${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(ticket['price'])}',
-                  ),
+
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

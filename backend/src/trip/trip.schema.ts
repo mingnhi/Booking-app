@@ -5,8 +5,8 @@ export type TripDocument = Trip & Document;
 
 @Schema({ timestamps: { createdAt: 'create_at' } })
 export class Trip {
-  @Prop({ type: Types.ObjectId, ref: 'Location', required: true })
-  location_id: Types.ObjectId;
+  // @Prop({ type: Types.ObjectId, ref: 'Location', required: true })
+  // location_id: Types.ObjectId;
   @Prop({ required: true })
   departure_location: string;
 

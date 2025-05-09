@@ -4,31 +4,39 @@ import { Trip, TripDocument } from './trip.schema';
 import { Model } from 'mongoose';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
+import { Seat, SeatDocument } from 'src/seat/seat.schema';
 
 @Injectable()
 export class TripService {
-  constructor(@InjectModel(Trip.name) private tripModel: Model<TripDocument>) {}
+  constructor(
+    @InjectModel(Trip.name) private tripModel: Model<TripDocument>,
+    @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
+  ) {}
 
   async create(createTripDto: CreateTripDto): Promise<Trip> {
-    const trip = new this.tripModel(createTripDto);
-    return trip.save();
+    const newTrip = await this.tripModel.create(createTripDto);
+
+    const seats: Partial<SeatDocument>[] = [];
+    for (let i = 1; i <= createTripDto.total_seats; i++) {
+      seats.push({
+        trip_id: newTrip._id,
+        seat_number: i,
+        is_available: true,
+      });
+    }
+    await this.seatModel.insertMany(seats);
+    return newTrip;
   }
 
   async findAll(): Promise<Trip[]> {
-    return this.tripModel.find().exec();
+    return this.tripModel.find().populate('location_id').exec();
   }
 
-  // async searchTrips(departureId: string, arrivalId: string): Promise<Trip[]> {
-  //   return this.tripModel
-  //     .find({
-  //       departure_location: departureId,
-  //       arrival_location: arrivalId,
-  //     })
-  //     .exec();
-  // }
-
   async findOne(id: string): Promise<Trip> {
-    const trip = await this.tripModel.findById(id).exec();
+    const trip = await this.tripModel
+      .findById(id)
+      .populate('location_id')
+      .exec();
     if (!trip) {
       throw new NotFoundException('Trip with id ${id} not found');
     }

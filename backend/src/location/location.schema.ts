@@ -6,7 +6,10 @@ export type LocationDocument = Location & Document;
 @Schema({ timestamps: true })
 export class Location {
   @Prop({ required: true })
-  location: string;
+  departure_location: string;
+
+  @Prop({ required: true })
+  arrival_location: string;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);

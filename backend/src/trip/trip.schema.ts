@@ -3,29 +3,30 @@ import { Document, Types } from 'mongoose';
 
 export type TripDocument = Trip & Document;
 
-@Schema({ timestamps: { createdAt: 'create_at' } })
+@Schema({ timestamps: { createdAt: 'created_at' } })
 export class Trip {
-  // @Prop({ type: Types.ObjectId, ref: 'Location', required: true })
-  // location_id: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Location', required: true })
+  location_id: Types.ObjectId;
+
   @Prop({ required: true })
   departure_location: string;
 
   @Prop({ required: true })
   arrival_location: string;
 
-  @Prop({ required: true })
+  @Prop({ type: Date, required: true })
   departure_time: Date;
 
-  @Prop({ required: true })
+  @Prop({ type: Date, required: true })
   arrival_time: Date;
 
-  @Prop({ required: true })
+  @Prop({ type: Number, required: true })
   price: number;
 
   @Prop({ required: true })
   bus_type: string;
 
-  @Prop({ required: true })
+  @Prop({ type: Number, required: true })
   total_seats: number;
 }
 

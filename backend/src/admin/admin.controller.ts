@@ -112,17 +112,17 @@ export class AdminController {
     await this.userService.delete(id);
     return { message: 'xoá người dùng thành công' };
   }
-  @Post('Location')
+  @Post('location')
   createLocation(@Body() dto: CreateLocationDto) {
     return this.locationService.create(dto);
   }
 
-  @Get('Location')
+  @Get('location')
   getAllLocation() {
     return this.locationService.findAll();
   }
 
-  @Get('Location/:id')
+  @Get('location/:id')
   getOneLocation(@Param('id') id: string) {
     return this.locationService.findOne(id);
   }

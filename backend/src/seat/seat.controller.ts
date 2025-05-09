@@ -18,7 +18,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 @Controller('seats')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SeatController {
-  constructor(private readonly seatService: SeatService) { }
+  constructor(private readonly seatService: SeatService) {}
 
   // @SetMetadata('roles', ['admin'])
   // @Post()

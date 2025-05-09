@@ -7,8 +7,9 @@ import {
 } from 'class-validator';
 
 export class CreateTripDto {
-  // @IsNotEmpty()
-  // location_id: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  location_id: string;
 
   @IsMongoId()
   @IsNotEmpty()

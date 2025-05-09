@@ -1,6 +1,11 @@
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateLocationDto {
   @IsString()
-  location: string;
+  @IsNotEmpty()
+  departure_location: string;
+
+  @IsString()
+  @IsNotEmpty()
+  arrival_location: string;
 }

@@ -18,7 +18,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 @Controller('seats')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SeatController {
-  constructor(private readonly seatService: SeatService) {}
+  constructor(private readonly seatService: SeatService) { }
 
   // @SetMetadata('roles', ['admin'])
   // @Post()
@@ -36,6 +36,11 @@ export class SeatController {
   @Get(':id')
   getOne(@Param('id') id: string) {
     return this.seatService.findOne(id);
+  }
+  @SetMetadata('roles', ['user', 'admin'])
+  @Get('trip/:tripId')
+  getByTripId(@Param('tripId') tripId: string) {
+    return this.seatService.findByTripId(tripId);
   }
 
   // @SetMetadata('roles', ['admin'])

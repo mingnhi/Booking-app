@@ -30,6 +30,9 @@ export class SeatService {
     if (!updated) throw new NotFoundException('Seat not found');
     return updated;
   }
+  async findByTripId(tripId: string): Promise<Seat[]> {
+    return this.seatModel.find({ trip_id: tripId }).exec();
+  }
 
   async remove(id: string): Promise<void> {
     const result = await this.seatModel.findByIdAndDelete(id).exec();

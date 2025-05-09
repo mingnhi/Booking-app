@@ -12,6 +12,6 @@ import { UsersModule } from 'src/users/users.module';
   ],
   controllers: [SeatController],
   providers: [SeatService],
-  exports: [SeatService],
+  exports: [SeatService, MongooseModule],
 })
 export class SeatModule {}

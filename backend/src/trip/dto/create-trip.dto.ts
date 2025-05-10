@@ -9,7 +9,7 @@ import {
 export class CreateTripDto {
   @IsMongoId()
   @IsNotEmpty()
-  location_id: string;
+  vehicle_id: string;
 
   @IsMongoId()
   @IsNotEmpty()
@@ -33,7 +33,7 @@ export class CreateTripDto {
 
   @IsString()
   @IsNotEmpty()
-  bus_type: string;
+  distance: number;
 
   @IsNumber()
   @IsNotEmpty()

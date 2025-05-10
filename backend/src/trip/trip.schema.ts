@@ -5,14 +5,14 @@ export type TripDocument = Trip & Document;
 
 @Schema({ timestamps: { createdAt: 'created_at' } })
 export class Trip {
+  @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true })
+  vehicle_id: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Location', required: true })
-  location_id: Types.ObjectId;
+  departure_location: Types.ObjectId;
 
-  @Prop({ required: true })
-  departure_location: string;
-
-  @Prop({ required: true })
-  arrival_location: string;
+  @Prop({ type: Types.ObjectId, ref: 'Location', required: true })
+  arrival_location: Types.ObjectId;
 
   @Prop({ type: Date, required: true })
   departure_time: Date;
@@ -24,7 +24,7 @@ export class Trip {
   price: number;
 
   @Prop({ required: true })
-  bus_type: string;
+  distance: number;
 
   @Prop({ type: Number, required: true })
   total_seats: number;

@@ -8,14 +8,14 @@ import { Ticket, TicketDocument } from './ticket.schema';
 import { Model } from 'mongoose';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
-import { Seat, SeatDocument } from 'src/seat/seat.schema';
+import { Seat, SeatDocument, SeatStatus } from 'src/seat/seat.schema';
 
 @Injectable()
 export class TicketService {
   constructor(
     @InjectModel(Ticket.name) private ticketModel: Model<TicketDocument>,
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
-  ) { }
+  ) {}
 
   // async create(dto: CreateTicketDto, userId: string): Promise<Ticket> {
   //   const ticket = new this.ticketModel({
@@ -32,7 +32,7 @@ export class TicketService {
       throw new NotFoundException('Không tìm thấy ghế');
     }
 
-    if (!seat.is_available) {
+    if (seat.status_seat !== SeatStatus.AVAILABLE) {
       throw new BadRequestException(' Ghế đã được đặt');
     }
 
@@ -45,7 +45,8 @@ export class TicketService {
     });
     await ticket.save();
 
-    const populatedTicket = await this.ticketModel.findById(ticket._id)
+    const populatedTicket = await this.ticketModel
+      .findById(ticket._id)
       .populate('user_id', 'full_name phone_number')
       .populate('trip_id', 'departure_location arrival_location price')
       .populate('seat_id', 'seat_number')

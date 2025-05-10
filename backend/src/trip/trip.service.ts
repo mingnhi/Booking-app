@@ -1,16 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Trip, TripDocument } from './trip.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
-import { Seat, SeatDocument } from 'src/seat/seat.schema';
+import { Seat, SeatDocument, SeatStatus } from 'src/seat/seat.schema';
+import { Location, LocationDocument } from 'src/location/location.schema';
+// import { PopulatedTrip } from './dto/populated';
 
 @Injectable()
 export class TripService {
   constructor(
     @InjectModel(Trip.name) private tripModel: Model<TripDocument>,
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
+    @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
   ) {}
 
   async create(createTripDto: CreateTripDto): Promise<Trip> {
@@ -21,21 +24,39 @@ export class TripService {
       seats.push({
         trip_id: newTrip._id,
         seat_number: i,
-        is_available: true,
+        status_seat: SeatStatus.AVAILABLE,
       });
     }
     await this.seatModel.insertMany(seats);
-    return newTrip;
+    const populatedTrip = await this.tripModel
+      .findById(newTrip._id)
+      .populate('departure_location', 'name')
+      .populate('arrival_location', 'name')
+      .populate('vehicle_id')
+      .exec();
+    if (!populatedTrip) {
+      throw new NotFoundException('Trip not found');
+    }
+
+    return populatedTrip;
   }
 
   async findAll(): Promise<Trip[]> {
-    return this.tripModel.find().populate('location_id').exec();
+    return this.tripModel.find().exec();
+    // return this.tripModel
+    //   .find()
+    //   .populate('departure_location', 'name')
+    //   .populate('arrival_location', 'name')
+    //   .populate('vehicle_id')
+    //   .exec();
   }
 
   async findOne(id: string): Promise<Trip> {
     const trip = await this.tripModel
       .findById(id)
-      .populate('location_id')
+      .populate('departure_location')
+      .populate('arrival_location')
+      .populate('vehicle_id')
       .exec();
     if (!trip) {
       throw new NotFoundException('Trip with id ${id} not found');

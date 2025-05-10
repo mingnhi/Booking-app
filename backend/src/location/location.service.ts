@@ -15,7 +15,7 @@ export class LocationService {
   create(dto: CreateLocationDto) {
     return this.model.create(dto);
   }
-  findAll() {
+  async findAll(): Promise<Location[]> {
     return this.model.find().exec();
   }
   async findOne(id: string) {
@@ -25,10 +25,8 @@ export class LocationService {
     }
     return location;
   }
-  async update(id: string, dto: UpdateLocationDto) {
-    const location = await this.model
-      .findByIdAndUpdate(id, dto, { new: true })
-      .exec();
+  async update(id: string, dto: UpdateLocationDto): Promise<Location> {
+    const location = await this.model.findByIdAndUpdate(id, dto, { new: true });
     if (!location) {
       throw new NotFoundException('Location not found');
     }

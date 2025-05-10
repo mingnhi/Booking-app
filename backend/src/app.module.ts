@@ -10,6 +10,7 @@ import { TripModule } from './trip/trip.module';
 import { SeatModule } from './seat/seat.module';
 import { TicketModule } from './ticket/ticket.module';
 import { AdminModule } from './admin/admin.module';
+import { VehicleModule } from './vehicle/vehicle.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -28,6 +29,7 @@ import { AdminModule } from './admin/admin.module';
     SeatModule,
     TicketModule,
     AdminModule,
+    VehicleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

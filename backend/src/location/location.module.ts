@@ -14,6 +14,6 @@ import { UsersModule } from 'src/users/users.module';
   ],
   controllers: [LocationController],
   providers: [LocationService],
-  exports: [LocationService],
+  exports: [LocationService, MongooseModule],
 })
 export class LocationModule {}

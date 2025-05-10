@@ -36,7 +36,7 @@ export class TripController {
   //   const { departure_location, arrival_location, departure_time } = body;
   //   return this.tripService.searchTrips(departure_location, arrival_location, departure_time);
   // }
-  @Get('search')
+  @Post('search')
   async searchTrips(
     @Query('departure_location') departure_location?: string,
     @Query('arrival_location') arrival_location?: string,

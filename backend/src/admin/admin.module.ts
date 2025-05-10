@@ -6,6 +6,8 @@ import { TripModule } from 'src/trip/trip.module';
 import { SeatModule } from 'src/seat/seat.module';
 import { TicketModule } from 'src/ticket/ticket.module';
 import { LocationModule } from 'src/location/location.module';
+// import { Vehicle } from 'src/vehicle/vehicle.shema';
+import { VehicleModule } from 'src/vehicle/vehicle.module';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { LocationModule } from 'src/location/location.module';
     TicketModule,
     UsersModule,
     LocationModule,
+    VehicleModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

@@ -25,6 +25,9 @@ import { Users } from 'src/users/users.schema';
 import { LocationService } from 'src/location/location.service';
 import { UpdateLocationDto } from 'src/location/dto/update-location.dto';
 import { CreateLocationDto } from 'src/location/dto/create-location.dto';
+import { VehicleService } from 'src/vehicle/vehicle.service';
+import { CreateVehicleDto } from 'src/vehicle/dto/create-vehicle.dto';
+import { UpdateVehicleDto } from 'src/vehicle/dto/update-vehicle.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -37,11 +40,12 @@ export class AdminController {
     private readonly ticketService: TicketService,
     private readonly userService: UsersService,
     private readonly locationService: LocationService,
+    private readonly vehicleService: VehicleService,
   ) {}
-  @Post('seat')
-  createSeat(@Body() createSeatDto: CreateSeatDto) {
-    return this.seatService.create(createSeatDto);
-  }
+  // @Post('seat')
+  // createSeat(@Body() createSeatDto: CreateSeatDto) {
+  //   return this.seatService.create(createSeatDto);
+  // }
   @Get('seat')
   getAllSeat() {
     return this.seatService.findAll();
@@ -135,5 +139,29 @@ export class AdminController {
   @Delete('loaction/:id')
   deleteLocation(@Param('id') id: string) {
     return this.locationService.remove(id);
+  }
+
+  @Post('vehicle')
+  createVehicle(@Body() dto: CreateVehicleDto) {
+    return this.vehicleService.create(dto);
+  }
+  @Get('vehicle')
+  getAll() {
+    return this.vehicleService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.vehicleService.findOne(id);
+  }
+
+  @Put(':id')
+  updateVehicle(@Param('id') id: string, @Body() dto: UpdateVehicleDto) {
+    return this.vehicleService.update(id, dto);
+  }
+
+  @Delete(':id')
+  deleteVehicle(@Param('id') id: string) {
+    return this.vehicleService.remove(id);
   }
 }

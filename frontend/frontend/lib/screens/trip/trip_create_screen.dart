@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/trip.dart';
 import '../../services/trip_service.dart';
-import '../../services/location_service.dart';
+import '../../services/admin_service.dart';
 
 class TripCreateScreen extends StatefulWidget {
+  const TripCreateScreen({super.key});
+
   @override
   _TripCreateScreenState createState() => _TripCreateScreenState();
 }
@@ -21,17 +23,18 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
   @override
   void initState() {
     super.initState();
-    Provider.of<LocationService>(context, listen: false).fetchLocations();
+    Provider.of<AdminService>(context, listen: false).fetchLocations();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Tạo chuyến đi')),
-      body: Consumer<LocationService>(
+      body: Consumer<AdminService>(
         builder: (context, locationService, _) {
-          if (locationService.isLoading)
+          if (locationService.isLoading) {
             return Center(child: CircularProgressIndicator());
+          }
           return Padding(
             padding: EdgeInsets.all(16.0),
             child: ListView(
@@ -62,7 +65,7 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
                   items:
                       locationService.locations.map((loc) {
                         return DropdownMenuItem<String>(
-                          value: loc.location,
+                          value: loc.id,
                           child: Text(loc.location),
                         );
                       }).toList(),
@@ -86,7 +89,7 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
                 ),
                 ListTile(
                   title: Text('Thời gian đi'),
-                  subtitle: Text('${_departureTime}'),
+                  subtitle: Text('$_departureTime'),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
@@ -99,7 +102,7 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
                 ),
                 ListTile(
                   title: Text('Thời gian đến'),
-                  subtitle: Text('${_arrivalTime}'),
+                  subtitle: Text('$_arrivalTime'),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,

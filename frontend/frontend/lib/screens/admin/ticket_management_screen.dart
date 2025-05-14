@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class TicketManagementScreen extends StatefulWidget {
-  const TicketManagementScreen({Key? key}) : super(key: key);
+  const TicketManagementScreen({super.key});
 
   @override
   _TicketManagementScreenState createState() => _TicketManagementScreenState();

@@ -8,7 +8,7 @@ import '../../services/location_service.dart';
 class TripEditForm extends StatefulWidget {
   final Map<String, dynamic> tripData;
 
-  const TripEditForm({Key? key, required this.tripData}) : super(key: key);
+  const TripEditForm({super.key, required this.tripData});
 
   @override
   _TripEditFormState createState() => _TripEditFormState();

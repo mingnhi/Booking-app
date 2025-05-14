@@ -7,7 +7,7 @@ import '../../services/trip_service.dart';
 class SeatEditScreen extends StatefulWidget {
   final String id;
 
-  SeatEditScreen({required this.id});
+  const SeatEditScreen({super.key, required this.id});
 
   @override
   _SeatEditScreenState createState() => _SeatEditScreenState();

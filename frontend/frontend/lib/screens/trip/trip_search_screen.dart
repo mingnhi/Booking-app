@@ -8,6 +8,8 @@ import '../../services/auth_service.dart';
 import '../home/customer_nav_bar.dart'; // Import CustomNavBar
 
 class TripSearchScreen extends StatefulWidget {
+  const TripSearchScreen({super.key});
+
   @override
   _TripSearchScreenState createState() => _TripSearchScreenState();
 }

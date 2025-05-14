@@ -5,6 +5,8 @@ import '../../services/seat_service.dart';
 import '../../services/trip_service.dart';
 
 class SeatCreateScreen extends StatefulWidget {
+  const SeatCreateScreen({super.key});
+
   @override
   _SeatCreateScreenState createState() => _SeatCreateScreenState();
 }

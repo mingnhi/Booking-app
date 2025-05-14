@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../services/admin_service.dart';
-import '../../services/location_service.dart';
+// import '../../services/location_service.dart';
 
 class TripCreateForm extends StatefulWidget {
+  const TripCreateForm({super.key});
+
   @override
   _TripCreateFormState createState() => _TripCreateFormState();
 }
@@ -29,7 +31,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
   @override
   void initState() {
     super.initState();
-    Provider.of<LocationService>(context, listen: false).fetchLocations();
+    Provider.of<AdminService>(context, listen: false).fetchLocations();
   }
 
   Future<void> _selectDepartureDate(BuildContext context) async {
@@ -154,7 +156,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : Consumer<LocationService>(
+              : Consumer<AdminService>(
                 builder: (context, locationService, _) {
                   if (locationService.isLoading) {
                     return const Center(child: CircularProgressIndicator());
@@ -194,7 +196,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
                                   items:
                                       locations.map((location) {
                                         return DropdownMenuItem<String>(
-                                          value: location.location,
+                                          value: location.id,
                                           child: Text(location.location),
                                         );
                                       }).toList(),
@@ -226,7 +228,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
                                   items:
                                       locations.map((location) {
                                         return DropdownMenuItem<String>(
-                                          value: location.location,
+                                          value: location.id,
                                           child: Text(location.location),
                                         );
                                       }).toList(),

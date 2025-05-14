@@ -6,7 +6,7 @@ import '../../services/seat_service.dart';
 class TripDetailScreen extends StatelessWidget {
   final String id;
 
-  TripDetailScreen({required this.id});
+  const TripDetailScreen({super.key, required this.id});
 
   @override
   Widget build(BuildContext context) {

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/location_service.dart';
 
 class LocationCreateScreen extends StatefulWidget {
-  const LocationCreateScreen({Key? key}) : super(key: key);
+  const LocationCreateScreen({super.key});
 
   @override
   State<LocationCreateScreen> createState() => _LocationCreateScreenState();

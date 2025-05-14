@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class LocationManagementScreen extends StatefulWidget {
-  const LocationManagementScreen({Key? key}) : super(key: key);
+  const LocationManagementScreen({super.key});
 
   @override
   State<LocationManagementScreen> createState() => _LocationManagementScreenState();
@@ -143,7 +143,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
   }
 
   void _createNewLocation(BuildContext context) async {
-    final TextEditingController _locationController = TextEditingController();
+    final TextEditingController locationController = TextEditingController();
     
     showDialog(
       context: context,
@@ -153,7 +153,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         content: TextField(
-          controller: _locationController,
+          controller: locationController,
           decoration: InputDecoration(
             labelText: 'Tên địa điểm',
             border: OutlineInputBorder(),
@@ -170,7 +170,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_locationController.text.trim().isEmpty) {
+              if (locationController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Vui lòng nhập tên địa điểm'),
@@ -188,7 +188,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
                 });
                 
                 final adminService = Provider.of<AdminService>(context, listen: false);
-                await adminService.createLocation(_locationController.text.trim().toUpperCase());
+                await adminService.createLocation(locationController.text.trim().toUpperCase());
                 
                 setState(() {
                   isLoading = false;
@@ -224,7 +224,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
   }
 
   void _editLocation(BuildContext context, dynamic location) {
-    final TextEditingController _locationController = TextEditingController(
+    final TextEditingController locationController = TextEditingController(
       text: location['location'] ?? '',
     );
     
@@ -236,7 +236,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         content: TextField(
-          controller: _locationController,
+          controller: locationController,
           decoration: InputDecoration(
             labelText: 'Tên địa điểm',
             border: OutlineInputBorder(),
@@ -253,7 +253,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_locationController.text.trim().isEmpty) {
+              if (locationController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Vui lòng nhập tên địa điểm'),
@@ -273,7 +273,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
                 final adminService = Provider.of<AdminService>(context, listen: false);
                 await adminService.updateLocation(
                   location['_id'], 
-                  _locationController.text.trim().toUpperCase()
+                  locationController.text.trim().toUpperCase()
                 );
                 
                 setState(() {
@@ -431,8 +431,8 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _createNewLocation(context),
-        child: const Icon(Icons.add),
         tooltip: 'Thêm địa điểm mới',
+        child: const Icon(Icons.add),
       ),
     );
   }

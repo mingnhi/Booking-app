@@ -9,6 +9,8 @@ import '../../services/auth_service.dart';
 import '../home/customer_nav_bar.dart'; // Import CustomNavBar
 
 class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }

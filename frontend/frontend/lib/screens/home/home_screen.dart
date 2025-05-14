@@ -6,6 +6,8 @@ import '../../services/auth_service.dart';
 import 'customer_nav_bar.dart'; // Import CustomNavBar
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }

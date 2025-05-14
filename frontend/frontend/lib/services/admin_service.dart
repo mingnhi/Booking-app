@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:frontend/models/location.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -9,7 +10,7 @@ class AdminService extends ChangeNotifier {
   final _storage = const FlutterSecureStorage();
   bool isLoading = false;
   String? error;
-
+  List<Location> locations = [];
   // Trips
   Future<List<dynamic>> getTrips() async {
     isLoading = true;
@@ -31,9 +32,12 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Đảm bảo rằng departure_location và arrival_location luôn được xử lý như ObjectId
+        // Nếu cần hiển thị tên địa điểm, bạn sẽ cần thêm một bước để lấy thông tin địa điểm
         isLoading = false;
         notifyListeners();
-        return jsonDecode(response.body);
+        return data;
       } else {
         throw Exception('Failed to load trips: ${response.statusCode}');
       }
@@ -154,7 +158,7 @@ class AdminService extends ChangeNotifier {
       error = e.toString();
       notifyListeners();
       print('Error in getTicketDetail: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -229,7 +233,7 @@ class AdminService extends ChangeNotifier {
       error = e.toString();
       notifyListeners();
       print('Error in updateTicketStatus: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -264,7 +268,7 @@ class AdminService extends ChangeNotifier {
       error = e.toString();
       notifyListeners();
       print('Error in deleteTicket: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -300,7 +304,7 @@ class AdminService extends ChangeNotifier {
       error = e.toString();
       notifyListeners();
       print('Error in getTripDetail: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -348,7 +352,7 @@ class AdminService extends ChangeNotifier {
       error = e.toString();
       notifyListeners();
       print('Error in updateTrip: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -433,7 +437,7 @@ class AdminService extends ChangeNotifier {
       error = e.toString();
       notifyListeners();
       print('Error in createTrip: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -473,6 +477,35 @@ class AdminService extends ChangeNotifier {
       notifyListeners();
       print('Error in getLocations: $e');
       return [];
+    }
+  }
+
+  Future<void> fetchLocations() async {
+    isLoading = true;
+    notifyListeners();
+    final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('No access token found');
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/location'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        locations =
+            (jsonDecode(response.body) as List)
+                .map((e) => Location.fromJson(e))
+                .toList();
+      } else {
+        throw Exception(
+          'Failed to fetch locations: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      print('Error fetching locations: $e');
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 

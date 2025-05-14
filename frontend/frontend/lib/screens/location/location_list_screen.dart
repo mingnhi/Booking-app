@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../services/location_service.dart';
 
 class LocationListScreen extends StatelessWidget {
+  const LocationListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

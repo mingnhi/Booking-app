@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../services/seat_service.dart';
 
 class SeatListScreen extends StatelessWidget {
+  const SeatListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

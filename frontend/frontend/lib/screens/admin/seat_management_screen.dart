@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SeatManagementScreen extends StatefulWidget {
-  const SeatManagementScreen({Key? key}) : super(key: key);
+  const SeatManagementScreen({super.key});
 
   @override
   _SeatManagementScreenState createState() => _SeatManagementScreenState();
@@ -41,8 +41,8 @@ class _SeatManagementScreenState extends State<SeatManagementScreen> {
         onPressed: () {
           // Hiển thị form thêm ghế
         },
-        child: const Icon(Icons.add),
         tooltip: 'Thêm ghế mới',
+        child: const Icon(Icons.add),
       ),
     );
   }

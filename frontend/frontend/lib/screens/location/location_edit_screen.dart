@@ -5,7 +5,7 @@ import '../../services/location_service.dart';
 class LocationEditScreen extends StatefulWidget {
   final String id;
 
-  const LocationEditScreen({Key? key, required this.id}) : super(key: key);
+  const LocationEditScreen({super.key, required this.id});
 
   @override
   State<LocationEditScreen> createState() => _LocationEditScreenState();

@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class UserManagementScreen extends StatefulWidget {
-  const UserManagementScreen({Key? key}) : super(key: key);
+  const UserManagementScreen({super.key});
 
   @override
   _UserManagementScreenState createState() => _UserManagementScreenState();
@@ -368,7 +368,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   void _showEditUserForm(BuildContext context, dynamic user) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
 
     final fullNameController = TextEditingController(
       text: user['full_name'] ?? '',
@@ -388,7 +388,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
             ),
             content: Form(
-              key: _formKey,
+              key: formKey,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -464,7 +464,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (_formKey.currentState!.validate()) {
+                  if (formKey.currentState!.validate()) {
                     // Cập nhật thông tin người dùng
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(

@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/admin/trip_create_form.dart';
 import 'package:frontend/screens/admin/trip_edit_form.dart';
 import 'package:frontend/services/admin_service.dart';
+import 'package:frontend/models/location.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class TripManagementScreen extends StatefulWidget {
-  const TripManagementScreen({Key? key}) : super(key: key);
+  const TripManagementScreen({super.key});
 
   @override
   State<TripManagementScreen> createState() => _TripManagementScreenState();
@@ -165,7 +166,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
         final departureTime = DateTime.parse(trip['departure_time']);
         final arrivalTime = DateTime.parse(trip['arrival_time']);
         final formatter = DateFormat('dd/MM/yyyy HH:mm');
-        
+
         return AlertDialog(
           title: Text(
             'Chi tiết chuyến đi',
@@ -177,20 +178,41 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildDetailItem('ID:', trip['_id']),
-                _buildDetailItem('Điểm đi:', trip['departure_location_name'] ?? 'N/A'),
-                _buildDetailItem('Điểm đến:', trip['arrival_location_name'] ?? 'N/A'),
-                _buildDetailItem('Thời gian đi:', formatter.format(departureTime)),
-                _buildDetailItem('Thời gian đến:', formatter.format(arrivalTime)),
+                _buildDetailItem(
+                  'Điểm đi:',
+                  trip['departure_location'] ?? 'N/A',
+                ),
+                _buildDetailItem(
+                  'Điểm đến:',
+                  trip['arrival_location'] ?? 'N/A',
+                ),
+                _buildDetailItem(
+                  'Thời gian đi:',
+                  formatter.format(departureTime),
+                ),
+                _buildDetailItem(
+                  'Thời gian đến:',
+                  formatter.format(arrivalTime),
+                ),
                 _buildDetailItem('Giá vé:', '${trip['price']} VND'),
                 _buildDetailItem('Loại xe:', trip['bus_type'] ?? 'N/A'),
                 _buildDetailItem('Tổng số ghế:', '${trip['total_seats']}'),
-                _buildDetailItem('Số ghế còn trống:', '${trip['available_seats'] ?? 'N/A'}'),
-                _buildDetailItem('Ngày tạo:', trip['createdAt'] != null 
-                  ? formatter.format(DateTime.parse(trip['createdAt']))
-                  : 'N/A'),
-                _buildDetailItem('Cập nhật lần cuối:', trip['updatedAt'] != null 
-                  ? formatter.format(DateTime.parse(trip['updatedAt']))
-                  : 'N/A'),
+                _buildDetailItem(
+                  'Số ghế còn trống:',
+                  '${trip['available_seats'] ?? 'N/A'}',
+                ),
+                _buildDetailItem(
+                  'Ngày tạo:',
+                  trip['create_at'] != null
+                      ? formatter.format(DateTime.parse(trip['create_at']))
+                      : 'N/A',
+                ),
+                _buildDetailItem(
+                  'Cập nhật lần cuối:',
+                  trip['updatedAt'] != null
+                      ? formatter.format(DateTime.parse(trip['updatedAt']))
+                      : 'N/A',
+                ),
               ],
             ),
           ),
@@ -229,12 +251,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(),
-            ),
-          ),
+          Expanded(child: Text(value, style: GoogleFonts.poppins())),
         ],
       ),
     );
@@ -246,14 +263,14 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
       setState(() {
         isLoading = true;
       });
-      
+
       final adminService = Provider.of<AdminService>(context, listen: false);
       final tripData = await adminService.getTripDetail(tripId);
-      
+
       setState(() {
         isLoading = false;
       });
-      
+
       // Mở form chỉnh sửa với dữ liệu đã lấy
       final result = await Navigator.push(
         context,
@@ -261,7 +278,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
           builder: (context) => TripEditForm(tripData: tripData),
         ),
       );
-      
+
       // Nếu chỉnh sửa thành công, tải lại danh sách
       if (result == true) {
         _loadTrips();
@@ -271,7 +288,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
         isLoading = false;
         error = e.toString();
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Lỗi: ${e.toString()}'),
@@ -285,14 +302,36 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
   void _createNewTrip(BuildContext context) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TripCreateForm(),
-      ),
+      MaterialPageRoute(builder: (context) => TripCreateForm()),
     );
-    
+
     // Nếu tạo thành công, tải lại danh sách
     if (result == true) {
       _loadTrips();
+    }
+  }
+
+  Future<String> _getLocationName(String locationId) async {
+    if (locationId == null || locationId.isEmpty) {
+      return 'N/A';
+    }
+    
+    try {
+      final adminService = Provider.of<AdminService>(context, listen: false);
+      // Nếu đã có danh sách locations, tìm trong đó
+      if (adminService.locations.isNotEmpty) {
+        for (var loc in adminService.locations) {
+          if (loc.id == locationId) {
+            return loc.location;
+          }
+        }
+      }
+      
+      // Nếu không tìm thấy, trả về ID
+      return locationId;
+    } catch (e) {
+      print('Error getting location name: $e');
+      return locationId; // Trả về ID nếu có lỗi
     }
   }
 
@@ -376,7 +415,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
             final departureTime = DateTime.parse(trip['departure_time']);
             final arrivalTime = DateTime.parse(trip['arrival_time']);
             final formatter = DateFormat('dd/MM/yyyy HH:mm');
-            
+
             return Card(
               margin: const EdgeInsets.only(bottom: 16),
               child: Padding(
@@ -396,7 +435,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                           ),
                         ),
                         Text(
-                          '${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip['price'])}',
+                          NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip['price']),
                           style: GoogleFonts.poppins(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
@@ -507,7 +546,9 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton.icon(
-                          onPressed: () => _showDeleteConfirmation(context, trip['_id']),
+                          onPressed:
+                              () =>
+                                  _showDeleteConfirmation(context, trip['_id']),
                           icon: const Icon(Icons.delete, color: Colors.red),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,
@@ -525,10 +566,9 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _createNewTrip(context),
-        child: const Icon(Icons.add),
         tooltip: 'Thêm chuyến đi mới',
+        child: const Icon(Icons.add),
       ),
     );
   }
 }
-

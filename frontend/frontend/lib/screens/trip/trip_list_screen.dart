@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../services/trip_service.dart';
 
 class TripListScreen extends StatelessWidget {
+  const TripListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

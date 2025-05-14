@@ -31,12 +31,14 @@ class Trip {
       price: json['price'].toDouble(),
       busType: json['bus_type'],
       totalSeats: json['total_seats'],
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'departure_location': departureLocation,
+
     'arrival_location': arrivalLocation,
     'departure_time': departureTime.toIso8601String(),
     'arrival_time': arrivalTime.toIso8601String(),

@@ -7,7 +7,7 @@ import 'package:frontend/utils/auth_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AdminDashboard extends StatefulWidget {
-  const AdminDashboard({Key? key}) : super(key: key);
+  const AdminDashboard({super.key});
 
   @override
   State<AdminDashboard> createState() => _AdminDashboardState();

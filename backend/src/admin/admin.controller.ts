@@ -14,7 +14,6 @@ import { SeatService } from 'src/seat/seat.service';
 import { TripService } from 'src/trip/trip.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { CreateSeatDto } from 'src/seat/dto/create-seat.dto';
 import { UpdateSeatDto } from 'src/seat/dto/update-seat.dto';
 import { CreateTripDto } from 'src/trip/dto/create-trip.dto';
 import { UpdateTripDto } from 'src/trip/dto/update-trip.dto';
@@ -150,17 +149,17 @@ export class AdminController {
     return this.vehicleService.findAll();
   }
 
-  @Get(':id')
+  @Get('vehicle/:id')
   findOne(@Param('id') id: string) {
     return this.vehicleService.findOne(id);
   }
 
-  @Put(':id')
+  @Put('vehicle/:id')
   updateVehicle(@Param('id') id: string, @Body() dto: UpdateVehicleDto) {
     return this.vehicleService.update(id, dto);
   }
 
-  @Delete(':id')
+  @Delete('vehicle/:id')
   deleteVehicle(@Param('id') id: string) {
     return this.vehicleService.remove(id);
   }

@@ -1,6 +1,7 @@
 import {
   // Body,
   Controller,
+  Get,
   // Delete,
   // Get,
   // Param,
@@ -15,7 +16,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('location')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@SetMetadata('roles', ['admin'])
+@SetMetadata('roles', ['user'])
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
@@ -24,10 +25,10 @@ export class LocationController {
   //   return this.locationService.create(dto);
   // }
 
-  // @Get()
-  // findAll() {
-  //   return this.locationService.findAll();
-  // }
+  @Get()
+  findAll() {
+    return this.locationService.findAll();
+  }
 
   // @Get(':id')
   // findOne(@Param('id') id: string) {

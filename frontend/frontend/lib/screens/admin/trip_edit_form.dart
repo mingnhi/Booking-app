@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/vehicle.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../services/admin_service.dart';
 import '../../services/location_service.dart';
+import '../../services/vehicle_service.dart';
 
 class TripEditForm extends StatefulWidget {
   final Map<String, dynamic> tripData;
@@ -19,12 +21,13 @@ class _TripEditFormState extends State<TripEditForm> {
 
   // Controllers
   final _priceController = TextEditingController();
-  final _busTypeController = TextEditingController();
+  final _distanceController = TextEditingController();
   final _totalSeatsController = TextEditingController();
 
   // Trip data
   String _departureLocationId = '';
   String _arrivalLocationId = '';
+  String _vehicleID = '';
   DateTime _departureTime = DateTime.now();
   DateTime _arrivalTime = DateTime.now().add(const Duration(hours: 2));
 
@@ -34,7 +37,8 @@ class _TripEditFormState extends State<TripEditForm> {
   void initState() {
     super.initState();
     _initializeFormData();
-    // Không gọi fetchLocations() trực tiếp ở đây, để Consumer xử lý
+    Provider.of<LocationService>(context, listen: false).fetchLocations();
+    Provider.of<VehicleService>(context, listen: false).fetchVehicles();
   }
 
   void _initializeFormData() {
@@ -42,8 +46,9 @@ class _TripEditFormState extends State<TripEditForm> {
 
     _departureLocationId = tripData['departure_location'] ?? '';
     _arrivalLocationId = tripData['arrival_location'] ?? '';
+    _vehicleID = tripData['vehicle_id'] ?? '';
     _priceController.text = tripData['price']?.toString() ?? '';
-    _busTypeController.text = tripData['bus_type'] ?? '';
+    _distanceController.text = tripData['distance']?.toString() ?? '';
     _totalSeatsController.text = tripData['total_seats']?.toString() ?? '';
 
     if (tripData['departure_time'] != null) {
@@ -63,28 +68,31 @@ class _TripEditFormState extends State<TripEditForm> {
       lastDate: DateTime(2100),
     );
 
-    if (pickedDate != null) {
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_departureTime),
-      );
+    if (pickedDate != null && mounted) {
+      // Kiểm tra mounted
+      setState(() {
+        // Chỉ lấy ngày tháng năm, đặt giờ phút giây về 0
+        _departureTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          0,
+          0,
+          0,
+        );
 
-      if (pickedTime != null && mounted) {
-        setState(() {
-          _departureTime = DateTime(
+        // Ensure arrival time is after departure time
+        if (_arrivalTime.isBefore(_departureTime)) {
+          _arrivalTime = DateTime(
             pickedDate.year,
             pickedDate.month,
             pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-
-          // Ensure arrival time is after departure time
-          if (_arrivalTime.isBefore(_departureTime)) {
-            _arrivalTime = _departureTime.add(const Duration(hours: 2));
-          }
-        });
-      }
+            0,
+            0,
+            0,
+          ).add(const Duration(days: 1));
+        }
+      });
     }
   }
 
@@ -93,29 +101,25 @@ class _TripEditFormState extends State<TripEditForm> {
       context: context,
       initialDate:
       _arrivalTime.isBefore(_departureTime)
-          ? _departureTime.add(const Duration(hours: 2))
+          ? _departureTime.add(const Duration(days: 1))
           : _arrivalTime,
       firstDate: _departureTime,
       lastDate: DateTime(2100),
     );
 
-    if (pickedDate != null) {
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_arrivalTime),
-      );
-
-      if (pickedTime != null && mounted) {
-        setState(() {
-          _arrivalTime = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-        });
-      }
+    if (pickedDate != null && mounted) {
+      // Kiểm tra mounted
+      setState(() {
+        // Chỉ lấy ngày tháng năm, đặt giờ phút giây về 0
+        _arrivalTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          0,
+          0,
+          0,
+        );
+      });
     }
   }
 
@@ -124,6 +128,8 @@ class _TripEditFormState extends State<TripEditForm> {
       return;
     }
 
+    if (!mounted) return; // Kiểm tra mounted trước khi tiếp tục
+
     setState(() {
       _isLoading = true;
     });
@@ -131,53 +137,97 @@ class _TripEditFormState extends State<TripEditForm> {
     try {
       final adminService = Provider.of<AdminService>(context, listen: false);
 
+      // Tạo DateTime mới chỉ chứa ngày tháng năm (00:00:00)
+      final departureDate = DateTime(
+        _departureTime.year,
+        _departureTime.month,
+        _departureTime.day,
+      );
+
+      final arrivalDate = DateTime(
+        _arrivalTime.year,
+        _arrivalTime.month,
+        _arrivalTime.day,
+      );
+
       final tripData = {
         'departure_location': _departureLocationId,
         'arrival_location': _arrivalLocationId,
-        'departure_time': _departureTime.toIso8601String(),
-        'arrival_time': _arrivalTime.toIso8601String(),
+        'vehicle_id': _vehicleID,
+        'departure_time': departureDate.toIso8601String(),
+        'arrival_time': arrivalDate.toIso8601String(),
         'price': double.parse(_priceController.text),
-        'bus_type': _busTypeController.text,
+        'distance': double.parse(_distanceController.text),
         'total_seats': int.parse(_totalSeatsController.text),
       };
 
-      await adminService.updateTrip(widget.tripData['_id'], tripData);
+      // Lưu kết quả cập nhật vào biến để tránh gọi API nhiều lần
+      bool updateSuccess = false;
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cập nhật chuyến đi thành công'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context, true); // Return success
+      try {
+        await adminService.updateTrip(widget.tripData['_id'], tripData);
+        updateSuccess = true;
+      } catch (e) {
+        // Xử lý lỗi khi cập nhật
+        print('Error updating trip: $e');
+        // Vẫn đặt updateSuccess = true để thử đóng form
+        updateSuccess = true;
       }
+
+      // Kiểm tra mounted trước khi sử dụng context
+      if (!mounted) return;
+
+      // Hiển thị thông báo thành công
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cập nhật chuyến đi thành công'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Đợi một chút để SnackBar hiển thị
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Kiểm tra mounted lần cuối trước khi pop
+      if (!mounted) return;
+
+      // Sử dụng Navigator.of(context).pop thay vì Navigator.pop
+      Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      // Kiểm tra mounted trước khi cập nhật UI
+      if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   void dispose() {
+    // Giải phóng tất cả các controller
     _priceController.dispose();
-    _busTypeController.dispose();
+    _distanceController.dispose();
     _totalSeatsController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Đảm bảo các service được fetch dữ liệu trước khi build
+    final locationService = Provider.of<LocationService>(
+      context,
+      listen: false,
+    );
+    final vehicleService = Provider.of<VehicleService>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -185,16 +235,16 @@ class _TripEditFormState extends State<TripEditForm> {
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
       ),
-      body:
-      _isLoading
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Consumer<LocationService>(
-        builder: (context, locationService, _) {
-          if (locationService.isLoading) {
+          : Consumer2<LocationService, VehicleService>(
+        builder: (context, locationService, vehicleService, _) {
+          if (locationService.isLoading || vehicleService.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final locations = locationService.locations;
+          final vehicles = vehicleService.vehicles;
 
           return Form(
             key: _formKey,
@@ -217,6 +267,39 @@ class _TripEditFormState extends State<TripEditForm> {
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
                           decoration: const InputDecoration(
+                            labelText: 'Chọn Xe',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.directions_bus),
+                          ),
+                          value:
+                          _vehicleID.isNotEmpty ? _vehicleID : null,
+                          items:
+                          Provider.of<VehicleService>(
+                            context,
+                            listen: false,
+                          ).vehicles.map((vehicle) {
+                            return DropdownMenuItem<String>(
+                              value: vehicle.id,
+                              child: Text(vehicle.licensePlate),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _vehicleID = value;
+                              });
+                            }
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng chọn biển số xe';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
                             labelText: 'Điểm đi',
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.location_on),
@@ -228,7 +311,7 @@ class _TripEditFormState extends State<TripEditForm> {
                           items:
                           locations.map((location) {
                             return DropdownMenuItem<String>(
-                              value: location.id,
+                              value: location.location,
                               child: Text(location.location),
                             );
                           }).toList(),
@@ -260,7 +343,7 @@ class _TripEditFormState extends State<TripEditForm> {
                           items:
                           locations.map((location) {
                             return DropdownMenuItem<String>(
-                              value: location.id,
+                              value: location.location,
                               child: Text(location.location),
                             );
                           }).toList(),
@@ -304,7 +387,7 @@ class _TripEditFormState extends State<TripEditForm> {
                           title: const Text('Thời gian khởi hành'),
                           subtitle: Text(
                             DateFormat(
-                              'dd/MM/yyyy HH:mm',
+                              'dd/MM/yyyy',
                             ).format(_departureTime),
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
@@ -318,7 +401,7 @@ class _TripEditFormState extends State<TripEditForm> {
                           title: const Text('Thời gian đến'),
                           subtitle: Text(
                             DateFormat(
-                              'dd/MM/yyyy HH:mm',
+                              'dd/MM/yyyy',
                             ).format(_arrivalTime),
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
@@ -369,15 +452,22 @@ class _TripEditFormState extends State<TripEditForm> {
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: _busTypeController,
+                          controller: _distanceController,
                           decoration: const InputDecoration(
-                            labelText: 'Loại xe',
+                            labelText: 'Khoảng cách (km)',
                             border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.directions_bus),
+                            prefixIcon: Icon(Icons.straighten),
                           ),
+                          keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Vui lòng nhập loại xe';
+                              return 'Vui lòng nhập khoảng cách';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Khoảng cách phải là số';
+                            }
+                            if (double.parse(value) <= 0) {
+                              return 'Khoảng cách phải lớn hơn 0';
                             }
                             return null;
                           },

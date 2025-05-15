@@ -12,14 +12,35 @@ class AdminDashboard extends StatefulWidget {
   State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
+class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAliveClientMixin {
   int _selectedIndex = 0;
+  bool _isInit = false;
 
-  final List<Widget> _screens = [
-    const TripManagementScreen(),
-    const TicketManagementScreen(),
-    const UserManagementScreen(),
-  ];
+  // Sử dụng late để khởi tạo các màn hình khi cần thiết
+  late final List<Widget> _screens;
+
+  @override
+  bool get wantKeepAlive => true; // Giữ trạng thái khi chuyển tab
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Khởi tạo các màn hình trong initState để tránh tạo lại mỗi khi build
+    _screens = [
+      const TripManagementScreen(),
+      const TicketManagementScreen(),
+      const UserManagementScreen(),
+    ];
+
+    // Kiểm tra quyền admin khi vào trang
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isInit && mounted) {
+        _isInit = true;
+        AuthUtils.checkAdminAccess(context);
+      }
+    });
+  }
 
   final List<String> _titles = [
     'Quản lý chuyến đi',
@@ -28,97 +49,115 @@ class _AdminDashboardState extends State<AdminDashboard> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-
-    // Kiểm tra quyền admin khi vào trang
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      AuthUtils.checkAdminAccess(context);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
-        backgroundColor: Colors.blue,
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.blue),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.admin_panel_settings,
-                      size: 30,
-                      color: Colors.blue,
-                    ),
+    // Gọi super.build khi sử dụng AutomaticKeepAliveClientMixin
+    super.build(context);
+
+    return WillPopScope(
+      onWillPop: () async {
+        // Xử lý khi người dùng nhấn nút back
+        if (_selectedIndex != 0) {
+          setState(() {
+            _selectedIndex = 0;
+          });
+          return false; // Không thoát ứng dụng, chỉ quay lại tab đầu tiên
+        }
+        return true; // Cho phép thoát ứng dụng
+      },
+      child: ScaffoldMessenger(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(_titles[_selectedIndex]),
+            backgroundColor: Colors.blue,
+          ),
+          drawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(color: Colors.blue),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.admin_panel_settings,
+                          size: 30,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Admin Dashboard',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Admin Dashboard',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.directions_bus),
+                  title: const Text('Quản lý chuyến đi'),
+                  selected: _selectedIndex == 0,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 0;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.confirmation_number),
+                  title: const Text('Quản lý vé'),
+                  selected: _selectedIndex == 1,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 1;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.people),
+                  title: const Text('Quản lý người dùng'),
+                  selected: _selectedIndex == 2,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 2;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.home),
+                  title: const Text('Về trang chủ'),
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/home');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Đăng xuất'),
+                  onTap: () {
+                    // Xử lý đăng xuất
+                    Navigator.pushReplacementNamed(context, '/auth/login');
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.directions_bus),
-              title: const Text('Quản lý chuyến đi'),
-              selected: _selectedIndex == 0,
-              onTap: () {
-                setState(() {
-                  _selectedIndex = 0;
-                });
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.confirmation_number),
-              title: const Text('Quản lý vé'),
-              selected: _selectedIndex == 1,
-              onTap: () {
-                setState(() {
-                  _selectedIndex = 1;
-                });
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.people),
-              title: const Text('Quản lý người dùng'),
-              selected: _selectedIndex == 2,
-              onTap: () {
-                setState(() {
-                  _selectedIndex = 2;
-                });
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Về trang chủ'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/admin');
-              },
-            ),
-          ],
+          ),
+          body: IndexedStack(
+            index: _selectedIndex,
+            children: _screens,
+          ),
         ),
       ),
-      body: _screens[_selectedIndex],
     );
   }
 }

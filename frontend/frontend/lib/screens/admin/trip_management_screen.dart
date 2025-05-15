@@ -37,9 +37,10 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     try {
       final adminService = Provider.of<AdminService>(context, listen: false);
       final fetchedTripsData = await adminService.getTrips();
-      
+
       // Chuyển đổi dữ liệu thô thành danh sách Trip
-      final List<Trip> fetchedTrips = fetchedTripsData.map((tripData) {
+      final List<Trip> fetchedTrips =
+      fetchedTripsData.map((tripData) {
         return Trip.fromJson(tripData);
       }).toList();
 
@@ -67,17 +68,20 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     if (locationId.isEmpty) {
       return 'N/A';
     }
-    
+
     try {
-      final locationService = Provider.of<LocationService>(context, listen: false);
+      final locationService = Provider.of<LocationService>(
+        context,
+        listen: false,
+      );
       final locations = locationService.locations;
-      
+
       for (var loc in locations) {
         if (loc.id == locationId) {
           return loc.location;
         }
       }
-      
+
       return locationId;
     } catch (e) {
       print('Error getting location name: $e');
@@ -91,7 +95,8 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder:
+          (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
             title: Text(
@@ -107,72 +112,74 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text(
-                  'Hủy',
-                  style: GoogleFonts.poppins(),
-                ),
+                child: Text('Hủy', style: GoogleFonts.poppins()),
               ),
               ElevatedButton(
-                onPressed: isSubmitting
+                onPressed:
+                isSubmitting
                     ? null
                     : () async {
-                        setState(() {
-                          isSubmitting = true;
-                        });
+                  setState(() {
+                    isSubmitting = true;
+                  });
 
-                        try {
-                          final adminService =
-                              Provider.of<AdminService>(context, listen: false);
+                  try {
+                    final adminService = Provider.of<AdminService>(
+                      context,
+                      listen: false,
+                    );
 
-                          // Gọi API xóa chuyến đi
-                          final success = await adminService.deleteTrip(tripId);
+                    // Gọi API xóa chuyến đi
+                    final success = await adminService.deleteTrip(
+                      tripId,
+                    );
 
-                          // Đóng dialog
-                          Navigator.of(context).pop();
+                    // Đóng dialog
+                    Navigator.of(context).pop();
 
-                          if (success) {
-                            // Hiển thị thông báo thành công
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Đã xóa chuyến đi thành công',
-                                  style: GoogleFonts.poppins(),
-                                ),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                    if (success) {
+                      // Hiển thị thông báo thành công
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Đã xóa chuyến đi thành công',
+                            style: GoogleFonts.poppins(),
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
 
-                            // Tải lại danh sách chuyến đi
-                            _loadTrips();
-                          } else {
-                            // Hiển thị thông báo lỗi
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Không thể xóa chuyến đi',
-                                  style: GoogleFonts.poppins(),
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          // Hiển thị thông báo lỗi
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Lỗi: ${e.toString()}',
-                                style: GoogleFonts.poppins(),
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
+                      // Tải lại danh sách chuyến đi
+                      _loadTrips();
+                    } else {
+                      // Hiển thị thông báo lỗi
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Không thể xóa chuyến đi',
+                            style: GoogleFonts.poppins(),
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    // Hiển thị thông báo lỗi
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Lỗi: ${e.toString()}',
+                          style: GoogleFonts.poppins(),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
 
-                          setState(() {
-                            isSubmitting = false;
-                          });
-                        }
-                      },
+                    setState(() {
+                      isSubmitting = false;
+                    });
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                 ),
@@ -194,7 +201,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
       context: context,
       builder: (context) {
         final formatter = DateFormat('dd/MM/yyyy HH:mm');
-        
+
         return AlertDialog(
           title: Text(
             'Chi tiết chuyến đi',
@@ -209,25 +216,46 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                 FutureBuilder<String>(
                   future: _getLocationName(trip.departure_location),
                   builder: (context, snapshot) {
-                    return _buildDetailItem('Điểm đi:', snapshot.data ?? trip.departure_location);
-                  }
+                    return _buildDetailItem(
+                      'Điểm đi:',
+                      snapshot.data ?? trip.departure_location,
+                    );
+                  },
                 ),
                 FutureBuilder<String>(
                   future: _getLocationName(trip.arrival_location),
                   builder: (context, snapshot) {
-                    return _buildDetailItem('Điểm đến:', snapshot.data ?? trip.arrival_location);
-                  }
+                    return _buildDetailItem(
+                      'Điểm đến:',
+                      snapshot.data ?? trip.arrival_location,
+                    );
+                  },
                 ),
-                _buildDetailItem('Thời gian đi:', formatter.format(trip.departure_time)),
-                _buildDetailItem('Thời gian đến:', formatter.format(trip.arrival_time)),
-                _buildDetailItem('Giá vé:', '${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip.price)}'),
+                _buildDetailItem(
+                  'Thời gian đi:',
+                  formatter.format(trip.departure_time),
+                ),
+                _buildDetailItem(
+                  'Thời gian đến:',
+                  formatter.format(trip.arrival_time),
+                ),
+                _buildDetailItem(
+                  'Giá vé:',
+                  '${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip.price)}',
+                ),
                 _buildDetailItem('Loại xe:', trip.vehicle_id),
                 _buildDetailItem('Tổng số ghế:', '${trip.totalSeats}'),
                 _buildDetailItem('Khoảng cách:', '${trip.distance} km'),
                 if (trip.createdAt != null)
-                  _buildDetailItem('Ngày tạo:', formatter.format(trip.createdAt!)),
+                  _buildDetailItem(
+                    'Ngày tạo:',
+                    formatter.format(trip.createdAt!),
+                  ),
                 if (trip.updatedAt != null)
-                  _buildDetailItem('Cập nhật lần cuối:', formatter.format(trip.updatedAt!)),
+                  _buildDetailItem(
+                    'Cập nhật lần cuối:',
+                    formatter.format(trip.updatedAt!),
+                  ),
               ],
             ),
           ),
@@ -265,12 +293,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(),
-            ),
-          ),
+          Expanded(child: Text(value, style: GoogleFonts.poppins())),
         ],
       ),
     );
@@ -321,9 +344,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
   void _createNewTrip(BuildContext context) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TripCreateForm(),
-      ),
+      MaterialPageRoute(builder: (context) => TripCreateForm()),
     );
 
     // Nếu tạo thành công, tải lại danh sách
@@ -424,11 +445,15 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                           child: FutureBuilder<String>(
                             future: _getLocationName(trip.departure_location),
                             builder: (context, departureSnapshot) {
-                              final departureName = departureSnapshot.data ?? trip.departure_location;
+                              final departureName =
+                                  departureSnapshot.data ??
+                                      trip.departure_location;
                               return FutureBuilder<String>(
                                 future: _getLocationName(trip.arrival_location),
                                 builder: (context, arrivalSnapshot) {
-                                  final arrivalName = arrivalSnapshot.data ?? trip.arrival_location;
+                                  final arrivalName =
+                                      arrivalSnapshot.data ??
+                                          trip.arrival_location;
                                   return Text(
                                     '$departureName → $arrivalName',
                                     style: GoogleFonts.poppins(
@@ -442,7 +467,10 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                           ),
                         ),
                         Text(
-                          NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip.price),
+                          NumberFormat.currency(
+                            locale: 'vi_VN',
+                            symbol: 'đ',
+                          ).format(trip.price),
                           style: GoogleFonts.poppins(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
@@ -553,7 +581,8 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton.icon(
-                          onPressed: () => _showDeleteConfirmation(context, trip.id),
+                          onPressed:
+                              () => _showDeleteConfirmation(context, trip.id),
                           icon: const Icon(Icons.delete, color: Colors.red),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,

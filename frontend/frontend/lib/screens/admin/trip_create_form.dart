@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/vehicle.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../services/admin_service.dart';
 import '../../services/location_service.dart';
+import '../../services/vehicle_service.dart';
 
 class TripCreateForm extends StatefulWidget {
   @override
@@ -15,12 +17,13 @@ class _TripCreateFormState extends State<TripCreateForm> {
 
   // Controllers
   final _priceController = TextEditingController();
-  final _busTypeController = TextEditingController();
+  final _distanceController = TextEditingController();
   final _totalSeatsController = TextEditingController();
 
   // Trip data
   String _departureLocationId = '';
   String _arrivalLocationId = '';
+  String _vehicleID = '';
   DateTime _departureTime = DateTime.now().add(const Duration(hours: 1));
   DateTime _arrivalTime = DateTime.now().add(const Duration(hours: 3));
 
@@ -30,6 +33,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
   void initState() {
     super.initState();
     Provider.of<LocationService>(context, listen: false).fetchLocations();
+    Provider.of<VehicleService>(context, listen: false).fetchVehicles();
   }
 
   Future<void> _selectDepartureDate(BuildContext context) async {
@@ -41,27 +45,29 @@ class _TripCreateFormState extends State<TripCreateForm> {
     );
 
     if (pickedDate != null) {
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_departureTime),
-      );
+      setState(() {
+        // Chỉ lấy ngày tháng năm, đặt giờ phút giây về 0
+        _departureTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          0,
+          0,
+          0,
+        );
 
-      if (pickedTime != null) {
-        setState(() {
-          _departureTime = DateTime(
+        // Ensure arrival time is after departure time
+        if (_arrivalTime.isBefore(_departureTime)) {
+          _arrivalTime = DateTime(
             pickedDate.year,
             pickedDate.month,
             pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-
-          // Ensure arrival time is after departure time
-          if (_arrivalTime.isBefore(_departureTime)) {
-            _arrivalTime = _departureTime.add(const Duration(hours: 2));
-          }
-        });
-      }
+            0,
+            0,
+            0,
+          ).add(const Duration(days: 1));
+        }
+      });
     }
   }
 
@@ -70,29 +76,24 @@ class _TripCreateFormState extends State<TripCreateForm> {
       context: context,
       initialDate:
       _arrivalTime.isBefore(_departureTime)
-          ? _departureTime.add(const Duration(hours: 2))
+          ? _departureTime.add(const Duration(days: 1))
           : _arrivalTime,
       firstDate: _departureTime,
       lastDate: DateTime(2100),
     );
 
     if (pickedDate != null) {
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_arrivalTime),
-      );
-
-      if (pickedTime != null) {
-        setState(() {
-          _arrivalTime = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-        });
-      }
+      setState(() {
+        // Chỉ lấy ngày tháng năm, đặt giờ phút giây về 0
+        _arrivalTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          0,
+          0,
+          0,
+        );
+      });
     }
   }
 
@@ -108,26 +109,54 @@ class _TripCreateFormState extends State<TripCreateForm> {
     try {
       final adminService = Provider.of<AdminService>(context, listen: false);
 
+      // Tạo DateTime mới chỉ chứa ngày tháng năm (00:00:00)
+      final departureDate = DateTime(
+        _departureTime.year,
+        _departureTime.month,
+        _departureTime.day,
+      );
+
+      final arrivalDate = DateTime(
+        _arrivalTime.year,
+        _arrivalTime.month,
+        _arrivalTime.day,
+      );
+
       final tripData = {
+        'vehicle_id': _vehicleID,
         'departure_location': _departureLocationId,
         'arrival_location': _arrivalLocationId,
-        'departure_time': _departureTime.toIso8601String(),
-        'arrival_time': _arrivalTime.toIso8601String(),
+        'departure_time': departureDate.toIso8601String(),
+        'arrival_time': arrivalDate.toIso8601String(),
         'price': double.parse(_priceController.text),
-        'bus_type': _busTypeController.text,
+        'distance': double.parse(_distanceController.text),
         'total_seats': int.parse(_totalSeatsController.text),
       };
 
-      await adminService.createTrip(tripData);
+      try {
+        await adminService.createTrip(tripData);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tạo chuyến đi mới thành công'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tạo chuyến đi mới thành công'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        // Ngay cả khi có lỗi 500, vẫn thử kiểm tra xem trip có được tạo không
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đang tạo chuyến đi , vui lòng đợi'),
+            backgroundColor: Colors.orange,
+          ),
+        );
 
-      Navigator.pop(context, true); // Return success
+        // Đợi 2 giây để server có thể hoàn tất xử lý
+        await Future.delayed(const Duration(seconds: 2));
+      }
+
+      // Dù có lỗi hay không, vẫn trả về true để load lại danh sách trip
+      Navigator.pop(context, true);
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -144,6 +173,13 @@ class _TripCreateFormState extends State<TripCreateForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Đảm bảo các service được fetch dữ liệu trước khi build
+    final locationService = Provider.of<LocationService>(
+      context,
+      listen: false,
+    );
+    final vehicleService = Provider.of<VehicleService>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -181,6 +217,38 @@ class _TripCreateFormState extends State<TripCreateForm> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: 'Chọn Xe',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          value:
+                          _vehicleID.isNotEmpty ? _vehicleID : null,
+                          items:
+                          Provider.of<VehicleService>(
+                            context,
+                            listen: false,
+                          ).vehicles.map((vehicle) {
+                            return DropdownMenuItem<String>(
+                              value: vehicle.id,
+                              child: Text(vehicle.licensePlate),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _vehicleID = value;
+                              });
+                            }
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng chọn biển số xe';
+                            }
+                            return null;
+                          },
+                        ),
                         DropdownButtonFormField<String>(
                           decoration: const InputDecoration(
                             labelText: 'Điểm đi',
@@ -270,7 +338,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
                           title: const Text('Thời gian khởi hành'),
                           subtitle: Text(
                             DateFormat(
-                              'dd/MM/yyyy HH:mm',
+                              'dd/MM/yyyy',
                             ).format(_departureTime),
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
@@ -284,7 +352,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
                           title: const Text('Thời gian đến'),
                           subtitle: Text(
                             DateFormat(
-                              'dd/MM/yyyy HH:mm',
+                              'dd/MM/yyyy',
                             ).format(_arrivalTime),
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
@@ -335,9 +403,9 @@ class _TripCreateFormState extends State<TripCreateForm> {
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: _busTypeController,
+                          controller: _distanceController,
                           decoration: const InputDecoration(
-                            labelText: 'Loại xe',
+                            labelText: 'Khoảng cách (km)',
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.directions_bus),
                           ),

@@ -279,7 +279,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   void _showUserDetails(BuildContext context, dynamic user) {
     final createdAt =
-    user['createdAt'] != null ? DateTime.parse(user['createdAt']) : null;
+    user['created_at'] != null ? DateTime.parse(user['created_at']) : null;
 
     showDialog(
       context: context,
@@ -299,8 +299,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   radius: 40,
                   backgroundColor: Colors.blue.shade100,
                   child: Text(
-                    (user['fullName'] ?? user['username'] ?? 'U')[0]
-                        .toUpperCase(),
+                    (user['full_name'] != null &&
+                        user['full_name'].toString().isNotEmpty)
+                        ? user['full_name'][0].toUpperCase()
+                        : '?',
                     style: GoogleFonts.poppins(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
@@ -312,13 +314,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               const SizedBox(height: 16),
               _buildDetailRow(
                 'Họ tên',
-                user['fullName'] ?? 'Chưa cập nhật',
+                user['full_name'] ?? 'Chưa cập nhật',
               ),
-              _buildDetailRow('Tên đăng nhập', user['username']),
+              // _buildDetailRow('Tên đăng nhập', user['username']),
               _buildDetailRow('Email', user['email'] ?? 'Chưa cập nhật'),
               _buildDetailRow(
                 'Số điện thoại',
-                user['phone'] ?? 'Chưa cập nhật',
+                user['phone_number'] ?? 'Chưa cập nhật',
               ),
               _buildDetailRow(
                 'Vai trò',
@@ -327,13 +329,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               _buildDetailRow(
                 'Ngày tham gia',
                 createdAt != null
-                    ? DateFormat('dd/MM/yyyy HH:mm').format(createdAt)
+                    ? DateFormat('dd/MM/yyyy').format(createdAt)
                     : 'Không xác định',
               ),
-              _buildDetailRow(
-                'Trạng thái',
-                user['isBlocked'] ? 'Đã khóa' : 'Đang hoạt động',
-              ),
+              // _buildDetailRow(
+              //   'Trạng thái',
+              //   user['isBlocked'] ? 'Đã khóa' : 'Đang hoạt động',
+              // ),
             ],
           ),
         ),
@@ -381,107 +383,146 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-        title: Text(
-          'Chỉnh sửa người dùng',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: fullNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Họ tên',
-                    prefixIcon: Icon(Icons.person),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                'Chỉnh sửa người dùng',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+              content: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: fullNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Họ tên',
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Vui lòng nhập họ tên';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Vui lòng nhập email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Email không hợp lệ';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: phoneController,
+                        decoration: const InputDecoration(
+                          labelText: 'Số điện thoại',
+                          prefixIcon: Icon(Icons.phone),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: role,
+                        decoration: const InputDecoration(
+                          labelText: 'Vai trò',
+                          prefixIcon: Icon(Icons.admin_panel_settings),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'user',
+                            child: Text('Người dùng'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'admin',
+                            child: Text('Admin'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              role = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập họ tên';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Email không hợp lệ';
-                    }
-                    return null;
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
                   },
+                  child: Text('Hủy', style: GoogleFonts.poppins()),
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Số điện thoại',
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: role,
-                  decoration: const InputDecoration(
-                    labelText: 'Vai trò',
-                    prefixIcon: Icon(Icons.admin_panel_settings),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'user',
-                      child: Text('Người dùng'),
-                    ),
-                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      role = value;
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      Navigator.of(
+                        context,
+                      ).pop(); // Đóng dialog trước khi gọi API
+
+                      final updatedUser = <String, dynamic>{
+                        '_id': user['_id'],
+                        'full_name': fullNameController.text.trim(),
+                        'email': emailController.text.trim(),
+                        'phone_number': phoneController.text.trim(),
+                        'role': role,
+                      };
+
+                      try {
+                        final adminService = Provider.of<AdminService>(
+                          context,
+                          listen: false,
+                        );
+                        await adminService.updateUser(updatedUser);
+                        await _loadUsers();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Cập nhật thông tin người dùng thành công',
+                              style: GoogleFonts.poppins(),
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Cập nhật thất bại: $e',
+                              style: GoogleFonts.poppins(),
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
                   },
+                  child: Text('Cập nhật', style: GoogleFonts.poppins()),
                 ),
               ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Hủy', style: GoogleFonts.poppins()),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                // Cập nhật thông tin người dùng
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Cập nhật thông tin người dùng thành công',
-                      style: GoogleFonts.poppins(),
-                    ),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              }
-            },
-            child: Text('Cập nhật', style: GoogleFonts.poppins()),
-          ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 

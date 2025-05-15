@@ -16,7 +16,7 @@ class SeatEditScreen extends StatefulWidget {
 class _SeatEditScreenState extends State<SeatEditScreen> {
   final _tripIdController = TextEditingController();
   final _seatNumberController = TextEditingController();
-  bool _isAvailable = true;
+  String _statusSeat = 'AVAILABLE';
 
   @override
   void initState() {
@@ -25,7 +25,7 @@ class _SeatEditScreenState extends State<SeatEditScreen> {
     final seat = seatService.seats.firstWhere((s) => s.id == widget.id);
     _tripIdController.text = seat.tripId;
     _seatNumberController.text = seat.seatNumber.toString();
-    _isAvailable = seat.isAvailable;
+    _statusSeat = seat.statusSeat; // Sử dụng statusSeat
     Provider.of<TripService>(context, listen: false).fetchTrips();
   }
 
@@ -50,10 +50,16 @@ class _SeatEditScreenState extends State<SeatEditScreen> {
                   onChanged: (value) => setState(() => _tripIdController.text = value!),
                 ),
                 TextField(controller: _seatNumberController, decoration: InputDecoration(labelText: 'Số ghế'), keyboardType: TextInputType.number),
-                SwitchListTile(
-                  title: Text('Còn trống'),
-                  value: _isAvailable,
-                  onChanged: (value) => setState(() => _isAvailable = value),
+                DropdownButton<String>(
+                  hint: Text('Trạng thái ghế'),
+                  value: _statusSeat,
+                  items: ['AVAILABLE', 'BOOKED', 'UNAVAILABLE'].map((status) {
+                    return DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(status),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _statusSeat = value!),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -62,7 +68,7 @@ class _SeatEditScreenState extends State<SeatEditScreen> {
                       id: widget.id,
                       tripId: _tripIdController.text,
                       seatNumber: int.parse(_seatNumberController.text),
-                      isAvailable: _isAvailable,
+                      statusSeat: _statusSeat,
                       createdAt: null,
                       updatedAt: null,
                     );

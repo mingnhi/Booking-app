@@ -10,6 +10,8 @@ import '../home/customer_nav_bar.dart';
 import '../../models/trip.dart';
 
 class TripSearchScreen extends StatefulWidget {
+  const TripSearchScreen({super.key});
+
   @override
   _TripSearchScreenState createState() => _TripSearchScreenState();
 }
@@ -21,7 +23,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
   DateTime? _departureTime;
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
-  int _selectedIndex = 1; // Default to TripSearchScreen
+  int _selectedIndex = 1; // Mặc định là TripSearchScreen
   List<Trip> _searchResults = [];
 
   @override
@@ -34,37 +36,31 @@ class _TripSearchScreenState extends State<TripSearchScreen>
       ),
     );
 
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController!,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController!.forward();
+
     Future.microtask(() async {
       if (mounted) {
-        _animationController = AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 1000),
-        );
-        _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-          CurvedAnimation(
-            parent: _animationController!,
-            curve: Curves.easeInOut,
-          ),
-        );
-        _animationController!.forward();
-
-        // Đợi fetchLocations hoàn thành
-        final locationService = Provider.of<LocationService>(
-          context,
-          listen: false,
-        );
+        final locationService = Provider.of<LocationService>(context, listen: false);
         await locationService.fetchLocations();
       }
     });
-
-    Provider.of<LocationService>(context, listen: false).fetchLocations();
   }
 
   @override
   void dispose() {
     _animationController?.dispose();
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
+      const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
       ),
@@ -84,7 +80,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
       case 1:
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/my-tickets');
+        Navigator.pushReplacementNamed(context, '/tickets');
         break;
       case 3:
         Navigator.pushReplacementNamed(context, '/auth/profile');
@@ -94,45 +90,31 @@ class _TripSearchScreenState extends State<TripSearchScreen>
 
   Future<void> _searchTrips() async {
     final tripService = Provider.of<TripService>(context, listen: false);
-    final locationService = Provider.of<LocationService>(
-      context,
-      listen: false,
-    );
+    final locationService = Provider.of<LocationService>(context, listen: false);
     try {
       if (locationService.locations.isEmpty) {
-        throw Exception('No locations available for search');
+        throw Exception('Không có danh sách địa điểm để tìm kiếm');
       }
 
-      // Lấy tên địa điểm dựa trên ID, xử lý trường hợp không tìm thấy
-      String? departureLocation =
-          _departureId != null
-              ? locationService.locations
-                  .firstWhere(
-                    (loc) => loc.id == _departureId,
-                    orElse:
-                        () =>
-                            throw Exception(
-                              'Departure location not found for ID: $_departureId',
-                            ),
-                  )
-                  .location
-              : null;
-      String? arrivalLocation =
-          _arrivalId != null
-              ? locationService.locations
-                  .firstWhere(
-                    (loc) => loc.id == _arrivalId,
-                    orElse:
-                        () =>
-                            throw Exception(
-                              'Arrival location not found for ID: $_arrivalId',
-                            ),
-                  )
-                  .location
-              : null;
+      final departureLocation = _departureId != null
+          ? locationService.locations
+          .firstWhere(
+            (loc) => loc.id == _departureId,
+        orElse: () => throw Exception('Không tìm thấy điểm đi với ID: $_departureId'),
+      )
+          .location
+          : null;
+      final arrivalLocation = _arrivalId != null
+          ? locationService.locations
+          .firstWhere(
+            (loc) => loc.id == _arrivalId,
+        orElse: () => throw Exception('Không tìm thấy điểm đến với ID: $_arrivalId'),
+      )
+          .location
+          : null;
 
       if (departureLocation == null || arrivalLocation == null) {
-        throw Exception('Could not find location names for the selected IDs');
+        throw Exception('Không thể tìm thấy tên địa điểm cho ID đã chọn');
       }
 
       final results = await tripService.searchTrips(
@@ -142,13 +124,14 @@ class _TripSearchScreenState extends State<TripSearchScreen>
       );
       setState(() {
         _searchResults = results;
-        print('Search results: $_searchResults'); // Debug log
       });
     } catch (e) {
       setState(() {
         _searchResults = [];
       });
-      print('Error searching trips in UI: $e'); // Debug log
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi tìm kiếm chuyến đi: $e')),
+      );
     }
   }
 
@@ -190,10 +173,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                 return const Center(child: CircularProgressIndicator());
               }
               return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 20.0,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                 child: FadeTransition(
                   opacity: _fadeAnimation!,
                   child: Column(
@@ -230,10 +210,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                         shadowColor: const Color(0xFF2474E5).withOpacity(0.3),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(
-                            color: Color(0xFF2474E5),
-                            width: 1,
-                          ),
+                          side: const BorderSide(color: Color(0xFF2474E5), width: 1),
                         ),
                         color: Colors.white.withOpacity(0.95),
                         child: Padding(
@@ -243,16 +220,16 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.directions_bus,
-                                    color: const Color(0xFF2474E5),
+                                    color: Color(0xFF2474E5),
                                     size: 24,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Xe khách',
                                     style: GoogleFonts.poppins(
-                                      color: const Color(0xFF2474E5),
+                                      color: Color(0xFF2474E5),
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -264,93 +241,61 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                 value: _departureId,
                                 decoration: InputDecoration(
                                   labelText: 'Điểm Đi',
-                                  labelStyle: GoogleFonts.poppins(
-                                    color: Colors.blueGrey.shade800,
-                                  ),
+                                  labelStyle: GoogleFonts.poppins(color: Colors.blueGrey.shade800),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF2474E5),
-                                    ),
+                                    borderSide: const BorderSide(color: Color(0xFF2474E5)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF2474E5),
-                                      width: 2,
-                                    ),
+                                    borderSide: const BorderSide(color: Color(0xFF2474E5), width: 2),
                                   ),
-                                  prefixIcon: Icon(
-                                    Icons.location_on,
-                                    color: const Color(0xFF2474E5),
-                                  ),
+                                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF2474E5)),
                                 ),
-                                items:
-                                    locationService.locations.map((loc) {
-                                      return DropdownMenuItem<String>(
-                                        value: loc.id,
-                                        child: Text(
-                                          loc.location,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                onChanged:
-                                    (value) =>
-                                        setState(() => _departureId = value),
+                                items: locationService.locations.map((loc) {
+                                  return DropdownMenuItem<String>(
+                                    value: loc.id,
+                                    child: Text(
+                                      loc.location,
+                                      style: GoogleFonts.poppins(fontSize: 14),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) => setState(() => _departureId = value),
                               ),
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
                                 value: _arrivalId,
                                 decoration: InputDecoration(
                                   labelText: 'Điểm Đến',
-                                  labelStyle: GoogleFonts.poppins(
-                                    color: Colors.blueGrey.shade800,
-                                  ),
+                                  labelStyle: GoogleFonts.poppins(color: Colors.blueGrey.shade800),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF2474E5),
-                                    ),
+                                    borderSide: const BorderSide(color: Color(0xFF2474E5)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF2474E5),
-                                      width: 2,
-                                    ),
+                                    borderSide: const BorderSide(color: Color(0xFF2474E5), width: 2),
                                   ),
-                                  prefixIcon: Icon(
-                                    Icons.location_on,
-                                    color: const Color(0xFF2474E5),
-                                  ),
+                                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF2474E5)),
                                 ),
-                                items:
-                                    locationService.locations.map((loc) {
-                                      return DropdownMenuItem<String>(
-                                        value: loc.id,
-                                        child: Text(
-                                          loc.location,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                onChanged:
-                                    (value) =>
-                                        setState(() => _arrivalId = value),
+                                items: locationService.locations.map((loc) {
+                                  return DropdownMenuItem<String>(
+                                    value: loc.id,
+                                    child: Text(
+                                      loc.location,
+                                      style: GoogleFonts.poppins(fontSize: 14),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) => setState(() => _arrivalId = value),
                               ),
                               const SizedBox(height: 16),
                               ListTile(
-                                title: Text('Ngày đi'),
+                                title: const Text('Ngày đi'),
                                 subtitle: Text(
                                   _departureTime != null
-                                      ? DateFormat(
-                                        'dd/MM/yyyy',
-                                      ).format(_departureTime!)
+                                      ? DateFormat('dd/MM/yyyy').format(_departureTime!)
                                       : 'Chọn ngày',
                                 ),
                                 onTap: () async {
@@ -362,11 +307,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                   );
                                   if (picked != null) {
                                     setState(() {
-                                      _departureTime = DateTime(
-                                        picked.year,
-                                        picked.month,
-                                        picked.day,
-                                      );
+                                      _departureTime = DateTime(picked.year, picked.month, picked.day);
                                     });
                                   }
                                 },
@@ -375,16 +316,11 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed:
-                                      _departureId != null && _arrivalId != null
-                                          ? () => _searchTrips()
-                                          : null,
+                                  onPressed: _departureId != null && _arrivalId != null ? _searchTrips : null,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFFD4A017),
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -392,10 +328,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                   ),
                                   child: Text(
                                     'Tìm kiếm',
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               ),
@@ -427,20 +360,39 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                         const Center(child: CircularProgressIndicator()),
                       ListView.builder(
                         shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: _searchResults.length,
                         itemBuilder: (context, index) {
                           final trip = _searchResults[index];
+                          final locationService = Provider.of<LocationService>(context, listen: false);
+
+                          String departureName = 'Không xác định';
+                          String arrivalName = 'Không xác định';
+                          try {
+                            if (_departureId != null) {
+                              departureName = locationService.locations
+                                  .firstWhere((loc) => loc.id == _departureId)
+                                  .location;
+                            }
+                            if (_arrivalId != null) {
+                              arrivalName = locationService.locations
+                                  .firstWhere((loc) => loc.id == _arrivalId)
+                                  .location;
+                            }
+                          } catch (e) {
+                            print('Lỗi khi ánh xạ ID địa điểm: $e');
+                          }
+
                           return Card(
-                            margin: EdgeInsets.symmetric(vertical: 8),
+                            margin: const EdgeInsets.symmetric(vertical: 8),
                             elevation: 4,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: ListTile(
-                              contentPadding: EdgeInsets.all(16),
+                              contentPadding: const EdgeInsets.all(16),
                               title: Text(
-                                '${trip.departure_location} → ${trip.arrival_location}',
+                                '$departureName → $arrivalName',
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -468,11 +420,13 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                   ),
                                 ],
                               ),
-                              onTap:
-                                  () => Navigator.pushNamed(
-                                    context,
-                                    '/trip/detail/${trip.id}',
-                                  ),
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/trip/detail/:id',
+                                  arguments: trip.id,
+                                );
+                              },
                             ),
                           );
                         },

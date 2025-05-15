@@ -12,7 +12,7 @@ class SeatCreateScreen extends StatefulWidget {
 class _SeatCreateScreenState extends State<SeatCreateScreen> {
   final _tripIdController = TextEditingController();
   final _seatNumberController = TextEditingController();
-  bool _isAvailable = true;
+  String _statusSeat = 'AVAILABLE'; // Sử dụng enum tương ứng
 
   @override
   void initState() {
@@ -35,44 +35,41 @@ class _SeatCreateScreenState extends State<SeatCreateScreen> {
               children: [
                 DropdownButton<String>(
                   hint: Text('Chọn chuyến đi'),
-                  value:
-                      _tripIdController.text.isNotEmpty
-                          ? _tripIdController.text
-                          : null,
-                  items:
-                      tripService.trips.map((trip) {
-                        return DropdownMenuItem<String>(
-                          value: trip.id,
-                          child: Text(
-                            '${trip.departure_location} - ${trip.arrival_location}',
-                          ),
-                        );
-                      }).toList(),
-                  onChanged:
-                      (value) =>
-                          setState(() => _tripIdController.text = value!),
+                  value: _tripIdController.text.isNotEmpty ? _tripIdController.text : null,
+                  items: tripService.trips.map((trip) {
+                    return DropdownMenuItem<String>(
+                      value: trip.id,
+                      child: Text(
+                        '${trip.departure_location} - ${trip.arrival_location}',
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _tripIdController.text = value!),
                 ),
                 TextField(
                   controller: _seatNumberController,
                   decoration: InputDecoration(labelText: 'Số ghế'),
                   keyboardType: TextInputType.number,
                 ),
-                SwitchListTile(
-                  title: Text('Còn trống'),
-                  value: _isAvailable,
-                  onChanged: (value) => setState(() => _isAvailable = value),
+                DropdownButton<String>(
+                  hint: Text('Trạng thái ghế'),
+                  value: _statusSeat,
+                  items: ['AVAILABLE', 'BOOKED', 'UNAVAILABLE'].map((status) {
+                    return DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(status),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _statusSeat = value!),
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final seatService = Provider.of<SeatService>(
-                      context,
-                      listen: false,
-                    );
+                    final seatService = Provider.of<SeatService>(context, listen: false);
                     final seat = Seat(
-                      id: '',
+                      id: '', // ID sẽ được tạo bởi backend
                       tripId: _tripIdController.text,
                       seatNumber: int.parse(_seatNumberController.text),
-                      isAvailable: _isAvailable,
+                      statusSeat: _statusSeat,
                       createdAt: null,
                       updatedAt: null,
                     );

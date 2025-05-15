@@ -69,13 +69,13 @@ class _HomeScreenState extends State<HomeScreen>
     });
     switch (index) {
       case 0:
-        // Đã ở Home, không cần làm gì
+      // Đã ở Home, không cần làm gì
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/trip/search');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/tickets');
+        Navigator.pushReplacementNamed(context, '/tickets'); // Điều hướng đến TicketScreen
         break;
       case 3:
         Navigator.pushReplacementNamed(context, '/auth/profile');
@@ -242,9 +242,9 @@ class _HomeScreenState extends State<HomeScreen>
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount:
-                            homeService.featuredTrips.length > 2
-                                ? 2
-                                : homeService.featuredTrips.length,
+                        homeService.featuredTrips.length > 2
+                            ? 2
+                            : homeService.featuredTrips.length,
                         itemBuilder: (context, index) {
                           final trip = homeService.featuredTrips[index];
                           return Container(
@@ -285,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     padding: const EdgeInsets.all(16.0),
                                     child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           '${trip.departure_location} → ${trip.arrival_location}',
@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen>
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          'Khởi hành: ${trip.arrival_time.hour}:${trip.departure_time.minute.toString().padLeft(2, '0')}',
+                                          'Khởi hành: ${trip.departure_time.hour}:${trip.departure_time.minute.toString().padLeft(2, '0')}',
                                           style: GoogleFonts.poppins(
                                             color: secondaryTextColor,
                                             fontSize: 12,
@@ -343,9 +343,9 @@ class _HomeScreenState extends State<HomeScreen>
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount:
-                            homeService.locations.length > 4
-                                ? 4
-                                : homeService.locations.length,
+                        homeService.locations.length > 4
+                            ? 4
+                            : homeService.locations.length,
                         itemBuilder: (context, index) {
                           final location = homeService.locations[index];
                           return Container(

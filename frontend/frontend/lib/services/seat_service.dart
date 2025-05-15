@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/seat.dart';
 
 class SeatService extends ChangeNotifier {
-  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com'; // Thay bằng URL backend thực tế
+  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com';
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Seat> seats = [];
@@ -26,6 +26,32 @@ class SeatService extends ChangeNotifier {
       }
     } catch (e) {
       print('Error fetching seats: $e');
+      seats = [];
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchSeatsByTripId(String tripId) async {
+    isLoading = true;
+    notifyListeners();
+    final token = await _storage.read(key: 'accessToken');
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/seats/trip/$tripId'), // Sử dụng route đúng của backend
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        seats = data.map((e) => Seat.fromJson(e)).toList();
+        print('Fetched seats for tripId $tripId: $seats'); // Log để debug
+      } else {
+        throw Exception('Failed to fetch seats by tripId: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching seats by tripId: $e');
+      seats = [];
     } finally {
       isLoading = false;
       notifyListeners();

@@ -16,9 +16,7 @@ import 'package:frontend/screens/location/location_list_screen.dart';
 import 'package:frontend/screens/seat/seat_create_screen.dart';
 import 'package:frontend/screens/seat/seat_edit_screen.dart';
 import 'package:frontend/screens/seat/seat_list_screen.dart';
-import 'package:frontend/screens/ticket/ticket_create_screen.dart';
-import 'package:frontend/screens/ticket/ticket_edit_screen.dart';
-import 'package:frontend/screens/ticket/ticket_list_screen.dart';
+import 'package:frontend/screens/ticket/ticket_screen.dart';
 import 'package:frontend/screens/trip/trip_detail_screen.dart';
 import 'package:frontend/screens/trip/trip_list_screen.dart';
 import 'package:frontend/screens/trip/trip_search_screen.dart';
@@ -30,6 +28,7 @@ import 'package:frontend/services/location_service.dart';
 import 'package:frontend/services/seat_service.dart';
 import 'package:frontend/services/ticket_service.dart';
 import 'package:frontend/services/trip_service.dart';
+import 'package:frontend/services/vehicle_service.dart'; // Thêm VehicleService cho TripCreateForm và TripEditForm
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -51,6 +50,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<TripService>(create: (_) => TripService()),
         ChangeNotifierProvider<SeatService>(create: (_) => SeatService()),
         ChangeNotifierProvider<TicketService>(create: (_) => TicketService()),
+        ChangeNotifierProvider<VehicleService>(create: (_) => VehicleService()), // Thêm để hỗ trợ TripCreateForm và TripEditForm
       ],
       child: MaterialApp(
         title: 'Đăng ký tuyến xe',
@@ -86,11 +86,21 @@ class MyApp extends StatelessWidget {
             final authService = Provider.of<AuthService>(context, listen: false);
             return authService.isAdmin() ? const AdminDashboard() : HomeScreen();
           },
+          // Các tuyến đường admin
           '/admin': (context) => const AdminDashboard(),
           '/admin/seats': (context) => const SeatManagementScreen(),
           '/admin/tickets': (context) => const TicketManagementScreen(),
           '/admin/trips': (context) => const TripManagementScreen(),
           '/admin/users': (context) => const UserManagementScreen(),
+          '/trip/create': (context) => TripCreateForm(),
+          '/trip/edit': (context) {
+            final tripData = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+            if (tripData != null && tripData['_id'] != null) {
+              return TripEditForm(tripData: tripData);
+            }
+            return const Scaffold(body: Center(child: Text('Dữ liệu chuyến đi không hợp lệ')));
+          },
+          // Các tuyến đường không liên quan đến admin được giữ nguyên
           '/location': (context) => LocationListScreen(),
           '/location/create': (context) => LocationCreateScreen(),
           '/location/edit/:id': (context) {
@@ -102,21 +112,7 @@ class MyApp extends StatelessWidget {
           },
           '/trip': (context) => TripListScreen(),
           '/trip/search': (context) => TripSearchScreen(),
-          '/trip/detail/:id': (context) {
-            final id = ModalRoute.of(context)!.settings.arguments as String?;
-            if (id != null && id.isNotEmpty) {
-              return TripDetailScreen(id: id);
-            }
-            return const Scaffold(body: Center(child: Text('ID chuyến đi không hợp lệ')));
-          },
-          '/trip/create': (context) => TripCreateForm(),
-          '/trip/edit/:id': (context) {
-            final id = ModalRoute.of(context)!.settings.arguments as String?;
-            if (id != null && id.isNotEmpty) {
-              return TripEditForm(tripData: {'_id': id});
-            }
-            return const Scaffold(body: Center(child: Text('ID chuyến đi không hợp lệ')));
-          },
+          '/trip/detail/:id': (context) => TripDetailScreen(),
           '/seat': (context) => SeatListScreen(),
           '/seat/create': (context) => SeatCreateScreen(),
           '/seat/edit/:id': (context) {
@@ -126,9 +122,7 @@ class MyApp extends StatelessWidget {
             }
             return const Scaffold(body: Center(child: Text('ID ghế không hợp lệ')));
           },
-          '/tickets': (context) => const TicketListScreen(),
-          '/ticket/create': (context) => const TicketCreateScreen(),
-          // '/ticket/edit/:id': (context) => const TicketEditScreen(),
+          '/tickets': (context) => const TicketScreen(),
         },
         onUnknownRoute: (settings) {
           return MaterialPageRoute(

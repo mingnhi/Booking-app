@@ -2,7 +2,7 @@ class Seat {
   final String id;
   final String tripId;
   final int seatNumber;
-  final bool isAvailable;
+  final String statusSeat; // Sử dụng status_seat thay vì isAvailable
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -10,7 +10,7 @@ class Seat {
     required this.id,
     required this.tripId,
     required this.seatNumber,
-    required this.isAvailable,
+    required this.statusSeat,
     this.createdAt,
     this.updatedAt,
   });
@@ -20,7 +20,7 @@ class Seat {
       id: json['_id'],
       tripId: json['trip_id'],
       seatNumber: json['seat_number'],
-      isAvailable: json['is_available'],
+      statusSeat: json['status_seat'] ?? 'UNAVAILABLE', // Giá trị mặc định nếu null
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
@@ -29,6 +29,6 @@ class Seat {
   Map<String, dynamic> toJson() => {
     'trip_id': tripId,
     'seat_number': seatNumber,
-    'is_available': isAvailable,
+    'status_seat': statusSeat, // Gửi status_seat về backend
   };
 }

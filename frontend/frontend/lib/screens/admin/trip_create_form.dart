@@ -75,9 +75,15 @@ class _TripCreateFormState extends State<TripCreateForm> {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate:
+<<<<<<< HEAD
           _arrivalTime.isBefore(_departureTime)
               ? _departureTime.add(const Duration(days: 1))
               : _arrivalTime,
+=======
+      _arrivalTime.isBefore(_departureTime)
+          ? _departureTime.add(const Duration(days: 1))
+          : _arrivalTime,
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
       firstDate: _departureTime,
       lastDate: DateTime(2100),
     );
@@ -203,6 +209,7 @@ class _TripCreateFormState extends State<TripCreateForm> {
                     child: ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
+<<<<<<< HEAD
                         Card(
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -316,9 +323,145 @@ class _TripCreateFormState extends State<TripCreateForm> {
                                   },
                                 ),
                               ],
+=======
+                        Text(
+                          'Thông tin cơ bản',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: 'Chọn Xe',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          value:
+                          _vehicleID.isNotEmpty ? _vehicleID : null,
+                          items:
+                          Provider.of<VehicleService>(
+                            context,
+                            listen: false,
+                          ).vehicles.map((vehicle) {
+                            return DropdownMenuItem<String>(
+                              value: vehicle.id,
+                              child: Text(vehicle.licensePlate),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _vehicleID = value;
+                              });
+                            }
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng chọn biển số xe';
+                            }
+                            return null;
+                          },
+                        ),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: 'Điểm đi',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          value:
+                          _departureLocationId.isNotEmpty
+                              ? _departureLocationId
+                              : null,
+                          items:
+                          locations.map((location) {
+                            return DropdownMenuItem<String>(
+                              value: location.location,
+                              child: Text(location.location),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _departureLocationId = value;
+                              });
+                            }
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng chọn điểm đi';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: 'Điểm đến',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          value:
+                          _arrivalLocationId.isNotEmpty
+                              ? _arrivalLocationId
+                              : null,
+                          items:
+                          locations.map((location) {
+                            return DropdownMenuItem<String>(
+                              value: location.location,
+                              child: Text(location.location),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _arrivalLocationId = value;
+                              });
+                            }
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng chọn điểm đến';
+                            }
+                            if (value == _departureLocationId) {
+                              return 'Điểm đến không được trùng với điểm đi';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Thời gian',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ListTile(
+                          title: const Text('Thời gian khởi hành'),
+                          subtitle: Text(
+                            DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(_departureTime),
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
                             ),
                           ),
                         ),
+<<<<<<< HEAD
                         const SizedBox(height: 16),
                         Card(
                           child: Padding(
@@ -362,6 +505,17 @@ class _TripCreateFormState extends State<TripCreateForm> {
                                   onTap: () => _selectArrivalDate(context),
                                 ),
                               ],
+=======
+                        const Divider(),
+                        ListTile(
+                          title: const Text('Thời gian đến'),
+                          subtitle: Text(
+                            DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(_arrivalTime),
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
                             ),
                           ),
                         ),
@@ -463,9 +617,115 @@ class _TripCreateFormState extends State<TripCreateForm> {
                         ),
                       ],
                     ),
+<<<<<<< HEAD
                   );
                 },
               ),
+=======
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Thông tin khác',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _priceController,
+                          decoration: const InputDecoration(
+                            labelText: 'Giá vé (VND)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.attach_money),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng nhập giá vé';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Giá vé phải là số';
+                            }
+                            if (double.parse(value) <= 0) {
+                              return 'Giá vé phải lớn hơn 0';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _distanceController,
+                          decoration: const InputDecoration(
+                            labelText: 'Khoảng cách (km)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.directions_bus),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng nhập loại xe';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _totalSeatsController,
+                          decoration: const InputDecoration(
+                            labelText: 'Tổng số ghế',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.event_seat),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng nhập tổng số ghế';
+                            }
+                            if (int.tryParse(value) == null) {
+                              return 'Tổng số ghế phải là số nguyên';
+                            }
+                            if (int.parse(value) <= 0) {
+                              return 'Tổng số ghế phải lớn hơn 0';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _createTrip,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child:
+                  _isLoading
+                      ? const CircularProgressIndicator(
+                    color: Colors.white,
+                  )
+                      : Text(
+                    'Tạo chuyến đi mới',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
     );
   }
 }

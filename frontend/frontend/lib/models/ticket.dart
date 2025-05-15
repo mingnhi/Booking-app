@@ -19,13 +19,15 @@ class Ticket {
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
-      id: json['_id'],
-      user_id: json['user_id'],
-      trip_id: json['trip_id'],
-      seat_id: json['seat_id'],
-      ticket_status: json['ticket_status'],
-      booked_at: DateTime.parse(json['booked_at']),
-      updated_at: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
+      id: json['_id']?.toString() ?? '',
+      user_id: json['user_id']?.toString() ?? '',
+      trip_id: json['trip_id']?.toString() ?? '',
+      seat_id: json['seat_id']?.toString() ?? '',
+      ticket_status: json['ticket_status']?.toString() ?? '',
+      booked_at: DateTime.parse(json['booked_at']?.toString() ?? DateTime.now().toIso8601String()),
+      updated_at: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'].toString())
+          : null,
     );
   }
 

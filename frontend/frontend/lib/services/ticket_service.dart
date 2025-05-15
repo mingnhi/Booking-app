@@ -9,25 +9,29 @@ class TicketService extends ChangeNotifier {
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Ticket> tickets = [];
+  String? errorMessage; // Thêm biến errorMessage
 
   Future<void> fetchTickets() async {
     isLoading = true;
+    errorMessage = null; // Reset errorMessage
     notifyListeners();
     final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('No access token found');
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/tickets'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        tickets = (jsonDecode(response.body) as List)
-            .map((e) => Ticket.fromJson(e))
-            .toList();
+        final List<dynamic> data = jsonDecode(response.body);
+        tickets = data.map((e) => Ticket.fromJson(e as Map<String, dynamic>)).toList();
       } else {
         throw Exception('Lấy danh sách ticket thất bại: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Lỗi khi lấy danh sách ticket: $e');
+      tickets = [];
+      rethrow;
     } finally {
       isLoading = false;
       notifyListeners();
@@ -38,7 +42,9 @@ class TicketService extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('No access token found');
     try {
+      print('Creating ticket with data: $ticketData');
       final response = await http.post(
         Uri.parse('$baseUrl/tickets'),
         headers: {
@@ -47,8 +53,10 @@ class TicketService extends ChangeNotifier {
         },
         body: jsonEncode(ticketData),
       );
-      if (response.statusCode == 200) {
-        final newTicket = Ticket.fromJson(jsonDecode(response.body));
+      print('Create ticket response: ${response.statusCode} - ${response.body}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final newTicket = Ticket.fromJson(data);
         tickets.add(newTicket);
         return newTicket;
       } else {
@@ -67,6 +75,7 @@ class TicketService extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('No access token found');
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/tickets/$id'),
@@ -77,7 +86,8 @@ class TicketService extends ChangeNotifier {
         body: jsonEncode(ticketData),
       );
       if (response.statusCode == 200) {
-        final updatedTicket = Ticket.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final updatedTicket = Ticket.fromJson(data);
         final index = tickets.indexWhere((ticket) => ticket.id == id);
         if (index != -1) {
           tickets[index] = updatedTicket;
@@ -99,6 +109,7 @@ class TicketService extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('No access token found');
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/tickets/$id'),
@@ -123,13 +134,15 @@ class TicketService extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('No access token found');
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/tickets/$id'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        return Ticket.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        return Ticket.fromJson(data);
       } else {
         throw Exception('Lấy ticket thất bại: ${response.statusCode} - ${response.body}');
       }

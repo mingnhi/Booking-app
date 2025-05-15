@@ -40,9 +40,15 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
 
       // Chuyển đổi dữ liệu thô thành danh sách Trip
       final List<Trip> fetchedTrips =
+<<<<<<< HEAD
           fetchedTripsData.map((tripData) {
             return Trip.fromJson(tripData);
           }).toList();
+=======
+      fetchedTripsData.map((tripData) {
+        return Trip.fromJson(tripData);
+      }).toList();
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
 
       setState(() {
         trips = fetchedTrips;
@@ -97,6 +103,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
       context: context,
       builder:
           (context) => StatefulBuilder(
+<<<<<<< HEAD
             builder: (context, setState) {
               return AlertDialog(
                 title: Text(
@@ -192,6 +199,103 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
               );
             },
           ),
+=======
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(
+              'Xác nhận xóa',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              'Bạn có chắc chắn muốn xóa chuyến đi này không?',
+              style: GoogleFonts.poppins(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Hủy', style: GoogleFonts.poppins()),
+              ),
+              ElevatedButton(
+                onPressed:
+                isSubmitting
+                    ? null
+                    : () async {
+                  setState(() {
+                    isSubmitting = true;
+                  });
+
+                  try {
+                    final adminService = Provider.of<AdminService>(
+                      context,
+                      listen: false,
+                    );
+
+                    // Gọi API xóa chuyến đi
+                    final success = await adminService.deleteTrip(
+                      tripId,
+                    );
+
+                    // Đóng dialog
+                    Navigator.of(context).pop();
+
+                    if (success) {
+                      // Hiển thị thông báo thành công
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Đã xóa chuyến đi thành công',
+                            style: GoogleFonts.poppins(),
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+
+                      // Tải lại danh sách chuyến đi
+                      _loadTrips();
+                    } else {
+                      // Hiển thị thông báo lỗi
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Không thể xóa chuyến đi',
+                            style: GoogleFonts.poppins(),
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    // Hiển thị thông báo lỗi
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Lỗi: ${e.toString()}',
+                          style: GoogleFonts.poppins(),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+
+                    setState(() {
+                      isSubmitting = false;
+                    });
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                child: Text(
+                  'Xóa chuyến đi',
+                  style: GoogleFonts.poppins(color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
     );
   }
 
@@ -447,13 +551,21 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                             builder: (context, departureSnapshot) {
                               final departureName =
                                   departureSnapshot.data ??
+<<<<<<< HEAD
                                   trip.departure_location;
+=======
+                                      trip.departure_location;
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
                               return FutureBuilder<String>(
                                 future: _getLocationName(trip.arrival_location),
                                 builder: (context, arrivalSnapshot) {
                                   final arrivalName =
                                       arrivalSnapshot.data ??
+<<<<<<< HEAD
                                       trip.arrival_location;
+=======
+                                          trip.arrival_location;
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
                                   return Text(
                                     '$departureName → $arrivalName',
                                     style: GoogleFonts.poppins(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/seat.dart';
 import '../../services/seat_service.dart';
 
 class SeatListScreen extends StatelessWidget {
@@ -17,7 +18,7 @@ class SeatListScreen extends StatelessWidget {
               final seat = seatService.seats[index];
               return ListTile(
                 title: Text('Ghế ${seat.seatNumber}'),
-                subtitle: Text('Trạng thái: ${seat.isAvailable ? 'Còn trống' : 'Đã đặt'}'),
+                subtitle: Text('Trạng thái: ${seat.statusSeat}'), // Hiển thị statusSeat
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -29,7 +30,7 @@ class SeatListScreen extends StatelessWidget {
                       icon: Icon(Icons.delete),
                       onPressed: () async {
                         await seatService.deleteSeat(seat.id);
-                        seatService.fetchSeats();
+                        seatService.fetchSeats(); // Cập nhật danh sách sau khi xóa
                       },
                     ),
                   ],

@@ -12,18 +12,49 @@ class AdminDashboard extends StatefulWidget {
   State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
+<<<<<<< HEAD
 class _AdminDashboardState extends State<AdminDashboard>
     with AutomaticKeepAliveClientMixin {
+=======
+class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAliveClientMixin {
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
   int _selectedIndex = 0;
   bool _isInit = false;
 
   // Sử dụng late để khởi tạo các màn hình khi cần thiết
   late final List<Widget> _screens;
+<<<<<<< HEAD
+=======
 
   @override
   bool get wantKeepAlive => true; // Giữ trạng thái khi chuyển tab
 
   @override
+  void initState() {
+    super.initState();
+
+    // Khởi tạo các màn hình trong initState để tránh tạo lại mỗi khi build
+    _screens = [
+      const TripManagementScreen(),
+      const TicketManagementScreen(),
+      const UserManagementScreen(),
+    ];
+
+    // Kiểm tra quyền admin khi vào trang
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isInit && mounted) {
+        _isInit = true;
+        AuthUtils.checkAdminAccess(context);
+      }
+    });
+  }
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
+
+  @override
+  bool get wantKeepAlive => true; // Giữ trạng thái khi chuyển tab
+
+  @override
+<<<<<<< HEAD
   void initState() {
     super.initState();
 
@@ -51,6 +82,8 @@ class _AdminDashboardState extends State<AdminDashboard>
   ];
 
   @override
+=======
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
   Widget build(BuildContext context) {
     // Gọi super.build khi sử dụng AutomaticKeepAliveClientMixin
     super.build(context);
@@ -154,7 +187,14 @@ class _AdminDashboardState extends State<AdminDashboard>
               ],
             ),
           ),
+<<<<<<< HEAD
           body: IndexedStack(index: _selectedIndex, children: _screens),
+=======
+          body: IndexedStack(
+            index: _selectedIndex,
+            children: _screens,
+          ),
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
         ),
       ),
     );

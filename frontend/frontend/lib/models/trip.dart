@@ -29,29 +29,25 @@ class Trip {
 
   factory Trip.fromJson(Map<String, dynamic> json) {
     return Trip(
-      id: json['_id'],
-      vehicle_id: json['vehicle_id'],
-      departure_location: json['departure_location'],
-      arrival_location: json['arrival_location'],
-      departure_time: DateTime.parse(json['departure_time']),
-      arrival_time: DateTime.parse(json['arrival_time']),
-      price:
-          (json['price'] is int)
-              ? (json['price'] as int).toDouble()
-              : json['price'].toDouble(),
-      distance:
-          (json['distance'] is int)
-              ? (json['distance'] as int).toDouble()
-              : json['distance'].toDouble(),
-      totalSeats: json['total_seats'],
-      createdAt:
-          json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : null,
-      updatedAt:
-          json['updated_at'] != null
-              ? DateTime.parse(json['updated_at'])
-              : null,
+      id: json['_id']?.toString() ?? '',
+      vehicle_id: json['vehicle_id']?.toString() ?? '',
+      departure_location: json['departure_location']?.toString() ?? '',
+      arrival_location: json['arrival_location']?.toString() ?? '',
+      departure_time: DateTime.parse(json['departure_time']?.toString() ?? DateTime.now().toIso8601String()),
+      arrival_time: DateTime.parse(json['arrival_time']?.toString() ?? DateTime.now().toIso8601String()),
+      price: (json['price'] is int)
+          ? (json['price'] as int).toDouble()
+          : (json['price'] as num?)?.toDouble() ?? 0.0,
+      distance: (json['distance'] is int)
+          ? (json['distance'] as int).toDouble()
+          : (json['distance'] as num?)?.toDouble() ?? 0.0,
+      totalSeats: (json['total_seats'] as int?) ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'].toString())
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'].toString())
+          : null,
     );
   }
 

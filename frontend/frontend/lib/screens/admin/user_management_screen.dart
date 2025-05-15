@@ -279,12 +279,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   void _showUserDetails(BuildContext context, dynamic user) {
     final createdAt =
+<<<<<<< HEAD
         user['created_at'] != null ? DateTime.parse(user['created_at']) : null;
+=======
+    user['created_at'] != null ? DateTime.parse(user['created_at']) : null;
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
 
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
+<<<<<<< HEAD
             title: Text(
               'Thông tin người dùng',
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
@@ -309,6 +314,30 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           fontSize: 30,
                         ),
                       ),
+=======
+        title: Text(
+          'Thông tin người dùng',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.blue.shade100,
+                  child: Text(
+                    (user['full_name'] != null &&
+                        user['full_name'].toString().isNotEmpty)
+                        ? user['full_name'][0].toUpperCase()
+                        : '?',
+                    style: GoogleFonts.poppins(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -338,6 +367,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   // ),
                 ],
               ),
+<<<<<<< HEAD
             ),
             actions: [
               TextButton(
@@ -346,6 +376,33 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 },
                 child: Text('Đóng', style: GoogleFonts.poppins()),
               ),
+=======
+              const SizedBox(height: 16),
+              _buildDetailRow(
+                'Họ tên',
+                user['full_name'] ?? 'Chưa cập nhật',
+              ),
+              // _buildDetailRow('Tên đăng nhập', user['username']),
+              _buildDetailRow('Email', user['email'] ?? 'Chưa cập nhật'),
+              _buildDetailRow(
+                'Số điện thoại',
+                user['phone_number'] ?? 'Chưa cập nhật',
+              ),
+              _buildDetailRow(
+                'Vai trò',
+                user['role'] == 'admin' ? 'Admin' : 'Người dùng',
+              ),
+              _buildDetailRow(
+                'Ngày tham gia',
+                createdAt != null
+                    ? DateFormat('dd/MM/yyyy').format(createdAt)
+                    : 'Không xác định',
+              ),
+              // _buildDetailRow(
+              //   'Trạng thái',
+              //   user['isBlocked'] ? 'Đã khóa' : 'Đang hoạt động',
+              // ),
+>>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
             ],
           ),
     );

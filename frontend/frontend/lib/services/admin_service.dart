@@ -57,8 +57,6 @@ class AdminService extends ChangeNotifier {
       if (token == null) {
         throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
       }
-
-      // Dựa vào backend/src/users/user.service.ts, endpoint có thể là /users
       final response = await http.get(
         Uri.parse('$baseUrl/admin/users'),
         headers: {
@@ -80,6 +78,27 @@ class AdminService extends ChangeNotifier {
       notifyListeners();
       print('Error in getUsers: $e');
       return [];
+    }
+  }
+  //Cập nhật user
+
+  Future<void> updateUser(Map<String, dynamic> updatedUser) async {
+    final String userId = updatedUser['_id'];
+    final token = await _storage.read(key: 'accessToken');
+    if (token == null) {
+      throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
+    }
+    final response = await http.put(
+      Uri.parse('$baseUrl/admin/users/$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(updatedUser),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Cập nhật người dùng thất bại');
     }
   }
 

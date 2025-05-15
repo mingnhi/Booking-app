@@ -1,21 +1,29 @@
 class Location {
   final String id;
   final String location;
+  final String contact_phone;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  Location({required this.id, required this.location, this.createdAt, this.updatedAt});
+  Location({
+    required this.id,
+    required this.location,
+    required this.contact_phone,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
       id: json['_id'],
-      location: json['location'],
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      location: json['name'],
+      contact_phone: json['contact_phone'],
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'location': location,
-  };
+  Map<String, dynamic> toJson() => {'location': location};
 }

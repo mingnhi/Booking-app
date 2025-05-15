@@ -14,7 +14,8 @@ class TripSearchScreen extends StatefulWidget {
   _TripSearchScreenState createState() => _TripSearchScreenState();
 }
 
-class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerProviderStateMixin {
+class _TripSearchScreenState extends State<TripSearchScreen>
+    with SingleTickerProviderStateMixin {
   String? _departureId;
   String? _arrivalId;
   DateTime? _departureTime;
@@ -26,10 +27,12 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: const Color(0xFF2474E5).withOpacity(0.8),
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: const Color(0xFF2474E5).withOpacity(0.8),
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     Future.microtask(() async {
       if (mounted) {
@@ -38,12 +41,18 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
           duration: const Duration(milliseconds: 1000),
         );
         _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-          CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+          CurvedAnimation(
+            parent: _animationController!,
+            curve: Curves.easeInOut,
+          ),
         );
         _animationController!.forward();
 
         // Đợi fetchLocations hoàn thành
-        final locationService = Provider.of<LocationService>(context, listen: false);
+        final locationService = Provider.of<LocationService>(
+          context,
+          listen: false,
+        );
         await locationService.fetchLocations();
       }
     });
@@ -54,10 +63,12 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
   @override
   void dispose() {
     _animationController?.dispose();
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
     super.dispose();
   }
 
@@ -83,25 +94,42 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
 
   Future<void> _searchTrips() async {
     final tripService = Provider.of<TripService>(context, listen: false);
-    final locationService = Provider.of<LocationService>(context, listen: false);
+    final locationService = Provider.of<LocationService>(
+      context,
+      listen: false,
+    );
     try {
       if (locationService.locations.isEmpty) {
         throw Exception('No locations available for search');
       }
 
       // Lấy tên địa điểm dựa trên ID, xử lý trường hợp không tìm thấy
-      String? departureLocation = _departureId != null
-          ? locationService.locations.firstWhere(
-            (loc) => loc.id == _departureId,
-        orElse: () => throw Exception('Departure location not found for ID: $_departureId'),
-      ).location
-          : null;
-      String? arrivalLocation = _arrivalId != null
-          ? locationService.locations.firstWhere(
-            (loc) => loc.id == _arrivalId,
-        orElse: () => throw Exception('Arrival location not found for ID: $_arrivalId'),
-      ).location
-          : null;
+      String? departureLocation =
+          _departureId != null
+              ? locationService.locations
+                  .firstWhere(
+                    (loc) => loc.id == _departureId,
+                    orElse:
+                        () =>
+                            throw Exception(
+                              'Departure location not found for ID: $_departureId',
+                            ),
+                  )
+                  .location
+              : null;
+      String? arrivalLocation =
+          _arrivalId != null
+              ? locationService.locations
+                  .firstWhere(
+                    (loc) => loc.id == _arrivalId,
+                    orElse:
+                        () =>
+                            throw Exception(
+                              'Arrival location not found for ID: $_arrivalId',
+                            ),
+                  )
+                  .location
+              : null;
 
       if (departureLocation == null || arrivalLocation == null) {
         throw Exception('Could not find location names for the selected IDs');
@@ -162,7 +190,10 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                 return const Center(child: CircularProgressIndicator());
               }
               return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 20.0,
+                ),
                 child: FadeTransition(
                   opacity: _fadeAnimation!,
                   child: Column(
@@ -199,7 +230,10 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                         shadowColor: const Color(0xFF2474E5).withOpacity(0.3),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(color: Color(0xFF2474E5), width: 1),
+                          side: const BorderSide(
+                            color: Color(0xFF2474E5),
+                            width: 1,
+                          ),
                         ),
                         color: Colors.white.withOpacity(0.95),
                         child: Padding(
@@ -209,7 +243,11 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.directions_bus, color: const Color(0xFF2474E5), size: 24),
+                                  Icon(
+                                    Icons.directions_bus,
+                                    color: const Color(0xFF2474E5),
+                                    size: 24,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Xe khách',
@@ -231,24 +269,37 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                   ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF2474E5)),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF2474E5),
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF2474E5), width: 2),
-                                  ),
-                                  prefixIcon: Icon(Icons.location_on, color: const Color(0xFF2474E5)),
-                                ),
-                                items: locationService.locations.map((loc) {
-                                  return DropdownMenuItem<String>(
-                                    value: loc.id,
-                                    child: Text(
-                                      loc.location,
-                                      style: GoogleFonts.poppins(fontSize: 14),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF2474E5),
+                                      width: 2,
                                     ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) => setState(() => _departureId = value),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.location_on,
+                                    color: const Color(0xFF2474E5),
+                                  ),
+                                ),
+                                items:
+                                    locationService.locations.map((loc) {
+                                      return DropdownMenuItem<String>(
+                                        value: loc.id,
+                                        child: Text(
+                                          loc.location,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                onChanged:
+                                    (value) =>
+                                        setState(() => _departureId = value),
                               ),
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
@@ -260,31 +311,46 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                   ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF2474E5)),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF2474E5),
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF2474E5), width: 2),
-                                  ),
-                                  prefixIcon: Icon(Icons.location_on, color: const Color(0xFF2474E5)),
-                                ),
-                                items: locationService.locations.map((loc) {
-                                  return DropdownMenuItem<String>(
-                                    value: loc.id,
-                                    child: Text(
-                                      loc.location,
-                                      style: GoogleFonts.poppins(fontSize: 14),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF2474E5),
+                                      width: 2,
                                     ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) => setState(() => _arrivalId = value),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.location_on,
+                                    color: const Color(0xFF2474E5),
+                                  ),
+                                ),
+                                items:
+                                    locationService.locations.map((loc) {
+                                      return DropdownMenuItem<String>(
+                                        value: loc.id,
+                                        child: Text(
+                                          loc.location,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                onChanged:
+                                    (value) =>
+                                        setState(() => _arrivalId = value),
                               ),
                               const SizedBox(height: 16),
                               ListTile(
                                 title: Text('Ngày đi'),
                                 subtitle: Text(
                                   _departureTime != null
-                                      ? DateFormat('dd/MM/yyyy').format(_departureTime!)
+                                      ? DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(_departureTime!)
                                       : 'Chọn ngày',
                                 ),
                                 onTap: () async {
@@ -309,13 +375,16 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: _departureId != null && _arrivalId != null
-                                      ? () => _searchTrips()
-                                      : null,
+                                  onPressed:
+                                      _departureId != null && _arrivalId != null
+                                          ? () => _searchTrips()
+                                          : null,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFFD4A017),
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -371,7 +440,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                             child: ListTile(
                               contentPadding: EdgeInsets.all(16),
                               title: Text(
-                                '${trip.departureLocation} → ${trip.arrivalLocation}',
+                                '${trip.departure_location} → ${trip.arrival_location}',
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -382,11 +451,11 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                 children: [
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Thời gian đi: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.departureTime)}',
+                                    'Thời gian đi: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.departure_time)}',
                                     style: GoogleFonts.poppins(fontSize: 14),
                                   ),
                                   Text(
-                                    'Thời gian đến: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.arrivalTime)}',
+                                    'Thời gian đến: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.arrival_time)}',
                                     style: GoogleFonts.poppins(fontSize: 14),
                                   ),
                                   Text(
@@ -394,12 +463,16 @@ class _TripSearchScreenState extends State<TripSearchScreen> with SingleTickerPr
                                     style: GoogleFonts.poppins(fontSize: 14),
                                   ),
                                   Text(
-                                    'Loại xe: ${trip.busType} - Tổng ghế: ${trip.totalSeats}',
+                                    'Loại xe: ${trip.vehicle_id} - Tổng ghế: ${trip.totalSeats}',
                                     style: GoogleFonts.poppins(fontSize: 14),
                                   ),
                                 ],
                               ),
-                              onTap: () => Navigator.pushNamed(context, '/trip/detail/${trip.id}'),
+                              onTap:
+                                  () => Navigator.pushNamed(
+                                    context,
+                                    '/trip/detail/${trip.id}',
+                                  ),
                             ),
                           );
                         },

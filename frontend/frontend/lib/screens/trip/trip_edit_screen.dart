@@ -28,14 +28,14 @@ class _TripEditScreenState extends State<TripEditScreen> {
     super.initState();
     final tripService = Provider.of<TripService>(context, listen: false);
     final trip = tripService.trips.firstWhere((t) => t.id == widget.id);
-    _locationIdController.text = trip.locationId;
-    _departureController.text = trip.departureLocation;
-    _arrivalController.text = trip.arrivalLocation;
+    _locationIdController.text = trip.vehicle_id;
+    _departureController.text = trip.departure_location;
+    _arrivalController.text = trip.arrival_location;
     _priceController.text = trip.price.toString();
-    _busTypeController.text = trip.busType;
+    _busTypeController.text = trip.distance.toString();
     _totalSeatsController.text = trip.totalSeats.toString();
-    _departureTime = trip.departureTime;
-    _arrivalTime = trip.arrivalTime;
+    _departureTime = trip.departure_time;
+    _arrivalTime = trip.arrival_time;
     Provider.of<LocationService>(context, listen: false).fetchLocations();
   }
 
@@ -45,34 +45,62 @@ class _TripEditScreenState extends State<TripEditScreen> {
       appBar: AppBar(title: Text('Chỉnh sửa chuyến đi')),
       body: Consumer<LocationService>(
         builder: (context, locationService, _) {
-          if (locationService.isLoading) return Center(child: CircularProgressIndicator());
+          if (locationService.isLoading)
+            return Center(child: CircularProgressIndicator());
           return Padding(
             padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
                 DropdownButton<String>(
                   hint: Text('Địa điểm'),
-                  value: _locationIdController.text.isNotEmpty ? _locationIdController.text : null,
-                  items: locationService.locations.map((loc) {
-                    return DropdownMenuItem<String>(value: loc.id, child: Text(loc.location));
-                  }).toList(),
-                  onChanged: (value) => setState(() => _locationIdController.text = value!),
+                  value:
+                      _locationIdController.text.isNotEmpty
+                          ? _locationIdController.text
+                          : null,
+                  items:
+                      locationService.locations.map((loc) {
+                        return DropdownMenuItem<String>(
+                          value: loc.id,
+                          child: Text(loc.location),
+                        );
+                      }).toList(),
+                  onChanged:
+                      (value) =>
+                          setState(() => _locationIdController.text = value!),
                 ),
                 DropdownButton<String>(
                   hint: Text('Điểm đi'),
-                  value: _departureController.text.isNotEmpty ? _departureController.text : null,
-                  items: locationService.locations.map((loc) {
-                    return DropdownMenuItem<String>(value: loc.id, child: Text(loc.location));
-                  }).toList(),
-                  onChanged: (value) => setState(() => _departureController.text = value!),
+                  value:
+                      _departureController.text.isNotEmpty
+                          ? _departureController.text
+                          : null,
+                  items:
+                      locationService.locations.map((loc) {
+                        return DropdownMenuItem<String>(
+                          value: loc.id,
+                          child: Text(loc.location),
+                        );
+                      }).toList(),
+                  onChanged:
+                      (value) =>
+                          setState(() => _departureController.text = value!),
                 ),
                 DropdownButton<String>(
                   hint: Text('Điểm đến'),
-                  value: _arrivalController.text.isNotEmpty ? _arrivalController.text : null,
-                  items: locationService.locations.map((loc) {
-                    return DropdownMenuItem<String>(value: loc.id, child: Text(loc.location));
-                  }).toList(),
-                  onChanged: (value) => setState(() => _arrivalController.text = value!),
+                  value:
+                      _arrivalController.text.isNotEmpty
+                          ? _arrivalController.text
+                          : null,
+                  items:
+                      locationService.locations.map((loc) {
+                        return DropdownMenuItem<String>(
+                          value: loc.id,
+                          child: Text(loc.location),
+                        );
+                      }).toList(),
+                  onChanged:
+                      (value) =>
+                          setState(() => _arrivalController.text = value!),
                 ),
                 TextField(
                   controller: _priceController,
@@ -148,16 +176,19 @@ class _TripEditScreenState extends State<TripEditScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final tripService = Provider.of<TripService>(context, listen: false);
+                    final tripService = Provider.of<TripService>(
+                      context,
+                      listen: false,
+                    );
                     final trip = Trip(
                       id: widget.id,
-                      locationId: _locationIdController.text,
-                      departureLocation: _departureController.text,
-                      arrivalLocation: _arrivalController.text,
-                      departureTime: _departureTime,
-                      arrivalTime: _arrivalTime,
+                      vehicle_id: _locationIdController.text,
+                      departure_location: _departureController.text,
+                      arrival_location: _arrivalController.text,
+                      departure_time: _departureTime,
+                      arrival_time: _arrivalTime,
                       price: double.parse(_priceController.text),
-                      busType: _busTypeController.text,
+                      distance: double.parse(_busTypeController.text),
                       totalSeats: int.parse(_totalSeatsController.text),
                       createdAt: null,
                     );

@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 import '../models/location.dart';
 
 class LocationService extends ChangeNotifier {
-  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com'; // Thay bằng URL backend thực tế
+  final String baseUrl =
+      'https://booking-app-1-bzfs.onrender.com'; // Thay bằng URL backend thực tế
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Location> locations = [];
@@ -32,14 +33,15 @@ class LocationService extends ChangeNotifier {
     }
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/admin/Location'),
+        Uri.parse('$baseUrl/admin/location'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         locations = data.map((e) => Location.fromJson(e)).toList();
       } else {
-        errorMessage = 'Failed to fetch locations: ${response.statusCode} - ${response.body}';
+        errorMessage =
+            'Failed to fetch locations: ${response.statusCode} - ${response.body}';
       }
     } catch (e) {
       if (kDebugMode) print('Error fetching locations: $e');
@@ -63,8 +65,11 @@ class LocationService extends ChangeNotifier {
     }
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/admin/Location'),
-        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/admin/location'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode({'location': location}),
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -72,7 +77,8 @@ class LocationService extends ChangeNotifier {
         locations.add(newLocation);
         return newLocation;
       } else {
-        errorMessage = 'Failed to create location: ${response.statusCode} - ${response.body}';
+        errorMessage =
+            'Failed to create location: ${response.statusCode} - ${response.body}';
         return null;
       }
     } catch (e) {
@@ -98,8 +104,11 @@ class LocationService extends ChangeNotifier {
     }
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/admin/Location/$id'),
-        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/admin/location/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode({'location': location}),
       );
       if (response.statusCode == 200) {
@@ -108,7 +117,8 @@ class LocationService extends ChangeNotifier {
         if (index != -1) locations[index] = updatedLocation;
         return updatedLocation;
       } else {
-        errorMessage = 'Failed to update location: ${response.statusCode} - ${response.body}';
+        errorMessage =
+            'Failed to update location: ${response.statusCode} - ${response.body}';
         return null;
       }
     } catch (e) {
@@ -134,14 +144,15 @@ class LocationService extends ChangeNotifier {
     }
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/admin/Location/$id'),
+        Uri.parse('$baseUrl/admin/location/$id'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         locations.removeWhere((loc) => loc.id == id);
         return true;
       } else {
-        errorMessage = 'Failed to delete location: ${response.statusCode} - ${response.body}';
+        errorMessage =
+            'Failed to delete location: ${response.statusCode} - ${response.body}';
         return false;
       }
     } catch (e) {

@@ -10,7 +10,8 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
   Animation<double>? _bounceAnimation;
@@ -32,7 +33,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           duration: const Duration(milliseconds: 1200),
         );
         _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-          CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+          CurvedAnimation(
+            parent: _animationController!,
+            curve: Curves.easeInOut,
+          ),
         );
         _bounceAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
           CurvedAnimation(
@@ -65,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     });
     switch (index) {
       case 0:
-      // Đã ở Home, không cần làm gì
+        // Đã ở Home, không cần làm gì
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/trip/search');
@@ -91,9 +95,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           builder: (context, homeService, authService, _) {
             if (homeService.isLoading) {
               return Center(
-                child: CircularProgressIndicator(
-                  color: primaryColor,
-                ),
+                child: CircularProgressIndicator(color: primaryColor),
               );
             }
             if (homeService.errorMessage != null) {
@@ -108,7 +110,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               );
             }
-            if (homeService.featuredTrips.isEmpty && homeService.locations.isEmpty) {
+            if (homeService.featuredTrips.isEmpty &&
+                homeService.locations.isEmpty) {
               return Center(
                 child: Text(
                   'Không có dữ liệu để hiển thị.',
@@ -121,9 +124,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             }
             if (_fadeAnimation == null) {
               return Center(
-                child: CircularProgressIndicator(
-                  color: primaryColor,
-                ),
+                child: CircularProgressIndicator(color: primaryColor),
               );
             }
             return SingleChildScrollView(
@@ -134,7 +135,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 60.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 60.0,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         boxShadow: [
@@ -193,7 +197,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: primaryColor,
-                                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 40,
+                                      vertical: 16,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(30),
                                     ),
@@ -216,7 +223,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     const SizedBox(height: 40),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 20.0,
+                      ),
                       child: Text(
                         'Chuyến đi nổi bật',
                         style: GoogleFonts.poppins(
@@ -231,25 +241,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: homeService.featuredTrips.length > 2 ? 2 : homeService.featuredTrips.length,
+                        itemCount:
+                            homeService.featuredTrips.length > 2
+                                ? 2
+                                : homeService.featuredTrips.length,
                         itemBuilder: (context, index) {
                           final trip = homeService.featuredTrips[index];
                           return Container(
                             width: 280,
-                            margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
                             child: Card(
                               elevation: 4,
                               shadowColor: Colors.black12,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(color: primaryColor.withOpacity(0.3), width: 1),
+                                side: BorderSide(
+                                  color: primaryColor.withOpacity(0.3),
+                                  width: 1,
+                                ),
                               ),
                               color: Colors.white,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(16),
+                                    ),
                                     child: Container(
                                       height: 160,
                                       width: double.infinity,
@@ -264,10 +284,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          '${trip.departureLocation} → ${trip.arrivalLocation}',
+                                          '${trip.departure_location} → ${trip.arrival_location}',
                                           style: GoogleFonts.poppins(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
@@ -286,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          'Khởi hành: ${trip.departureTime.hour}:${trip.departureTime.minute.toString().padLeft(2, '0')}',
+                                          'Khởi hành: ${trip.arrival_time.hour}:${trip.departure_time.minute.toString().padLeft(2, '0')}',
                                           style: GoogleFonts.poppins(
                                             color: secondaryTextColor,
                                             fontSize: 12,
@@ -303,7 +324,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 20.0,
+                      ),
                       child: Text(
                         'Địa điểm phổ biến',
                         style: GoogleFonts.poppins(
@@ -318,18 +342,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: homeService.locations.length > 4 ? 4 : homeService.locations.length,
+                        itemCount:
+                            homeService.locations.length > 4
+                                ? 4
+                                : homeService.locations.length,
                         itemBuilder: (context, index) {
                           final location = homeService.locations[index];
                           return Container(
                             width: 200,
-                            margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
                             child: Card(
                               elevation: 4,
                               shadowColor: Colors.black12,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(color: primaryColor.withOpacity(0.3), width: 1),
+                                side: BorderSide(
+                                  color: primaryColor.withOpacity(0.3),
+                                  width: 1,
+                                ),
                               ),
                               color: Colors.white,
                               child: InkWell(

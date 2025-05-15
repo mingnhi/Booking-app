@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/admin/trip_create_form.dart';
 import 'package:frontend/screens/admin/trip_edit_form.dart';
 import 'package:frontend/services/admin_service.dart';
+import 'package:frontend/models/trip.dart'; // Thêm import cho model Trip
+import 'package:frontend/services/location_service.dart'; // Thêm import cho LocationService
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +16,7 @@ class TripManagementScreen extends StatefulWidget {
 }
 
 class _TripManagementScreenState extends State<TripManagementScreen> {
-  List<dynamic> trips = [];
+  List<Trip> trips = []; // Thay đổi kiểu dữ liệu thành List<Trip>
   bool isLoading = true;
   String? error;
 
@@ -22,6 +24,8 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
   void initState() {
     super.initState();
     _loadTrips();
+    // Tải danh sách địa điểm để hiển thị tên
+    Provider.of<LocationService>(context, listen: false).fetchLocations();
   }
 
   Future<void> _loadTrips() async {
@@ -32,7 +36,12 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
 
     try {
       final adminService = Provider.of<AdminService>(context, listen: false);
-      final fetchedTrips = await adminService.getTrips();
+      final fetchedTripsData = await adminService.getTrips();
+      
+      // Chuyển đổi dữ liệu thô thành danh sách Trip
+      final List<Trip> fetchedTrips = fetchedTripsData.map((tripData) {
+        return Trip.fromJson(tripData);
+      }).toList();
 
       setState(() {
         trips = fetchedTrips;
@@ -53,22 +62,44 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     }
   }
 
-  // Thêm phương thức xóa chuyến đi
+  // Phương thức để lấy tên địa điểm từ ID
+  Future<String> _getLocationName(String locationId) async {
+    if (locationId.isEmpty) {
+      return 'N/A';
+    }
+    
+    try {
+      final locationService = Provider.of<LocationService>(context, listen: false);
+      final locations = locationService.locations;
+      
+      for (var loc in locations) {
+        if (loc.id == locationId) {
+          return loc.location;
+        }
+      }
+      
+      return locationId;
+    } catch (e) {
+      print('Error getting location name: $e');
+      return locationId;
+    }
+  }
+
+  // Phương thức hiển thị dialog xác nhận xóa
   void _showDeleteConfirmation(BuildContext context, String tripId) {
     bool isSubmitting = false;
 
     showDialog(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
+      builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
             title: Text(
-              'Xác nhận xóa chuyến đi',
+              'Xác nhận xóa',
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
             ),
             content: Text(
-              'Bạn có chắc chắn muốn xóa chuyến đi này không? Hành động này không thể hoàn tác và sẽ xóa tất cả vé liên quan.',
+              'Bạn có chắc chắn muốn xóa chuyến đi này không?',
               style: GoogleFonts.poppins(),
             ),
             actions: [
@@ -76,80 +107,80 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Hủy', style: GoogleFonts.poppins()),
-              ),
-              if (isSubmitting)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      setState(() {
-                        isSubmitting = true;
-                      });
-
-                      final adminService = Provider.of<AdminService>(
-                        context,
-                        listen: false,
-                      );
-
-                      // Gọi API xóa chuyến đi
-                      final success = await adminService.deleteTrip(tripId);
-
-                      // Đóng dialog
-                      Navigator.of(context).pop();
-
-                      if (success) {
-                        // Hiển thị thông báo thành công
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Đã xóa chuyến đi thành công',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-
-                        // Tải lại danh sách chuyến đi
-                        _loadTrips();
-                      } else {
-                        // Hiển thị thông báo lỗi
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Không thể xóa chuyến đi',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      // Hiển thị thông báo lỗi
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Lỗi: ${e.toString()}',
-                            style: GoogleFonts.poppins(),
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-
-                      setState(() {
-                        isSubmitting = false;
-                      });
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                  child: Text(
-                    'Xóa chuyến đi',
-                    style: GoogleFonts.poppins(color: Colors.white),
-                  ),
+                child: Text(
+                  'Hủy',
+                  style: GoogleFonts.poppins(),
                 ),
+              ),
+              ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        setState(() {
+                          isSubmitting = true;
+                        });
+
+                        try {
+                          final adminService =
+                              Provider.of<AdminService>(context, listen: false);
+
+                          // Gọi API xóa chuyến đi
+                          final success = await adminService.deleteTrip(tripId);
+
+                          // Đóng dialog
+                          Navigator.of(context).pop();
+
+                          if (success) {
+                            // Hiển thị thông báo thành công
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Đã xóa chuyến đi thành công',
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+
+                            // Tải lại danh sách chuyến đi
+                            _loadTrips();
+                          } else {
+                            // Hiển thị thông báo lỗi
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Không thể xóa chuyến đi',
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          // Hiển thị thông báo lỗi
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Lỗi: ${e.toString()}',
+                                style: GoogleFonts.poppins(),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+
+                          setState(() {
+                            isSubmitting = false;
+                          });
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                child: Text(
+                  'Xóa chuyến đi',
+                  style: GoogleFonts.poppins(color: Colors.white),
+                ),
+              ),
             ],
           );
         },
@@ -157,15 +188,13 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     );
   }
 
-  // Thêm phương thức xem chi tiết chuyến đi
-  void _showTripDetails(BuildContext context, dynamic trip) {
+  // Phương thức hiển thị chi tiết chuyến đi
+  void _showTripDetails(BuildContext context, Trip trip) {
     showDialog(
       context: context,
       builder: (context) {
-        final departureTime = DateTime.parse(trip['departure_time']);
-        final arrivalTime = DateTime.parse(trip['arrival_time']);
         final formatter = DateFormat('dd/MM/yyyy HH:mm');
-
+        
         return AlertDialog(
           title: Text(
             'Chi tiết chuyến đi',
@@ -176,21 +205,29 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildDetailItem('ID:', trip['_id']),
-                _buildDetailItem('Điểm đi:', trip['departure_location_name'] ?? 'N/A'),
-                _buildDetailItem('Điểm đến:', trip['arrival_location_name'] ?? 'N/A'),
-                _buildDetailItem('Thời gian đi:', formatter.format(departureTime)),
-                _buildDetailItem('Thời gian đến:', formatter.format(arrivalTime)),
-                _buildDetailItem('Giá vé:', '${trip['price']} VND'),
-                _buildDetailItem('Loại xe:', trip['bus_type'] ?? 'N/A'),
-                _buildDetailItem('Tổng số ghế:', '${trip['total_seats']}'),
-                _buildDetailItem('Số ghế còn trống:', '${trip['available_seats'] ?? 'N/A'}'),
-                _buildDetailItem('Ngày tạo:', trip['createdAt'] != null
-                    ? formatter.format(DateTime.parse(trip['createdAt']))
-                    : 'N/A'),
-                _buildDetailItem('Cập nhật lần cuối:', trip['updatedAt'] != null
-                    ? formatter.format(DateTime.parse(trip['updatedAt']))
-                    : 'N/A'),
+                _buildDetailItem('ID:', trip.id),
+                FutureBuilder<String>(
+                  future: _getLocationName(trip.departure_location),
+                  builder: (context, snapshot) {
+                    return _buildDetailItem('Điểm đi:', snapshot.data ?? trip.departure_location);
+                  }
+                ),
+                FutureBuilder<String>(
+                  future: _getLocationName(trip.arrival_location),
+                  builder: (context, snapshot) {
+                    return _buildDetailItem('Điểm đến:', snapshot.data ?? trip.arrival_location);
+                  }
+                ),
+                _buildDetailItem('Thời gian đi:', formatter.format(trip.departure_time)),
+                _buildDetailItem('Thời gian đến:', formatter.format(trip.arrival_time)),
+                _buildDetailItem('Giá vé:', '${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip.price)}'),
+                _buildDetailItem('Loại xe:', trip.vehicle_id),
+                _buildDetailItem('Tổng số ghế:', '${trip.totalSeats}'),
+                _buildDetailItem('Khoảng cách:', '${trip.distance} km'),
+                if (trip.createdAt != null)
+                  _buildDetailItem('Ngày tạo:', formatter.format(trip.createdAt!)),
+                if (trip.updatedAt != null)
+                  _buildDetailItem('Cập nhật lần cuối:', formatter.format(trip.updatedAt!)),
               ],
             ),
           ),
@@ -204,7 +241,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).pop();
-                _editTrip(context, trip['_id']);
+                _editTrip(context, trip.id);
               },
               icon: const Icon(Icons.edit),
               label: Text('Sửa', style: GoogleFonts.poppins()),
@@ -215,7 +252,6 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     );
   }
 
-  // Helper method để hiển thị từng mục trong chi tiết
   Widget _buildDetailItem(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -373,8 +409,6 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
           padding: const EdgeInsets.all(16),
           itemBuilder: (context, index) {
             final trip = trips[index];
-            final departureTime = DateTime.parse(trip['departure_time']);
-            final arrivalTime = DateTime.parse(trip['arrival_time']);
             final formatter = DateFormat('dd/MM/yyyy HH:mm');
 
             return Card(
@@ -387,16 +421,28 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            '${trip['departure_location']} → ${trip['arrival_location']}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child: FutureBuilder<String>(
+                            future: _getLocationName(trip.departure_location),
+                            builder: (context, departureSnapshot) {
+                              final departureName = departureSnapshot.data ?? trip.departure_location;
+                              return FutureBuilder<String>(
+                                future: _getLocationName(trip.arrival_location),
+                                builder: (context, arrivalSnapshot) {
+                                  final arrivalName = arrivalSnapshot.data ?? trip.arrival_location;
+                                  return Text(
+                                    '$departureName → $arrivalName',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                           ),
                         ),
                         Text(
-                          '${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip['price'])}',
+                          NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(trip.price),
                           style: GoogleFonts.poppins(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
@@ -419,7 +465,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                                 ),
                               ),
                               Text(
-                                formatter.format(departureTime),
+                                formatter.format(trip.departure_time),
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -439,7 +485,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                                 ),
                               ),
                               Text(
-                                formatter.format(arrivalTime),
+                                formatter.format(trip.arrival_time),
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -464,7 +510,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                                 ),
                               ),
                               Text(
-                                trip['bus_type'],
+                                trip.vehicle_id,
                                 style: GoogleFonts.poppins(),
                               ),
                             ],
@@ -482,7 +528,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                                 ),
                               ),
                               Text(
-                                '${trip['total_seats']}',
+                                '${trip.totalSeats}',
                                 style: GoogleFonts.poppins(),
                               ),
                             ],
@@ -501,13 +547,13 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
-                          onPressed: () => _editTrip(context, trip['_id']),
+                          onPressed: () => _editTrip(context, trip.id),
                           icon: const Icon(Icons.edit),
                           label: Text('Sửa', style: GoogleFonts.poppins()),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton.icon(
-                          onPressed: () => _showDeleteConfirmation(context, trip['_id']),
+                          onPressed: () => _showDeleteConfirmation(context, trip.id),
                           icon: const Icon(Icons.delete, color: Colors.red),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,

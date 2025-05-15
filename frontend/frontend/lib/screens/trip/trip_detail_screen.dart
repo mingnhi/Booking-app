@@ -16,13 +16,15 @@ class TripDetailScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Chi tiết chuyến đi')),
       body: Consumer3<TripService, SeatService, LocationService>(
         builder: (context, tripService, seatService, locationService, _) {
-          if (tripService.isLoading || seatService.isLoading || locationService.isLoading) {
+          if (tripService.isLoading ||
+              seatService.isLoading ||
+              locationService.isLoading) {
             return Center(child: CircularProgressIndicator());
           }
           final trip = tripService.trips.firstWhere((t) => t.id == id);
           final location = locationService.locations.firstWhere(
-                (loc) => loc.id == trip.locationId,
-            orElse: () => Location(id: trip.locationId, location: 'Unknown'),
+            (loc) => loc.id == trip.vehicle_id,
+            orElse: () => Location(id: trip.vehicle_id, location: 'Unknown', contact_phone: ''),
           );
           return Padding(
             padding: EdgeInsets.all(16.0),
@@ -30,12 +32,12 @@ class TripDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Địa điểm: ${location.location}'),
-                Text('Điểm đi: ${trip.departureLocation}'),
-                Text('Điểm đến: ${trip.arrivalLocation}'),
-                Text('Thời gian đi: ${trip.departureTime}'),
-                Text('Thời gian đến: ${trip.arrivalTime}'),
+                Text('Điểm đi: ${trip.departure_location}'),
+                Text('Điểm đến: ${trip.arrival_location}'),
+                Text('Thời gian đi: ${trip.departure_time}'),
+                Text('Thời gian đến: ${trip.arrival_time}'),
                 Text('Giá: ${trip.price}'),
-                Text('Loại xe: ${trip.busType}'),
+                Text('Loại xe: ${trip.distance}'),
                 Text('Tổng ghế: ${trip.totalSeats}'),
                 Text('Ghế ngồi', style: Theme.of(context).textTheme.titleLarge),
                 Expanded(
@@ -45,7 +47,9 @@ class TripDetailScreen extends StatelessWidget {
                       final seat = seatService.seats[index];
                       return ListTile(
                         title: Text('Ghế ${seat.seatNumber}'),
-                        subtitle: Text('Trạng thái: ${seat.isAvailable ? 'Còn trống' : 'Đã đặt'}'),
+                        subtitle: Text(
+                          'Trạng thái: ${seat.isAvailable ? 'Còn trống' : 'Đã đặt'}',
+                        ),
                       );
                     },
                   ),

@@ -9,22 +9,29 @@ class TripListScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Danh sách chuyến đi')),
       body: Consumer<TripService>(
         builder: (context, tripService, _) {
-          if (tripService.isLoading) return Center(child: CircularProgressIndicator());
+          if (tripService.isLoading)
+            return Center(child: CircularProgressIndicator());
           return ListView.builder(
             padding: EdgeInsets.all(16.0),
             itemCount: tripService.trips.length,
             itemBuilder: (context, index) {
               final trip = tripService.trips[index];
               return ListTile(
-                title: Text('${trip.departureLocation} - ${trip.arrivalLocation}'),
-                subtitle: Text('Giá: ${trip.price} - ${trip.departureTime}'),
-                onTap: () => Navigator.pushNamed(context, '/trip/detail/${trip.id}'),
+                title: Text('${trip.vehicle_id} - ${trip.departure_location}'),
+                subtitle: Text('Giá: ${trip.price} - ${trip.departure_time}'),
+                onTap:
+                    () =>
+                        Navigator.pushNamed(context, '/trip/detail/${trip.id}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       icon: Icon(Icons.edit),
-                      onPressed: () => Navigator.pushNamed(context, '/trip/edit/${trip.id}'),
+                      onPressed:
+                          () => Navigator.pushNamed(
+                            context,
+                            '/trip/edit/${trip.id}',
+                          ),
                     ),
                     IconButton(
                       icon: Icon(Icons.delete),

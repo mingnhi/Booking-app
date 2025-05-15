@@ -26,7 +26,8 @@ class _SeatCreateScreenState extends State<SeatCreateScreen> {
       appBar: AppBar(title: Text('Tạo ghế')),
       body: Consumer<TripService>(
         builder: (context, tripService, _) {
-          if (tripService.isLoading) return Center(child: CircularProgressIndicator());
+          if (tripService.isLoading)
+            return Center(child: CircularProgressIndicator());
           return Padding(
             padding: EdgeInsets.all(16.0),
             child: Column(
@@ -34,13 +35,28 @@ class _SeatCreateScreenState extends State<SeatCreateScreen> {
               children: [
                 DropdownButton<String>(
                   hint: Text('Chọn chuyến đi'),
-                  value: _tripIdController.text.isNotEmpty ? _tripIdController.text : null,
-                  items: tripService.trips.map((trip) {
-                    return DropdownMenuItem<String>(value: trip.id, child: Text('${trip.departureLocation} - ${trip.arrivalLocation}'));
-                  }).toList(),
-                  onChanged: (value) => setState(() => _tripIdController.text = value!),
+                  value:
+                      _tripIdController.text.isNotEmpty
+                          ? _tripIdController.text
+                          : null,
+                  items:
+                      tripService.trips.map((trip) {
+                        return DropdownMenuItem<String>(
+                          value: trip.id,
+                          child: Text(
+                            '${trip.departure_location} - ${trip.arrival_location}',
+                          ),
+                        );
+                      }).toList(),
+                  onChanged:
+                      (value) =>
+                          setState(() => _tripIdController.text = value!),
                 ),
-                TextField(controller: _seatNumberController, decoration: InputDecoration(labelText: 'Số ghế'), keyboardType: TextInputType.number),
+                TextField(
+                  controller: _seatNumberController,
+                  decoration: InputDecoration(labelText: 'Số ghế'),
+                  keyboardType: TextInputType.number,
+                ),
                 SwitchListTile(
                   title: Text('Còn trống'),
                   value: _isAvailable,
@@ -48,7 +64,10 @@ class _SeatCreateScreenState extends State<SeatCreateScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final seatService = Provider.of<SeatService>(context, listen: false);
+                    final seatService = Provider.of<SeatService>(
+                      context,
+                      listen: false,
+                    );
                     final seat = Seat(
                       id: '',
                       tripId: _tripIdController.text,
@@ -60,7 +79,9 @@ class _SeatCreateScreenState extends State<SeatCreateScreen> {
                     if (await seatService.createSeat(seat) != null) {
                       Navigator.pushReplacementNamed(context, '/seat');
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tạo ghế thất bại')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Tạo ghế thất bại')),
+                      );
                     }
                   },
                   child: Text('Lưu'),

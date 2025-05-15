@@ -45,7 +45,7 @@ class _SeatEditScreenState extends State<SeatEditScreen> {
                   hint: Text('Chọn chuyến đi'),
                   value: _tripIdController.text.isNotEmpty ? _tripIdController.text : null,
                   items: tripService.trips.map((trip) {
-                    return DropdownMenuItem<String>(value: trip.id, child: Text('${trip.departureLocation} - ${trip.arrivalLocation}'));
+                    return DropdownMenuItem<String>(value: trip.id, child: Text('${trip.departure_location} - ${trip.arrival_location}'));
                   }).toList(),
                   onChanged: (value) => setState(() => _tripIdController.text = value!),
                 ),

@@ -306,9 +306,9 @@ class AdminService extends ChangeNotifier {
 
   // Thêm phương thức cập nhật chuyến đi
   Future<dynamic> updateTrip(
-      String tripId,
-      Map<String, dynamic> tripData,
-      ) async {
+    String tripId,
+    Map<String, dynamic> tripData,
+  ) async {
     isLoading = true;
     error = null;
     notifyListeners();
@@ -404,7 +404,7 @@ class AdminService extends ChangeNotifier {
         throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
       }
 
-      print('Calling POST $baseUrl/trip with data: $tripData');
+      print('Calling POST $baseUrl/admin/trip with data: $tripData');
 
       final response = await http.post(
         Uri.parse('$baseUrl/admin/trip'),

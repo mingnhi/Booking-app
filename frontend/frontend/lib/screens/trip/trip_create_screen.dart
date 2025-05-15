@@ -14,7 +14,7 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
   final _departureController = TextEditingController();
   final _arrivalController = TextEditingController();
   final _priceController = TextEditingController();
-  final _busTypeController = TextEditingController();
+  final _distanceController = TextEditingController();
   final _totalSeatsController = TextEditingController();
   DateTime _departureTime = DateTime.now();
   DateTime _arrivalTime = DateTime.now();
@@ -94,8 +94,8 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
                   keyboardType: TextInputType.number,
                 ),
                 TextField(
-                  controller: _busTypeController,
-                  decoration: InputDecoration(labelText: 'Loại xe'),
+                  controller: _distanceController,
+                  decoration: InputDecoration(labelText: 'Khoảng cách (km)'),
                 ),
                 TextField(
                   controller: _totalSeatsController,
@@ -174,12 +174,12 @@ class _TripCreateScreenState extends State<TripCreateScreen> {
                       departure_time: _departureTime,
                       arrival_time: _arrivalTime,
                       price: double.parse(_priceController.text),
-                      distance: double.parse(_busTypeController.text),
+                      distance: double.parse(_distanceController.text),
                       totalSeats: int.parse(_totalSeatsController.text),
                       createdAt: null,
                     );
                     if (await tripService.createTrip(trip) != null) {
-                      Navigator.pushReplacementNamed(context, 'admin/trip');
+                      Navigator.pushReplacementNamed(context, '/admin/trip');
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Tạo chuyến đi thất bại')),

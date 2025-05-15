@@ -30,6 +30,7 @@ import 'package:frontend/services/location_service.dart';
 import 'package:frontend/services/seat_service.dart';
 import 'package:frontend/services/ticket_service.dart';
 import 'package:frontend/services/trip_service.dart';
+import 'package:frontend/services/vehicle_service.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<TripService>(create: (_) => TripService()),
         ChangeNotifierProvider<SeatService>(create: (_) => SeatService()),
         ChangeNotifierProvider<TicketService>(create: (_) => TicketService()),
+        ChangeNotifierProvider(create: (_) => VehicleService()),
       ],
       child: MaterialApp(
         title: 'Đăng ký tuyến xe',

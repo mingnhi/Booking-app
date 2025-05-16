@@ -4,24 +4,56 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AdminService extends ChangeNotifier {
-  // Sử dụng URL giống với các service khác
   final String baseUrl = 'https://booking-app-1-bzfs.onrender.com';
   final _storage = const FlutterSecureStorage();
-  bool isLoading = false;
-  String? error;
+  bool _isLoading = false;
+  String? _error;
 
-  // Trips
-  Future<List<dynamic>> getTrips() async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+  bool get isLoading => _isLoading;
+  String? get error => _error;
 
-    try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
+  Future<String?> _getValidToken() async {
+    var token = await _storage.read(key: 'accessToken');
+    if (token == null) {
+      throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/auth/check-token'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 401) {
+      final refreshToken = await _storage.read(key: 'refreshToken');
+      if (refreshToken == null) {
+        throw Exception('Không tìm thấy refresh token.');
       }
 
+      final refreshResponse = await http.post(
+        Uri.parse('$baseUrl/auth/refresh-token'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refreshToken': refreshToken}),
+      );
+
+      if (refreshResponse.statusCode == 200) {
+        final newToken = jsonDecode(refreshResponse.body)['accessToken'];
+        await _storage.write(key: 'accessToken', value: newToken);
+        return newToken;
+      } else {
+        throw Exception('Không thể refresh token.');
+      }
+    }
+
+    return token;
+  }
+
+  Future<List<dynamic>> getTrips() async {
+    _isLoading = true;
+    _error = null;
+    // Không gọi notifyListeners() ở đây
+
+    try {
+      final token = await _getValidToken();
       final response = await http.get(
         Uri.parse('$baseUrl/admin/trip'),
         headers: {
@@ -31,32 +63,25 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load trips: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in getTrips: $e');
-      return [];
+      rethrow; // Ném lại lỗi để widget xử lý
     }
   }
 
-  // Users - Cập nhật endpoint chính xác
   Future<List<dynamic>> getUsers() async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
+      final token = await _getValidToken();
       final response = await http.get(
         Uri.parse('$baseUrl/admin/users'),
         headers: {
@@ -66,28 +91,22 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load users: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in getUsers: $e');
-      return [];
+      rethrow;
     }
   }
-  //Cập nhật user
 
   Future<void> updateUser(Map<String, dynamic> updatedUser) async {
     final String userId = updatedUser['_id'];
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) {
-      throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-    }
+    final token = await _getValidToken();
     final response = await http.put(
       Uri.parse('$baseUrl/admin/users/$userId'),
       headers: {
@@ -102,19 +121,12 @@ class AdminService extends ChangeNotifier {
     }
   }
 
-  // Tickets - Cập nhật endpoint chính xác
   Future<List<dynamic>> getTickets() async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
-      // Dựa vào backend/src/ticket/ticket.controller.ts, endpoint là /tickets
+      final token = await _getValidToken();
       final response = await http.get(
         Uri.parse('$baseUrl/admin/ticket'),
         headers: {
@@ -124,33 +136,25 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load tickets: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in getTickets: $e');
-      return [];
+      rethrow;
     }
   }
 
-  // Xem chi tiết vé
   Future<dynamic> getTicketDetail(String ticketId) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
+      final token = await _getValidToken();
       final response = await http.get(
         Uri.parse('$baseUrl/admin/ticket/$ticketId'),
         headers: {
@@ -160,36 +164,25 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
         return jsonDecode(response.body);
       } else {
-        throw Exception(
-          'Failed to load ticket details: ${response.statusCode}',
-        );
+        throw Exception('Failed to load ticket details: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in getTicketDetail: $e');
       throw e;
     }
   }
 
-  // Seats - Cập nhật endpoint chính xác
   Future<List<dynamic>> getSeats() async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
-      // Dựa vào backend/src/seat/seat.controller.ts, endpoint là /seats
+      final token = await _getValidToken();
       final response = await http.get(
         Uri.parse('$baseUrl/admin/seat'),
         headers: {
@@ -199,32 +192,26 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load seats: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in getSeats: $e');
-      return [];
+      rethrow;
     }
   }
 
-  // Cập nhật trạng thái vé
-  Future<void> updateTicketStatus(String ticketId, String status) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+  Future<Map<String, dynamic>> updateTicketStatus(String ticketId, String status) async {
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
+      final token = await _getValidToken();
+      print('Calling PUT $baseUrl/admin/ticket/$ticketId with status: $status');
 
       final response = await http.put(
         Uri.parse('$baseUrl/admin/ticket/$ticketId'),
@@ -235,35 +222,32 @@ class AdminService extends ChangeNotifier {
         body: jsonEncode({'ticket_status': status}),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
+        return jsonDecode(response.body);
       } else {
+        final errorBody = jsonDecode(response.body);
         throw Exception(
-          'Failed to update ticket status: ${response.statusCode}',
+          'Failed to update ticket status: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
         );
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in updateTicketStatus: $e');
       throw e;
     }
   }
 
-  // Xóa vé
   Future<void> deleteTicket(String ticketId) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
+      final token = await _getValidToken();
       final response = await http.delete(
         Uri.parse('$baseUrl/admin/ticket/$ticketId'),
         headers: {
@@ -273,32 +257,24 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
       } else {
         throw Exception('Failed to delete ticket: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in deleteTicket: $e');
       throw e;
     }
   }
 
-  // Thêm phương thức lấy chi tiết chuyến đi
   Future<dynamic> getTripDetail(String tripId) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
+      final token = await _getValidToken();
       final response = await http.get(
         Uri.parse('$baseUrl/admin/trip/$tripId'),
         headers: {
@@ -308,37 +284,26 @@ class AdminService extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load trip details: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in getTripDetail: $e');
       throw e;
     }
   }
 
-  // Thêm phương thức cập nhật chuyến đi
-  Future<dynamic> updateTrip(
-    String tripId,
-    Map<String, dynamic> tripData,
-  ) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+  Future<dynamic> updateTrip(String tripId, Map<String, dynamic> tripData) async {
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
-      print('Calling PUT $baseUrl/trip/$tripId with data: $tripData');
+      final token = await _getValidToken();
+      print('Calling PUT $baseUrl/admin/trip/$tripId with data: $tripData');
 
       final response = await http.put(
         Uri.parse('$baseUrl/admin/trip/$tripId'),
@@ -353,37 +318,29 @@ class AdminService extends ChangeNotifier {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        isLoading = false;
-        notifyListeners();
-        return data;
+        _isLoading = false;
+        return jsonDecode(response.body);
       } else {
+        final errorBody = jsonDecode(response.body);
         throw Exception(
-          'Failed to update trip: ${response.statusCode} - ${response.body}',
+          'Failed to update trip: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
         );
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in updateTrip: $e');
       throw e;
     }
   }
 
-  // Thêm phương thức xóa chuyến đi
   Future<bool> deleteTrip(String tripId) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
-      print('Calling DELETE $baseUrl/trip/$tripId');
+      final token = await _getValidToken();
+      print('Calling DELETE $baseUrl/admin/trip/$tripId');
 
       final response = await http.delete(
         Uri.parse('$baseUrl/admin/trip/$tripId'),
@@ -396,33 +353,25 @@ class AdminService extends ChangeNotifier {
       print('Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        isLoading = false;
-        notifyListeners();
+        _isLoading = false;
         return true;
       } else {
         throw Exception('Failed to delete trip: ${response.statusCode}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in deleteTrip: $e');
-      return false;
+      rethrow;
     }
   }
 
-  // Thêm phương thức tạo chuyến đi mới
   Future<dynamic> createTrip(Map<String, dynamic> tripData) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    _isLoading = true;
+    _error = null;
 
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        throw Exception('Không tìm thấy token. Vui lòng đăng nhập lại.');
-      }
-
+      final token = await _getValidToken();
       print('Calling POST $baseUrl/admin/trip with data: $tripData');
 
       final response = await http.post(
@@ -438,19 +387,14 @@ class AdminService extends ChangeNotifier {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        isLoading = false;
-        notifyListeners();
-        return data;
+        _isLoading = false;
+        return jsonDecode(response.body);
       } else {
-        throw Exception(
-          'Failed to create trip: ${response.statusCode} - ${response.body}',
-        );
+        throw Exception('Failed to create trip: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      isLoading = false;
-      error = e.toString();
-      notifyListeners();
+      _isLoading = false;
+      _error = e.toString();
       print('Error in createTrip: $e');
       throw e;
     }

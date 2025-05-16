@@ -71,11 +71,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           ),
           Expanded(
             child:
-                isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : users.isEmpty
-                    ? _buildEmptyState()
-                    : _buildUserList(),
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : users.isEmpty
+                ? _buildEmptyState()
+                : _buildUserList(),
           ),
         ],
       ),
@@ -121,9 +121,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         itemBuilder: (context, index) {
           final user = currentUsers[index];
           final createdAt =
-              user['createdAt'] != null
-                  ? DateTime.parse(user['createdAt'])
-                  : null;
+          user['createdAt'] != null
+              ? DateTime.parse(user['createdAt'])
+              : null;
 
           return Card(
             elevation: 2,
@@ -175,9 +175,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         ),
                         decoration: BoxDecoration(
                           color:
-                              user['role'] == 'admin'
-                                  ? Colors.purple
-                                  : Colors.blue,
+                          user['role'] == 'admin'
+                              ? Colors.purple
+                              : Colors.blue,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -192,37 +192,37 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       PopupMenuButton(
                         itemBuilder:
                             (context) => [
-                              const PopupMenuItem(
-                                value: 'view',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.visibility, color: Colors.blue),
-                                    SizedBox(width: 8),
-                                    Text('Xem chi tiết'),
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.edit, color: Colors.orange),
-                                    SizedBox(width: 8),
-                                    Text('Chỉnh sửa'),
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'block',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.block, color: Colors.red),
-                                    SizedBox(width: 8),
-                                    Text('Khóa tài khoản'),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          const PopupMenuItem(
+                            value: 'view',
+                            child: Row(
+                              children: [
+                                Icon(Icons.visibility, color: Colors.blue),
+                                SizedBox(width: 8),
+                                Text('Xem chi tiết'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, color: Colors.orange),
+                                SizedBox(width: 8),
+                                Text('Chỉnh sửa'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'block',
+                            child: Row(
+                              children: [
+                                Icon(Icons.block, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Khóa tài khoản'),
+                              ],
+                            ),
+                          ),
+                        ],
                         onSelected: (value) {
                           if (value == 'view') {
                             _showUserDetails(context, user);
@@ -279,42 +279,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   void _showUserDetails(BuildContext context, dynamic user) {
     final createdAt =
-<<<<<<< HEAD
-        user['created_at'] != null ? DateTime.parse(user['created_at']) : null;
-=======
     user['created_at'] != null ? DateTime.parse(user['created_at']) : null;
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
 
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-<<<<<<< HEAD
-            title: Text(
-              'Thông tin người dùng',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.blue.shade100,
-                      child: Text(
-                        (user['full_name'] != null &&
-                                user['full_name'].toString().isNotEmpty)
-                            ? user['full_name'][0].toUpperCase()
-                            : '?',
-                        style: GoogleFonts.poppins(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                        ),
-                      ),
-=======
         title: Text(
           'Thông tin người dùng',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
@@ -337,46 +307,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
                       fontSize: 30,
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildDetailRow(
-                    'Họ tên',
-                    user['full_name'] ?? 'Chưa cập nhật',
-                  ),
-                  // _buildDetailRow('Tên đăng nhập', user['username']),
-                  _buildDetailRow('Email', user['email'] ?? 'Chưa cập nhật'),
-                  _buildDetailRow(
-                    'Số điện thoại',
-                    user['phone_number'] ?? 'Chưa cập nhật',
-                  ),
-                  _buildDetailRow(
-                    'Vai trò',
-                    user['role'] == 'admin' ? 'Admin' : 'Người dùng',
-                  ),
-                  _buildDetailRow(
-                    'Ngày tham gia',
-                    createdAt != null
-                        ? DateFormat('dd/MM/yyyy').format(createdAt)
-                        : 'Không xác định',
-                  ),
-                  // _buildDetailRow(
-                  //   'Trạng thái',
-                  //   user['isBlocked'] ? 'Đã khóa' : 'Đang hoạt động',
-                  // ),
-                ],
+                ),
               ),
-<<<<<<< HEAD
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Đóng', style: GoogleFonts.poppins()),
-              ),
-=======
               const SizedBox(height: 16),
               _buildDetailRow(
                 'Họ tên',
@@ -402,9 +336,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               //   'Trạng thái',
               //   user['isBlocked'] ? 'Đã khóa' : 'Đang hoạt động',
               // ),
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
             ],
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Đóng', style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
     );
   }
 
@@ -588,43 +531,43 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text(
-              'Xác nhận khóa tài khoản',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-            ),
-            content: Text(
-              'Bạn có chắc chắn muốn khóa tài khoản này không? Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa.',
-              style: GoogleFonts.poppins(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Hủy', style: GoogleFonts.poppins()),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Khóa tài khoản người dùng
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Đã khóa tài khoản người dùng',
-                        style: GoogleFonts.poppins(),
-                      ),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: Text(
-                  'Khóa tài khoản',
-                  style: GoogleFonts.poppins(color: Colors.white),
-                ),
-              ),
-            ],
+        title: Text(
+          'Xác nhận khóa tài khoản',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn khóa tài khoản này không? Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa.',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Hủy', style: GoogleFonts.poppins()),
           ),
+          ElevatedButton(
+            onPressed: () {
+              // Khóa tài khoản người dùng
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Đã khóa tài khoản người dùng',
+                    style: GoogleFonts.poppins(),
+                  ),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(
+              'Khóa tài khoản',
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -15,6 +15,7 @@ export class TicketService {
     const ticket = new this.ticketModel(dto);
     return ticket.save();
   }
+  
 
   async findAll(): Promise<Ticket[]> {
     return this.ticketModel.find().exec();
@@ -37,5 +38,13 @@ export class TicketService {
   async remove(id: string): Promise<void> {
     const result = await this.ticketModel.findByIdAndDelete(id).exec();
     if (!result) throw new NotFoundException('Ticket not found');
+  }
+  async findTicketByUserId(userId: string): Promise<Ticket[]>{
+    return this.ticketModel
+      .find({ user_id: userId })
+      .populate('user_id', 'full_name phone_number')
+      .populate('trip_id', 'departure_location arrival_location price')
+      .populate('seat_id', 'seat_number')
+      .exec();
   }
 }

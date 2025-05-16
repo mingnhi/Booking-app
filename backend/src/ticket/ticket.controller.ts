@@ -8,6 +8,7 @@ import {
   Put,
   UseGuards,
   SetMetadata,
+  Req,
 } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -48,5 +49,10 @@ export class TicketController {
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.ticketService.remove(id);
+  }
+  @Get('mytickets')
+  getMyTicket(@Req() req) {
+    const userId = req.user.userId;
+    return this.ticketService.findTicketByUserId(userId);
   }
 }

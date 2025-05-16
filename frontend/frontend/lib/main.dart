@@ -28,11 +28,8 @@ import 'package:frontend/services/location_service.dart';
 import 'package:frontend/services/seat_service.dart';
 import 'package:frontend/services/ticket_service.dart';
 import 'package:frontend/services/trip_service.dart';
-<<<<<<< HEAD
 import 'package:frontend/services/vehicle_service.dart';
-=======
 import 'package:frontend/services/vehicle_service.dart'; // Thêm VehicleService cho TripCreateForm và TripEditForm
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -47,6 +44,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+
         ChangeNotifierProvider<AuthService>(create: (_) => AuthService()),
         ChangeNotifierProvider<AdminService>(create: (_) => AdminService()),
         ChangeNotifierProvider<HomeService>(create: (_) => HomeService()),
@@ -54,11 +52,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<TripService>(create: (_) => TripService()),
         ChangeNotifierProvider<SeatService>(create: (_) => SeatService()),
         ChangeNotifierProvider<TicketService>(create: (_) => TicketService()),
-<<<<<<< HEAD
+
         ChangeNotifierProvider(create: (_) => VehicleService()),
-=======
+
         ChangeNotifierProvider<VehicleService>(create: (_) => VehicleService()), // Thêm để hỗ trợ TripCreateForm và TripEditForm
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
       ],
       child: MaterialApp(
         title: 'Đăng ký tuyến xe',

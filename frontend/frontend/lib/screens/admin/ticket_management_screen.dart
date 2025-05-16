@@ -14,6 +14,21 @@ class TicketManagementScreen extends StatefulWidget {
 class _TicketManagementScreenState extends State<TicketManagementScreen> {
   List<dynamic> tickets = [];
   bool isLoading = true;
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label: ',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          ),
+          Expanded(child: Text(value, style: GoogleFonts.poppins())),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -180,11 +195,11 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'confirmed':
+      case "BOOKED":
         return Colors.green;
-      case 'pending':
+      case "CANCELLED":
         return Colors.orange;
-      case 'cancelled':
+      case "COMPLETED":
         return Colors.red;
       default:
         return Colors.grey;
@@ -193,19 +208,19 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
 
   String _getStatusText(String status) {
     switch (status) {
-      case 'confirmed':
+      case "BOOKED":
         return 'Đã xác nhận';
-      case 'pending':
-        return 'Đang chờ';
-      case 'cancelled':
+      case "CANCELLED":
         return 'Đã hủy';
+      case 'COMPLETED':
+        return 'Hoàn tất';
       default:
         return 'Không xác định';
     }
   }
 
   void _showTicketDetails(BuildContext context, dynamic ticket) {
-    final purchaseDate = DateTime.parse(ticket['purchaseDate']);
+    final purchaseDate = DateTime.parse(ticket['booked_at']);
     final formatter = DateFormat('dd/MM/yyyy HH:mm');
 
     showDialog(
@@ -221,36 +236,40 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('ID', ticket['_id']),
+              _buildDetailRow('ID', ticket['_id'].toString()),
               _buildDetailRow(
                 'Trạng thái',
-                _getStatusText(ticket['status']),
+                _getStatusText(ticket['ticket_status'].toString()),
               ),
               _buildDetailRow(
                 'Người dùng',
                 ticket['user'] != null
-                    ? ticket['user']['username'] ?? ticket['userId']
-                    : ticket['userId'],
+                    ? (ticket['user']['full_name']?.toString() ??
+                    ticket['user_id'].toString())
+                    : ticket['user_id'].toString(),
               ),
               _buildDetailRow(
                 'Chuyến đi',
-                ticket['trip'] != null
-                    ? "${ticket['trip']['departureLocation']} → ${ticket['trip']['arrivalLocation']}"
-                    : ticket['tripId'],
+                ticket['trip_id'] is Map
+                    ? "${ticket['trip_id']['departure_location'].toString()} → ${ticket['trip_id']['arrival_location'].toString()}"
+                    : ticket['trip_id'].toString(),
               ),
+
               _buildDetailRow(
                 'Ghế',
-                ticket['seat'] != null
-                    ? ticket['seat']['seatNumber']
-                    : ticket['seatId'],
+                ticket['seat'] is Map
+                    ? ticket['seat']['seat_number'].toString()
+                    : ticket['seat_id'].toString(),
               ),
               _buildDetailRow('Ngày mua', formatter.format(purchaseDate)),
               _buildDetailRow(
                 'Giá',
-                NumberFormat.currency(
+                ticket['trip_id']['price'] != null
+                    ? NumberFormat.currency(
                   locale: 'vi_VN',
                   symbol: 'đ',
-                ).format(ticket['price']),
+                ).format(ticket['trip_id']['price'])
+                    : 'Không có dữ liệu',
               ),
             ],
           ),
@@ -265,27 +284,8 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(child: Text(value, style: GoogleFonts.poppins())),
-        ],
-      ),
-    );
-  }
-
   void _showUpdateStatusDialog(BuildContext context, dynamic ticket) {
-    String selectedStatus = ticket['status'];
+    String selectedStatus = ticket['ticket_status'];
 
     showDialog(
       context: context,
@@ -300,40 +300,40 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
           children: [
             RadioListTile<String>(
               title: Text('Đã xác nhận', style: GoogleFonts.poppins()),
-              value: 'confirmed',
+              value: 'COMPLETED',
               groupValue: selectedStatus,
               onChanged: (value) {
                 selectedStatus = value!;
                 Navigator.pop(context);
                 _showUpdateStatusDialog(context, {
                   ...ticket,
-                  'status': selectedStatus,
+                  'ticket_status': selectedStatus,
                 });
               },
             ),
             RadioListTile<String>(
-              title: Text('Đang chờ', style: GoogleFonts.poppins()),
-              value: 'pending',
+              title: Text('Đã Booked', style: GoogleFonts.poppins()),
+              value: 'BOOKED',
               groupValue: selectedStatus,
               onChanged: (value) {
                 selectedStatus = value!;
                 Navigator.pop(context);
                 _showUpdateStatusDialog(context, {
                   ...ticket,
-                  'status': selectedStatus,
+                  'ticket_status': selectedStatus,
                 });
               },
             ),
             RadioListTile<String>(
               title: Text('Đã hủy', style: GoogleFonts.poppins()),
-              value: 'cancelled',
+              value: 'CANCELLED',
               groupValue: selectedStatus,
               onChanged: (value) {
                 selectedStatus = value!;
                 Navigator.pop(context);
                 _showUpdateStatusDialog(context, {
                   ...ticket,
-                  'status': selectedStatus,
+                  'ticket_status': selectedStatus,
                 });
               },
             ),

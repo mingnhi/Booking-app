@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/admin/trip_create_form.dart';
 import 'package:frontend/screens/admin/trip_edit_form.dart';
 import 'package:frontend/services/admin_service.dart';
-import 'package:frontend/models/trip.dart'; // Thêm import cho model Trip
-import 'package:frontend/services/location_service.dart'; // Thêm import cho LocationService
+import 'package:frontend/models/trip.dart';
+import 'package:frontend/services/location_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +16,7 @@ class TripManagementScreen extends StatefulWidget {
 }
 
 class _TripManagementScreenState extends State<TripManagementScreen> {
-  List<Trip> trips = []; // Thay đổi kiểu dữ liệu thành List<Trip>
+  List<Trip> trips = [];
   bool isLoading = true;
   String? error;
 
@@ -24,7 +24,6 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
   void initState() {
     super.initState();
     _loadTrips();
-    // Tải danh sách địa điểm để hiển thị tên
     Provider.of<LocationService>(context, listen: false).fetchLocations();
   }
 
@@ -38,48 +37,40 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
       final adminService = Provider.of<AdminService>(context, listen: false);
       final fetchedTripsData = await adminService.getTrips();
 
-      // Chuyển đổi dữ liệu thô thành danh sách Trip
-      final List<Trip> fetchedTrips =
-<<<<<<< HEAD
-          fetchedTripsData.map((tripData) {
-            return Trip.fromJson(tripData);
-          }).toList();
-=======
-      fetchedTripsData.map((tripData) {
+      final List<Trip> fetchedTrips = fetchedTripsData.map((tripData) {
         return Trip.fromJson(tripData);
       }).toList();
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
 
-      setState(() {
-        trips = fetchedTrips;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          trips = fetchedTrips;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          error = e.toString();
+          isLoading = false;
+        });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  // Phương thức để lấy tên địa điểm từ ID
   Future<String> _getLocationName(String locationId) async {
     if (locationId.isEmpty) {
       return 'N/A';
     }
 
     try {
-      final locationService = Provider.of<LocationService>(
-        context,
-        listen: false,
-      );
+      final locationService = Provider.of<LocationService>(context, listen: false);
       final locations = locationService.locations;
 
       for (var loc in locations) {
@@ -95,111 +86,12 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     }
   }
 
-  // Phương thức hiển thị dialog xác nhận xóa
   void _showDeleteConfirmation(BuildContext context, String tripId) {
     bool isSubmitting = false;
 
     showDialog(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-<<<<<<< HEAD
-            builder: (context, setState) {
-              return AlertDialog(
-                title: Text(
-                  'Xác nhận xóa',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                ),
-                content: Text(
-                  'Bạn có chắc chắn muốn xóa chuyến đi này không?',
-                  style: GoogleFonts.poppins(),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Hủy', style: GoogleFonts.poppins()),
-                  ),
-                  ElevatedButton(
-                    onPressed:
-                        isSubmitting
-                            ? null
-                            : () async {
-                              setState(() {
-                                isSubmitting = true;
-                              });
-
-                              try {
-                                final adminService = Provider.of<AdminService>(
-                                  context,
-                                  listen: false,
-                                );
-
-                                // Gọi API xóa chuyến đi
-                                final success = await adminService.deleteTrip(
-                                  tripId,
-                                );
-
-                                // Đóng dialog
-                                Navigator.of(context).pop();
-
-                                if (success) {
-                                  // Hiển thị thông báo thành công
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Đã xóa chuyến đi thành công',
-                                        style: GoogleFonts.poppins(),
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-
-                                  // Tải lại danh sách chuyến đi
-                                  _loadTrips();
-                                } else {
-                                  // Hiển thị thông báo lỗi
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Không thể xóa chuyến đi',
-                                        style: GoogleFonts.poppins(),
-                                      ),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                // Hiển thị thông báo lỗi
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Lỗi: ${e.toString()}',
-                                      style: GoogleFonts.poppins(),
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-
-                                setState(() {
-                                  isSubmitting = false;
-                                });
-                              }
-                            },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                    child: Text(
-                      'Xóa chuyến đi',
-                      style: GoogleFonts.poppins(color: Colors.white),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-=======
+      builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
             title: Text(
@@ -218,8 +110,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                 child: Text('Hủy', style: GoogleFonts.poppins()),
               ),
               ElevatedButton(
-                onPressed:
-                isSubmitting
+                onPressed: isSubmitting
                     ? null
                     : () async {
                   setState(() {
@@ -227,21 +118,14 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                   });
 
                   try {
-                    final adminService = Provider.of<AdminService>(
-                      context,
-                      listen: false,
-                    );
+                    final adminService = Provider.of<AdminService>(context, listen: false);
+                    final success = await adminService.deleteTrip(tripId);
 
-                    // Gọi API xóa chuyến đi
-                    final success = await adminService.deleteTrip(
-                      tripId,
-                    );
-
-                    // Đóng dialog
                     Navigator.of(context).pop();
 
+                    if (!mounted) return;
+
                     if (success) {
-                      // Hiển thị thông báo thành công
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
@@ -252,10 +136,8 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                         ),
                       );
 
-                      // Tải lại danh sách chuyến đi
                       _loadTrips();
                     } else {
-                      // Hiển thị thông báo lỗi
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
@@ -267,7 +149,8 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                       );
                     }
                   } catch (e) {
-                    // Hiển thị thông báo lỗi
+                    if (!mounted) return;
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -295,11 +178,9 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
           );
         },
       ),
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
     );
   }
 
-  // Phương thức hiển thị chi tiết chuyến đi
   void _showTripDetails(BuildContext context, Trip trip) {
     showDialog(
       context: context,
@@ -403,7 +284,6 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     );
   }
 
-  // Phương thức để mở màn hình chỉnh sửa chuyến đi
   void _editTrip(BuildContext context, String tripId) async {
     try {
       setState(() {
@@ -413,11 +293,12 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
       final adminService = Provider.of<AdminService>(context, listen: false);
       final tripData = await adminService.getTripDetail(tripId);
 
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
 
-      // Mở form chỉnh sửa với dữ liệu đã lấy
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
@@ -425,11 +306,35 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
         ),
       );
 
-      // Nếu chỉnh sửa thành công, tải lại danh sách
-      if (result == true) {
-        _loadTrips();
+      if (!mounted) return;
+
+      if (result != null && result is Map<String, dynamic>) {
+        if (result['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result['message'],
+                style: GoogleFonts.poppins(),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadTrips();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result['message'],
+                style: GoogleFonts.poppins(),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
         error = e.toString();
@@ -444,14 +349,14 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
     }
   }
 
-  // Phương thức để mở form tạo chuyến đi mới
   void _createNewTrip(BuildContext context) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => TripCreateForm()),
     );
 
-    // Nếu tạo thành công, tải lại danh sách
+    if (!mounted) return;
+
     if (result == true) {
       _loadTrips();
     }
@@ -549,23 +454,11 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                           child: FutureBuilder<String>(
                             future: _getLocationName(trip.departure_location),
                             builder: (context, departureSnapshot) {
-                              final departureName =
-                                  departureSnapshot.data ??
-<<<<<<< HEAD
-                                  trip.departure_location;
-=======
-                                      trip.departure_location;
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
+                              final departureName = departureSnapshot.data ?? trip.departure_location;
                               return FutureBuilder<String>(
                                 future: _getLocationName(trip.arrival_location),
                                 builder: (context, arrivalSnapshot) {
-                                  final arrivalName =
-                                      arrivalSnapshot.data ??
-<<<<<<< HEAD
-                                      trip.arrival_location;
-=======
-                                          trip.arrival_location;
->>>>>>> 60d88a48252e53f6c09afec0693649d7f779f123
+                                  final arrivalName = arrivalSnapshot.data ?? trip.arrival_location;
                                   return Text(
                                     '$departureName → $arrivalName',
                                     style: GoogleFonts.poppins(
@@ -693,8 +586,7 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton.icon(
-                          onPressed:
-                              () => _showDeleteConfirmation(context, trip.id),
+                          onPressed: () => _showDeleteConfirmation(context, trip.id),
                           icon: const Icon(Icons.delete, color: Colors.red),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,

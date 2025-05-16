@@ -17,15 +17,14 @@ export class TicketService {
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
   ) {}
 
-  // async create(dto: CreateTicketDto, userId: string): Promise<Ticket> {
-  //   const ticket = new this.ticketModel({
-  //     ...dto,
-  //     user_id: userId,
-  //   });
-  //   return ticket.save();
-  // }
-
-  //
+  async findTicketByUserId(userId: string): Promise<Ticket[]>{
+    return this.ticketModel
+      .find({ user_id: userId })
+      .populate('user_id', 'full_name phone_number')
+      .populate('trip_id', 'departure_location arrival_location price')
+      .populate('seat_id', 'seat_number')
+      .exec();
+  }
   async create(dto: CreateTicketDto, userId: string): Promise<Ticket> {
     const seat = await this.seatModel.findById(dto.seat_id);
     if (!seat) {

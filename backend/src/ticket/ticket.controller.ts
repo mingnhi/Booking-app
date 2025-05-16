@@ -16,22 +16,23 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('tickets')
+@SetMetadata('roles', ['user'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
-  @SetMetadata('roles', ['user'])
+  
   @Post()
   createTicket(@Body() dto: CreateTicketDto, @Req() req: any) {
     const userId = req.user?.userId;
     return this.ticketService.create(dto, userId);
   }
 
-  // @SetMetadata('roles', ['admin'])
-  // @Get()
-  // getAll() {
-  //   return this.ticketService.findAll();
-  // }
+  @Get('mytickets')
+  getMyTicket(@Req() req) {
+    const userId = req.user.userId;
+    return this.ticketService.findTicketByUserId(userId);
+  }
 
   @SetMetadata('roles', ['user', 'admin'])
   @Get(':id')

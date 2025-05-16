@@ -6,7 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Ticket, TicketSchema } from './ticket.schema';
 import { SeatModule } from 'src/seat/seat.module';
 import { TripModule } from 'src/trip/trip.module';
-import { Users, UsersSchema } from 'src/users/users.schema';
+import { UsersSchema } from 'src/users/users.schema';
 
 @Module({
   imports: [
@@ -20,6 +20,6 @@ import { Users, UsersSchema } from 'src/users/users.schema';
   ],
   controllers: [TicketController],
   providers: [TicketService],
-  exports: [TicketService],
+  exports: [TicketService, MongooseModule],
 })
 export class TicketModule {}

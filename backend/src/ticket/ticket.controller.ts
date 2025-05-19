@@ -21,7 +21,6 @@ import { RolesGuard } from 'src/auth/roles.guard';
 export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
-  
   @Post()
   createTicket(@Body() dto: CreateTicketDto, @Req() req: any) {
     const userId = req.user?.userId;

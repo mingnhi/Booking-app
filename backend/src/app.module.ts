@@ -11,7 +11,7 @@ import { SeatModule } from './seat/seat.module';
 import { TicketModule } from './ticket/ticket.module';
 import { AdminModule } from './admin/admin.module';
 import { VehicleModule } from './vehicle/vehicle.module';
-// import { PaymentModule } from './payment/payment.module';
+import { PaymentModule } from './payment/payment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -31,6 +31,7 @@ import { VehicleModule } from './vehicle/vehicle.module';
     TicketModule,
     AdminModule,
     VehicleModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

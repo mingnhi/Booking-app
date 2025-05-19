@@ -17,7 +17,7 @@ export class TicketService {
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
   ) {}
 
-  async findTicketByUserId(userId: string): Promise<Ticket[]>{
+  async findTicketByUserId(userId: string): Promise<Ticket[]> {
     return this.ticketModel
       .find({ user_id: userId })
       .populate('user_id', 'full_name phone_number')

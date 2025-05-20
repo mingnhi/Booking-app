@@ -7,16 +7,10 @@ import {
   // Param,
   // Post,
   // Put,
-  SetMetadata,
-  UseGuards,
 } from '@nestjs/common';
 import { LocationService } from './location.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('location')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@SetMetadata('roles', ['user'])
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 

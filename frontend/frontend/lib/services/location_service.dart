@@ -5,8 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/location.dart';
 
 class LocationService extends ChangeNotifier {
-  final String baseUrl =
-      'https://booking-app-1-bzfs.onrender.com'; // Thay bằng URL backend thực tế
+  final String baseUrl = 'https://booking-app-1-bzfs.onrender.com';
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Location> locations = [];
@@ -20,32 +19,38 @@ class LocationService extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchLocations() async {
+  Future<void> fetchLocations({bool allowUnauthenticated = false}) async {
     isLoading = true;
     errorMessage = null;
     safeNotifyListeners();
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) {
-      errorMessage = 'No access token found';
-      isLoading = false;
-      safeNotifyListeners();
-      return;
-    }
+
     try {
+      String? token;
+      if (!allowUnauthenticated) {
+        token = await _storage.read(key: 'accessToken');
+        if (token == null) {
+          throw Exception('No access token found');
+        }
+      }
+
+      // Sử dụng endpoint công khai /location thay vì /admin/location
       final response = await http.get(
-        Uri.parse('$baseUrl/admin/location'),
-        headers: {'Authorization': 'Bearer $token'},
+        Uri.parse('$baseUrl/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
-      if (response.statusCode == 200) {
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = jsonDecode(response.body);
         locations = data.map((e) => Location.fromJson(e)).toList();
       } else {
-        errorMessage =
-            'Failed to fetch locations: ${response.statusCode} - ${response.body}';
+        throw Exception('Failed to fetch locations: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       if (kDebugMode) print('Error fetching locations: $e');
-      errorMessage = 'Error fetching locations: $e';
+      errorMessage = 'Không thể tải danh sách địa điểm.';
     } finally {
       isLoading = false;
       safeNotifyListeners();
@@ -78,7 +83,7 @@ class LocationService extends ChangeNotifier {
         return newLocation;
       } else {
         errorMessage =
-            'Failed to create location: ${response.statusCode} - ${response.body}';
+        'Failed to create location: ${response.statusCode} - ${response.body}';
         return null;
       }
     } catch (e) {
@@ -118,7 +123,7 @@ class LocationService extends ChangeNotifier {
         return updatedLocation;
       } else {
         errorMessage =
-            'Failed to update location: ${response.statusCode} - ${response.body}';
+        'Failed to update location: ${response.statusCode} - ${response.body}';
         return null;
       }
     } catch (e) {
@@ -152,7 +157,7 @@ class LocationService extends ChangeNotifier {
         return true;
       } else {
         errorMessage =
-            'Failed to delete location: ${response.statusCode} - ${response.body}';
+        'Failed to delete location: ${response.statusCode} - ${response.body}';
         return false;
       }
     } catch (e) {

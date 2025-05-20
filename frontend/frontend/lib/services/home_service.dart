@@ -21,18 +21,15 @@ class HomeService extends ChangeNotifier {
       final tripService = Provider.of<TripService>(context, listen: false);
       final locationService = Provider.of<LocationService>(context, listen: false);
 
-      await tripService.fetchTrips();
+      // Gọi fetchTrips và fetchLocations với allowUnauthenticated = true
+      await tripService.fetchTrips(allowUnauthenticated: true);
       featuredTrips = tripService.trips.take(5).toList();
 
-      await locationService.fetchLocations();
+      await locationService.fetchLocations(allowUnauthenticated: true);
       locations = locationService.locations;
     } catch (e) {
       print('Error fetching home data: $e');
-      errorMessage = e.toString();
-      if (e.toString().contains('No access token found')) {
-        // Điều hướng về màn hình đăng nhập nếu không có token
-        Navigator.pushReplacementNamed(context, '/auth/login');
-      }
+      errorMessage = 'Không thể tải dữ liệu. Vui lòng thử lại sau.';
     } finally {
       isLoading = false;
       notifyListeners();

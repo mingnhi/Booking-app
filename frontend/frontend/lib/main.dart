@@ -29,9 +29,10 @@ import 'package:frontend/services/seat_service.dart';
 import 'package:frontend/services/ticket_service.dart';
 import 'package:frontend/services/trip_service.dart';
 import 'package:frontend/services/vehicle_service.dart';
-import 'package:frontend/services/vehicle_service.dart'; // Thêm VehicleService cho TripCreateForm và TripEditForm
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'login_prompt_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,7 +45,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-
         ChangeNotifierProvider<AuthService>(create: (_) => AuthService()),
         ChangeNotifierProvider<AdminService>(create: (_) => AdminService()),
         ChangeNotifierProvider<HomeService>(create: (_) => HomeService()),
@@ -52,10 +52,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<TripService>(create: (_) => TripService()),
         ChangeNotifierProvider<SeatService>(create: (_) => SeatService()),
         ChangeNotifierProvider<TicketService>(create: (_) => TicketService()),
-
-        ChangeNotifierProvider(create: (_) => VehicleService()),
-
-        ChangeNotifierProvider<VehicleService>(create: (_) => VehicleService()), // Thêm để hỗ trợ TripCreateForm và TripEditForm
+        ChangeNotifierProvider<VehicleService>(create: (_) => VehicleService()),
       ],
       child: MaterialApp(
         title: 'Đăng ký tuyến xe',
@@ -83,51 +80,110 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/splash',
         routes: {
-          '/splash': (context) => const WaitingVexereScreen(),
+          '/splash': (context) {
+            Future.delayed(const Duration(seconds: 3), () {
+              Navigator.pushReplacementNamed(context, '/home');
+            });
+            return const WaitingVexereScreen();
+          },
           '/auth/login': (context) => LoginScreen(),
           '/auth/register': (context) => RegisterScreen(),
-          '/auth/profile': (context) => ProfileScreen(),
-          '/home': (context) {
+          '/auth/profile': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
-            return authService.isAdmin() ? const AdminDashboard() : HomeScreen();
+            return authService.currentUser != null
+                ? ProfileScreen()
+                : const LoginPromptScreen();
           },
-          // Các tuyến đường admin
-          '/admin': (context) => const AdminDashboard(),
-          '/admin/seats': (context) => const SeatManagementScreen(),
-          '/admin/tickets': (context) => const TicketManagementScreen(),
-          '/admin/trips': (context) => const TripManagementScreen(),
-          '/admin/users': (context) => const UserManagementScreen(),
-          '/trip/create': (context) => TripCreateForm(),
+          '/auth/login_prompt': (context) => const LoginPromptScreen(),
+          '/home': (context) => HomeScreen(),
+          '/admin': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? const AdminDashboard()
+                : const LoginPromptScreen();
+          },
+          '/admin/seats': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? const SeatManagementScreen()
+                : const LoginPromptScreen();
+          },
+          '/admin/tickets': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? const TicketManagementScreen()
+                : const LoginPromptScreen();
+          },
+          '/admin/trips': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? const TripManagementScreen()
+                : const LoginPromptScreen();
+          },
+          '/admin/users': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? const UserManagementScreen()
+                : const LoginPromptScreen();
+          },
+          '/trip/create': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? TripCreateForm()
+                : const LoginPromptScreen();
+          },
           '/trip/edit': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
             final tripData = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
-            if (tripData != null && tripData['_id'] != null) {
+            if (authService.currentUser != null && authService.isAdmin() && tripData != null && tripData['_id'] != null) {
               return TripEditForm(tripData: tripData);
             }
-            return const Scaffold(body: Center(child: Text('Dữ liệu chuyến đi không hợp lệ')));
+            return const Scaffold(body: Center(child: Text('Dữ liệu chuyến đi không hợp lệ hoặc quyền truy cập bị từ chối')));
           },
-          // Các tuyến đường không liên quan đến admin được giữ nguyên
           '/location': (context) => LocationListScreen(),
-          '/location/create': (context) => LocationCreateScreen(),
+          '/location/create': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? LocationCreateScreen()
+                : const LoginPromptScreen();
+          },
           '/location/edit/:id': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
             final id = ModalRoute.of(context)!.settings.arguments as String?;
-            if (id != null && id.isNotEmpty) {
+            if (authService.currentUser != null && authService.isAdmin() && id != null && id.isNotEmpty) {
               return LocationEditScreen(id: id);
             }
-            return const Scaffold(body: Center(child: Text('ID địa điểm không hợp lệ')));
+            return const Scaffold(body: Center(child: Text('ID địa điểm không hợp lệ hoặc quyền truy cập bị từ chối')));
           },
           '/trip': (context) => TripListScreen(),
-          '/trip/search': (context) => TripSearchScreen(),
+          '/trip/search': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null
+                ? TripSearchScreen()
+                : const LoginPromptScreen();
+          },
           '/trip/detail/:id': (context) => TripDetailScreen(),
           '/seat': (context) => SeatListScreen(),
-          '/seat/create': (context) => SeatCreateScreen(),
+          '/seat/create': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null && authService.isAdmin()
+                ? SeatCreateScreen()
+                : const LoginPromptScreen();
+          },
           '/seat/edit/:id': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
             final id = ModalRoute.of(context)!.settings.arguments as String?;
-            if (id != null && id.isNotEmpty) {
+            if (authService.currentUser != null && authService.isAdmin() && id != null && id.isNotEmpty) {
               return SeatEditScreen(id: id);
             }
-            return const Scaffold(body: Center(child: Text('ID ghế không hợp lệ')));
+            return const Scaffold(body: Center(child: Text('ID ghế không hợp lệ hoặc quyền truy cập bị từ chối')));
           },
-          '/tickets': (context) => const TicketScreen(),
+          '/tickets': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null
+                ? const TicketScreen()
+                : const LoginPromptScreen();
+          },
         },
         onUnknownRoute: (settings) {
           return MaterialPageRoute(

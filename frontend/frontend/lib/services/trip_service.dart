@@ -10,18 +10,31 @@ class TripService extends ChangeNotifier {
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Trip> trips = [];
+  String? errorMessage;
 
-  Future<void> fetchTrips() async {
+  Future<void> fetchTrips({bool allowUnauthenticated = false}) async {
     isLoading = true;
+    errorMessage = null;
     notifyListeners();
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+
     try {
+      String? token;
+      if (!allowUnauthenticated) {
+        token = await _storage.read(key: 'accessToken');
+        if (token == null) {
+          throw Exception('No access token found');
+        }
+      }
+
       final response = await http.get(
         Uri.parse('$baseUrl/trip'),
-        headers: {'Authorization': 'Bearer $token'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
-      if (response.statusCode == 200) {
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = jsonDecode(response.body);
         trips = data.map((e) => Trip.fromJson(e as Map<String, dynamic>)).toList();
       } else {
@@ -29,8 +42,8 @@ class TripService extends ChangeNotifier {
       }
     } catch (e) {
       print('Error fetching trips: $e');
+      errorMessage = 'Không thể tải danh sách chuyến đi.';
       trips = [];
-      rethrow;
     } finally {
       isLoading = false;
       notifyListeners();

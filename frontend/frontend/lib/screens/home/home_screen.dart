@@ -10,8 +10,7 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
   Animation<double>? _bounceAnimation;
@@ -67,19 +66,23 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _selectedIndex = index;
     });
-    switch (index) {
-      case 0:
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (index == 0) {
       // Đã ở Home, không cần làm gì
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/trip/search');
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/tickets'); // Điều hướng đến TicketScreen
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/auth/profile');
-        break;
+    } else if (authService.currentUser == null) {
+      Navigator.pushNamed(context, '/auth/login_prompt');
+    } else {
+      switch (index) {
+        case 1:
+          Navigator.pushReplacementNamed(context, '/trip/search');
+          break;
+        case 2:
+          Navigator.pushReplacementNamed(context, '/tickets');
+          break;
+        case 3:
+          Navigator.pushReplacementNamed(context, '/auth/profile');
+          break;
+      }
     }
   }
 
@@ -100,18 +103,36 @@ class _HomeScreenState extends State<HomeScreen>
             }
             if (homeService.errorMessage != null) {
               return Center(
-                child: Text(
-                  homeService.errorMessage!,
-                  style: GoogleFonts.poppins(
-                    color: primaryTextColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      homeService.errorMessage!,
+                      style: GoogleFonts.poppins(
+                        color: primaryTextColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        homeService.fetchHomeData(context);
+                      },
+                      child: Text(
+                        'Thử lại',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }
-            if (homeService.featuredTrips.isEmpty &&
-                homeService.locations.isEmpty) {
+            if (homeService.featuredTrips.isEmpty && homeService.locations.isEmpty) {
               return Center(
                 child: Text(
                   'Không có dữ liệu để hiển thị.',
@@ -194,7 +215,9 @@ class _HomeScreenState extends State<HomeScreen>
                               return Transform.scale(
                                 scale: _bounceAnimation!.value,
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/trip');
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: primaryColor,
                                     padding: const EdgeInsets.symmetric(
@@ -241,8 +264,7 @@ class _HomeScreenState extends State<HomeScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount:
-                        homeService.featuredTrips.length > 2
+                        itemCount: homeService.featuredTrips.length > 2
                             ? 2
                             : homeService.featuredTrips.length,
                         itemBuilder: (context, index) {
@@ -284,8 +306,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Column(
-                                      crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           '${trip.departure_location} → ${trip.arrival_location}',
@@ -342,8 +363,7 @@ class _HomeScreenState extends State<HomeScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount:
-                        homeService.locations.length > 4
+                        itemCount: homeService.locations.length > 4
                             ? 4
                             : homeService.locations.length,
                         itemBuilder: (context, index) {
@@ -365,7 +385,9 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                               color: Colors.white,
                               child: InkWell(
-                                onTap: () {},
+                                onTap: () {
+                                  Navigator.pushNamed(context, '/trip');
+                                },
                                 borderRadius: BorderRadius.circular(16),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),

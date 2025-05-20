@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../services/auth_service.dart';
 import '../../services/ticket_service.dart';
 
 class CustomNavBar extends StatefulWidget {
@@ -20,10 +21,22 @@ class CustomNavBar extends StatefulWidget {
 class _CustomNavBarState extends State<CustomNavBar> {
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
     return SafeArea(
       child: BottomNavigationBar(
         currentIndex: widget.currentIndex,
-        onTap: widget.onTap,
+        onTap: (index) {
+          if (index == 0) {
+            // Home luôn có thể truy cập
+            widget.onTap(index);
+          } else if (authService.currentUser == null) {
+            // Nếu chưa đăng nhập, chuyển đến màn hình yêu cầu đăng nhập
+            Navigator.pushNamed(context, '/auth/login_prompt');
+          } else {
+            // Nếu đã đăng nhập, gọi callback điều hướng
+            widget.onTap(index);
+          }
+        },
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF2474E5),
@@ -59,7 +72,7 @@ class _CustomNavBarState extends State<CustomNavBar> {
                       duration: const Duration(milliseconds: 200),
                       child: const Icon(Icons.airline_seat_recline_normal),
                     ),
-                    if (ticketCount > 0)
+                    if (ticketCount > 0 && authService.currentUser != null)
                       Positioned(
                         right: 0,
                         child: Container(

@@ -31,6 +31,7 @@ import 'package:frontend/services/trip_service.dart';
 import 'package:frontend/services/vehicle_service.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'login_prompt_screen.dart';
 
@@ -81,8 +82,21 @@ class MyApp extends StatelessWidget {
         initialRoute: '/splash',
         routes: {
           '/splash': (context) {
-            Future.delayed(const Duration(seconds: 3), () {
-              Navigator.pushReplacementNamed(context, '/home');
+            final authService = Provider.of<AuthService>(context, listen: false);
+            final storage = FlutterSecureStorage();
+            Future.delayed(const Duration(seconds: 3), () async {
+              // Chờ AuthService khôi phục trạng thái
+              if (authService.currentUser != null) {
+                String? currentRoute = await storage.read(key: 'currentRoute');
+                print('Restored route: $currentRoute, user: ${authService.currentUser?.fullName}');
+                if (currentRoute != null && _isValidRoute(currentRoute)) {
+                  Navigator.pushReplacementNamed(context, currentRoute);
+                } else {
+                  Navigator.pushReplacementNamed(context, '/home');
+                }
+              } else {
+                Navigator.pushReplacementNamed(context, '/home');
+              }
             });
             return const WaitingVexereScreen();
           },
@@ -159,7 +173,7 @@ class MyApp extends StatelessWidget {
           '/trip/search': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
             return authService.currentUser != null
-                ? TripSearchScreen()
+                ? const TripSearchScreen()
                 : const LoginPromptScreen();
           },
           '/trip/detail/:id': (context) => TripDetailScreen(),
@@ -192,7 +206,67 @@ class MyApp extends StatelessWidget {
             ),
           );
         },
+        navigatorObservers: [
+          RouteObserver(
+            onNavigate: (routeName) async {
+              if (_isValidRoute(routeName)) {
+                final storage = FlutterSecureStorage();
+                print('Saving route: $routeName');
+                await storage.write(key: 'currentRoute', value: routeName);
+              }
+            },
+          ),
+        ],
       ),
     );
+  }
+
+  bool _isValidRoute(String? routeName) {
+    if (routeName == null) return false;
+    const validRoutes = [
+      '/home',
+      '/trip/search',
+      '/tickets',
+      '/auth/profile',
+      '/trip',
+      '/location',
+      '/trip/detail/:id',
+      '/admin',
+      '/admin/seats',
+      '/admin/tickets',
+      '/admin/trips',
+      '/admin/users',
+    ];
+    return validRoutes.contains(routeName) || routeName.startsWith('/trip/detail/');
+  }
+}
+
+class RouteObserver extends NavigatorObserver {
+  final Function(String) onNavigate;
+
+  RouteObserver({required this.onNavigate});
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    final routeName = route.settings.name;
+    if (routeName != null) {
+      onNavigate(routeName);
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final routeName = newRoute?.settings.name;
+    if (routeName != null) {
+      onNavigate(routeName);
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    final routeName = previousRoute?.settings.name;
+    if (routeName != null) {
+      onNavigate(routeName);
+    }
   }
 }

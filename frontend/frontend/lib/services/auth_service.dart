@@ -6,14 +6,41 @@ import '../models/auth.dart';
 
 class AuthService extends ChangeNotifier {
   final String baseUrl = 'https://booking-app-1-bzfs.onrender.com';
-  final _storage = FlutterSecureStorage(); // Vẫn giữ private
+  final _storage = FlutterSecureStorage();
   bool isLoading = false;
   String? errorMessage;
   User? currentUser;
 
-  // Thêm phương thức public để lấy token
+  AuthService() {
+    // Khôi phục trạng thái đăng nhập khi khởi tạo
+    _restoreSession();
+  }
+
   Future<String?> getToken() async {
     return await _storage.read(key: 'accessToken');
+  }
+
+  Future<void> _restoreSession() async {
+    try {
+      final token = await _storage.read(key: 'accessToken');
+      if (token != null) {
+        // Thử lấy profile với token hiện tại
+        final user = await getProfile();
+        if (user != null) {
+          currentUser = user;
+          notifyListeners();
+        } else {
+          // Nếu token không hợp lệ, thử làm mới token
+          final loginResponse = await refreshToken();
+          if (loginResponse != null && loginResponse.user != null) {
+            currentUser = loginResponse.user;
+            notifyListeners();
+          }
+        }
+      }
+    } catch (e) {
+      print('Error restoring session: $e');
+    }
   }
 
   Future<LoginResponse?> login(String email, String password) async {
@@ -32,16 +59,14 @@ class AuthService extends ChangeNotifier {
         await _storage.write(key: 'refreshToken', value: data['refresh_token']);
         final loginResponse = LoginResponse.fromJson(data);
         currentUser = loginResponse.user;
-        return LoginResponse.fromJson(data);
+        notifyListeners();
+        return loginResponse;
       } else {
-        throw Exception(
-          'Login failed: ${response.statusCode} - ${response.body}',
-        );
+        throw Exception('Login failed: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error logging in: $e');
-      errorMessage =
-      e.toString().contains('Login failed')
+      errorMessage = e.toString().contains('Login failed')
           ? jsonDecode(e.toString().split(' - ')[1])['message']
           : e.toString();
       return null;
@@ -68,14 +93,11 @@ class AuthService extends ChangeNotifier {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
       } else {
-        throw Exception(
-          'Registration failed: ${response.statusCode} - ${response.body}',
-        );
+        throw Exception('Registration failed: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error registering: $e');
-      errorMessage =
-      e.toString().contains('Registration failed')
+      errorMessage = e.toString().contains('Registration failed')
           ? jsonDecode(e.toString().split(' - ')[1])['message']
           : e.toString();
       return false;
@@ -102,13 +124,12 @@ class AuthService extends ChangeNotifier {
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        print('Profile Response: ${response.body}'); // Log để kiểm tra
+        print('Profile Response: ${response.body}');
         currentUser = User.fromJson(jsonDecode(response.body));
+        notifyListeners();
         return currentUser;
       } else {
-        throw Exception(
-          'Failed to get profile: ${response.statusCode} - ${response.body}',
-        );
+        throw Exception('Failed to get profile: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error getting profile: $e');
@@ -141,17 +162,14 @@ class AuthService extends ChangeNotifier {
         final data = jsonDecode(response.body);
         await _storage.write(key: 'accessToken', value: data['accessToken']);
         await _storage.write(key: 'refreshToken', value: data['refresh_token']);
-
-        // Cập nhật thông tin người dùng nếu có
-        if (data['user'] != null) {
-          currentUser = User.fromJson(data['user']);
+        final loginResponse = LoginResponse.fromJson(data);
+        if (loginResponse.user != null) {
+          currentUser = loginResponse.user;
+          notifyListeners();
         }
-
-        return LoginResponse.fromJson(data);
+        return loginResponse;
       } else {
-        throw Exception(
-          'Failed to refresh token: ${response.statusCode} - ${response.body}',
-        );
+        throw Exception('Failed to refresh token: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error refreshing token: $e');

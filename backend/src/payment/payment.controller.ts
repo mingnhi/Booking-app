@@ -16,27 +16,33 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 // import { UpdatePayMentDto } from './dto/update-payment.dto';
 
 @Controller('payment')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@SetMetadata('roles', ['user'])
-export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
 
+export class PaymentController {
+  constructor(private readonly paymentService: PaymentService) { }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['user'])
   @Post()
   create(@Body() createPaymentDto: CreatePaymentDto, @Req() req: any) {
     const userId = req.user.userId;
     return this.paymentService.create(userId, createPaymentDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['user'])
   @Get()
   findAll() {
     return this.paymentService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['user'])
   @Get('ticket/:ticketId')
   findByTicket(@Param('ticketId') ticketId: string) {
     return this.paymentService.findbyTicketId(ticketId);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['user'])
   @Put(':id')
   async updateStatus(
     @Param('id') id: string,

@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
@@ -12,7 +13,7 @@ import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePayMentDto } from './dto/update-payment.dto';
+// import { UpdatePayMentDto } from './dto/update-payment.dto';
 
 @Controller('payment')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -21,8 +22,9 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post()
-  create(@Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentService.create(createPaymentDto);
+  create(@Body() createPaymentDto: CreatePaymentDto, @Req() req: any) {
+    const userId = req.user.userId;
+    return this.paymentService.create(userId, createPaymentDto);
   }
 
   @Get()
@@ -41,5 +43,14 @@ export class PaymentController {
     @Body('payment_status') status: 'PENDING' | 'COMPLETED' | 'FAILED',
   ) {
     return this.paymentService.update(id, status);
+  }
+  @Get('success')
+  success() {
+    return { message: 'Payment completed successfully' };
+  }
+
+  @Get('cancel')
+  cancel() {
+    return { message: 'Payment was cancelled' };
   }
 }

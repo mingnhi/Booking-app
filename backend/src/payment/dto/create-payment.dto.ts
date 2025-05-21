@@ -24,4 +24,8 @@ export class CreatePaymentDto {
 
   @IsOptional()
   payment_date?: Date;
+
+  @IsOptional()
+  @IsString()
+  paypal_payment_id?: string;
 }

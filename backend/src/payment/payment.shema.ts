@@ -9,6 +9,9 @@ export class Payment {
   @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true })
   ticket_id: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user_id: Types.ObjectId;
+
   @Prop({ required: true })
   amount: number;
 
@@ -20,6 +23,8 @@ export class Payment {
 
   @Prop()
   payment_date: Date;
+  @Prop()
+  paypal_payment_id?: string;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);

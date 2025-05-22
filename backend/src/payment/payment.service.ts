@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -23,49 +24,51 @@ export class PaymentService {
     userId: string,
     createPaymentDto: CreatePaymentDto,
   ): Promise<{ message: string; ticketStatus: string }> {
-    const {
-      ticket_id,
-      amount,
-      payment_method,
-      payment_status,
-      paypal_payment_id,
-    } = createPaymentDto;
-    const ticket = await this.ticketModel.findById(ticket_id);
-    if (!ticket) throw new NotFoundException('Ticket not found');
+    try {
+      const { ticket_id, amount, payment_method, payment_status, paypal_payment_id } = createPaymentDto;
 
-    if (ticket.user_id.toString() !== userId) throw new ForbiddenException();
+      const ticket = await this.ticketModel.findById(ticket_id);
+      if (!ticket) throw new NotFoundException('Ticket not found');
 
-    if (payment_method === 'paypal' && !paypal_payment_id) {
-      throw new Error('Thiếu mã thanh toán PayPal');
-    }
+      if (ticket.user_id.toString() !== userId) throw new ForbiddenException();
 
-    if (payment_method === 'cash' && paypal_payment_id) {
-      throw new Error('Thanh toán tiền mặt không cần mã PayPal');
-    }
-    ticket.ticket_status = createPaymentDto.payment_status === 'COMPLETED' ? 'COMPLETED' : 'BOOKED';
-    await ticket.save();
+      if (payment_method === 'paypal' && !paypal_payment_id) {
+        throw new Error('Thiếu mã thanh toán PayPal');
+      }
 
-    if (payment_status === 'COMPLETED') {
-      await this.seatModel.findByIdAndUpdate(ticket.seat_id, {
-        status_seat: SeatStatus.BOOKED,
+      if (payment_method === 'cash' && paypal_payment_id) {
+        throw new Error('Thanh toán tiền mặt không cần mã PayPal');
+      }
+
+      ticket.ticket_status = payment_status === 'COMPLETED' ? 'COMPLETED' : 'BOOKED';
+      await ticket.save();
+
+      if (payment_status === 'COMPLETED') {
+        await this.seatModel.findByIdAndUpdate(ticket.seat_id, {
+          status_seat: SeatStatus.BOOKED,
+        });
+      }
+
+      const payment = new this.paymentModel({
+        user_id: userId,
+        ticket_id,
+        amount,
+        payment_method,
+        payment_status,
+        paypal_payment_id,
+        payment_date: new Date(),
       });
+
+      await payment.save();
+
+      return {
+        message: 'Thanh toán đã được ghi nhận',
+        ticketStatus: ticket.ticket_status,
+      };
+    } catch (error) {
+      console.error('Lỗi khi tạo thanh toán:', error);
+      throw new InternalServerErrorException(' Đã xảy ra lỗi khi xử lý thanh toán ');
     }
-
-    const payment = new this.paymentModel({
-      user_id: userId,
-      ticket_id,
-      amount,
-      payment_method,
-      payment_status,
-      paypal_payment_id,
-      payment_date: new Date(),
-    });
-    await payment.save();
-
-    return {
-      message: 'Thanh toán đã được ghi nhận',
-      ticketStatus: ticket.ticket_status,
-    };
   }
 
   async findAll(): Promise<Payment[]> {

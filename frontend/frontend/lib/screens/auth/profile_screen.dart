@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         Navigator.pushReplacementNamed(context, '/trip/search');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/my-tickets');
+        Navigator.pushReplacementNamed(context, '/tickets');
         break;
       case 3:
         break;

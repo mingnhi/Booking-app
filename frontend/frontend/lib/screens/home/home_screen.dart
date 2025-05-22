@@ -216,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 scale: _bounceAnimation!.value,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/trip');
+                                    Navigator.pushNamed(context, '/trip/search');
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: primaryColor,

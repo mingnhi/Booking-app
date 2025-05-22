@@ -180,9 +180,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   onPressed: () async {
                                     final email = _emailController.text;
                                     final password = _passwordController.text;
+                                    final authService = Provider.of<AuthService>(context, listen: false); // Lấy AuthService
                                     final success = await authService.login(email, password);
                                     if (success != null) {
-                                      Navigator.pushReplacementNamed(context, '/home');
+                                      // Kiểm tra vai trò của người dùng
+                                      if (authService.isAdmin()) {
+                                        Navigator.pushReplacementNamed(context, '/admin'); // Chuyển hướng đến trang admin
+                                      } else {
+                                        Navigator.pushReplacementNamed(context, '/home'); // Chuyển hướng đến trang user
+                                      }
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(

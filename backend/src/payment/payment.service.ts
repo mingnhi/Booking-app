@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -10,7 +11,6 @@ import { Model } from 'mongoose';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { Ticket, TicketDocument } from 'src/ticket/ticket.schema';
 import { Seat, SeatDocument, SeatStatus } from 'src/seat/seat.schema';
-import path from 'path';
 
 @Injectable()
 export class PaymentService {
@@ -25,10 +25,20 @@ export class PaymentService {
     createPaymentDto: CreatePaymentDto,
   ): Promise<{ message: string; ticketStatus: string }> {
     try {
-      const { ticket_id, amount, payment_method, payment_status, paypal_payment_id } = createPaymentDto;
+      const {
+        ticket_id,
+        amount,
+        payment_method,
+        payment_status,
+        paypal_payment_id,
+      } = createPaymentDto;
 
       const ticket = await this.ticketModel.findById(ticket_id);
-      if (!ticket) throw new NotFoundException('Ticket not found');
+      if (!ticket) {
+        throw new NotFoundException('Ticket not found');
+      } else if (ticket.ticket_status === 'COMPLETED') {
+        throw new ConflictException('Ticket already completed');
+      }
 
       if (ticket.user_id.toString() !== userId) throw new ForbiddenException();
 
@@ -40,7 +50,8 @@ export class PaymentService {
         throw new Error('Thanh toán tiền mặt không cần mã PayPal');
       }
 
-      ticket.ticket_status = payment_status === 'COMPLETED' ? 'COMPLETED' : 'BOOKED';
+      ticket.ticket_status =
+        payment_status === 'COMPLETED' ? 'COMPLETED' : 'BOOKED';
       await ticket.save();
 
       if (payment_status === 'COMPLETED') {
@@ -67,7 +78,9 @@ export class PaymentService {
       };
     } catch (error) {
       console.error('Lỗi khi tạo thanh toán:', error);
-      throw new InternalServerErrorException(' Đã xảy ra lỗi khi xử lý thanh toán ');
+      throw new InternalServerErrorException(
+        ' Đã xảy ra lỗi khi xử lý thanh toán ',
+      );
     }
   }
 

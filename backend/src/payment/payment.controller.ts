@@ -16,9 +16,8 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 // import { UpdatePayMentDto } from './dto/update-payment.dto';
 
 @Controller('payment')
-
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) { }
+  constructor(private readonly paymentService: PaymentService) {}
   @UseGuards(JwtAuthGuard, RolesGuard)
   @SetMetadata('roles', ['user'])
   @Post()

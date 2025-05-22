@@ -8,7 +8,7 @@ import { Payment, PaymentDocument } from './payment.shema';
 import { Model } from 'mongoose';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { Ticket, TicketDocument } from 'src/ticket/ticket.schema';
-import { Seat, SeatDocument } from 'src/seat/seat.schema';
+import { Seat, SeatDocument, SeatStatus } from 'src/seat/seat.schema';
 import path from 'path';
 
 @Injectable()
@@ -47,7 +47,7 @@ export class PaymentService {
 
     if (payment_status === 'COMPLETED') {
       await this.seatModel.findByIdAndUpdate(ticket.seat_id, {
-        is_available: false,
+        status_seat: SeatStatus.BOOKED,
       });
     }
 
@@ -60,6 +60,7 @@ export class PaymentService {
       paypal_payment_id,
       payment_date: new Date(),
     });
+    await payment.save();
 
     return {
       message: 'Thanh toán đã được ghi nhận',

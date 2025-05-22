@@ -47,12 +47,6 @@ export class TripService {
 
   async findAll(): Promise<Trip[]> {
     return this.tripModel.find().exec();
-    // return this.tripModel
-    //   .find()
-    //   .populate('departure_location', 'name')
-    //   .populate('arrival_location', 'name')
-    //   .populate('vehicle_id')
-    //   .exec();
   }
 
   async findOne(id: string): Promise<Trip> {

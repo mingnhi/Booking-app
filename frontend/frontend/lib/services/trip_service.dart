@@ -102,7 +102,7 @@ class TripService extends ChangeNotifier {
     try {
       print('Fetching trip with ID: $tripId');
       final response = await http.get(
-        Uri.parse('$baseUrl/trip/$tripId'),
+        Uri.parse('$baseUrl/admin/trip/$tripId'),
         headers: {'Authorization': 'Bearer $token'},
       );
       print('Fetch trip response: ${response.statusCode} - ${response.body}');

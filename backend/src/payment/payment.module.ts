@@ -20,5 +20,6 @@ import { SeatModule } from 'src/seat/seat.module';
   ],
   controllers: [PaymentController],
   providers: [PaymentService],
+  exports: [PaymentService],
 })
 export class PaymentModule {}

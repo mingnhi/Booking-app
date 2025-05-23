@@ -50,12 +50,7 @@ export class TripService {
   }
 
   async findOne(id: string): Promise<Trip> {
-    const trip = await this.tripModel
-      .findById(id)
-      .populate('departure_location')
-      .populate('arrival_location')
-      .populate('vehicle_id')
-      .exec();
+    const trip = await this.tripModel.findById(id).exec();
     if (!trip) {
       throw new NotFoundException('Trip with id ${id} not found');
     }

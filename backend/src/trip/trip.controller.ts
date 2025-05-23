@@ -7,22 +7,12 @@ import { Trip } from './trip.schema';
 @Controller('trip')
 export class TripController {
   constructor(private readonly tripService: TripService) {}
-  // @SetMetadata('roles', ['admin'])
-  // @Post()
-  // createTrip(@Body() createTripDto: CreateTripDto) {
-  //   return this.tripService.create(createTripDto);
-  // }
 
   @Get()
   getAll() {
     return this.tripService.findAll();
   }
 
-  // @Post('search')
-  // searchTrips(@Body() body: any) {
-  //   const { departure_location, arrival_location, departure_time } = body;
-  //   return this.tripService.searchTrips(departure_location, arrival_location, departure_time);
-  // }
   @Post('search')
   async searchTrips(
     @Query('departure_location') departure_location?: string,

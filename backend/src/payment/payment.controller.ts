@@ -40,15 +40,7 @@ export class PaymentController {
     return this.paymentService.findbyTicketId(ticketId);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @SetMetadata('roles', ['user'])
-  @Put(':id')
-  async updateStatus(
-    @Param('id') id: string,
-    @Body('payment_status') status: 'PENDING' | 'COMPLETED' | 'FAILED',
-  ) {
-    return this.paymentService.update(id, status);
-  }
+  
   @Get('success')
   success() {
     return { message: 'Payment completed successfully' };

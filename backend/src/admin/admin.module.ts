@@ -8,6 +8,7 @@ import { TicketModule } from 'src/ticket/ticket.module';
 import { LocationModule } from 'src/location/location.module';
 // import { Vehicle } from 'src/vehicle/vehicle.shema';
 import { VehicleModule } from 'src/vehicle/vehicle.module';
+import { PaymentModule } from 'src/payment/payment.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { VehicleModule } from 'src/vehicle/vehicle.module';
     UsersModule,
     LocationModule,
     VehicleModule,
+    PaymentModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

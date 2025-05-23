@@ -27,6 +27,7 @@ import { CreateLocationDto } from 'src/location/dto/create-location.dto';
 import { VehicleService } from 'src/vehicle/vehicle.service';
 import { CreateVehicleDto } from 'src/vehicle/dto/create-vehicle.dto';
 import { UpdateVehicleDto } from 'src/vehicle/dto/update-vehicle.dto';
+import { PaymentService } from 'src/payment/payment.service';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -40,6 +41,7 @@ export class AdminController {
     private readonly userService: UsersService,
     private readonly locationService: LocationService,
     private readonly vehicleService: VehicleService,
+    private readonly paymentService: PaymentService,
   ) {}
   // @Post('seat')
   // createSeat(@Body() createSeatDto: CreateSeatDto) {
@@ -162,5 +164,18 @@ export class AdminController {
   @Delete('vehicle/:id')
   deleteVehicle(@Param('id') id: string) {
     return this.vehicleService.remove(id);
+  }
+
+  @Get()
+  findAll() {
+    return this.paymentService.findAll();
+  }
+
+  @Put('payment/:id')
+  async updateStatusPayment(
+    @Param('id') id: string,
+    @Body('payment_status') status: 'PENDING' | 'COMPLETED' | 'FAILED',
+  ) {
+    return this.paymentService.update(id, status);
   }
 }

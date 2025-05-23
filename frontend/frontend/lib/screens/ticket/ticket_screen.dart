@@ -477,11 +477,11 @@ class _TicketScreenState extends State<TicketScreen> {
                                       color: const Color(0xFF2474E5),
                                     ),
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteTicket(
-                                        ticket.id, ticket.seat_id, ticket.trip_id),
-                                  ),
+                                  // IconButton(
+                                  //   icon: const Icon(Icons.delete, color: Colors.red),
+                                  //   onPressed: () => _deleteTicket(
+                                  //       ticket.id, ticket.seat_id, ticket.trip_id),
+                                  // ),
                                 ],
                               ),
                               const SizedBox(height: 8),

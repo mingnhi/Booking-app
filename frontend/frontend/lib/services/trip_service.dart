@@ -63,9 +63,9 @@ class TripService extends ChangeNotifier {
       final body = {
         if (departureLocation != null) 'departure_location': departureLocation,
         if (arrivalLocation != null) 'arrival_location': arrivalLocation,
-        if (departureTime != null) 'departure_time': DateFormat('yyyy-MM-dd').format(departureTime),
+        if (departureTime != null) 'departure_time': departureTime.toIso8601String(), // Sửa đổi ở đây
       };
-      print('Search trips request body (TripService): $body');
+      print('Search trips request body (TripService): $body'); // Log body để kiểm tra
       final response = await http.post(
         Uri.parse('$baseUrl/trip/search'),
         headers: {
@@ -74,7 +74,7 @@ class TripService extends ChangeNotifier {
         },
         body: jsonEncode(body),
       );
-      print('Search trips response: ${response.statusCode} - ${response.body}');
+      print('Search trips response: ${response.statusCode} - ${response.body}'); // Log response
       if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = jsonDecode(response.body);
         trips = data.map((e) => Trip.fromJson(e as Map<String, dynamic>)).toList();

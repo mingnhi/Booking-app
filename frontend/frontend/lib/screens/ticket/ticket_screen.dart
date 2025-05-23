@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/payment/payment_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/ticket_service.dart';
@@ -543,15 +544,49 @@ class _TicketScreenState extends State<TicketScreen> {
                               const SizedBox(height: 8),
                               Align(
                                 alignment: Alignment.centerRight,
-                                child: ElevatedButton(
-                                  onPressed: () => _startEditing(ticket),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF5B9EE5),
-                                  ),
-                                  child:
-                                  Text('Chỉnh sửa', style: GoogleFonts.poppins()),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: () => _startEditing(ticket),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF5B9EE5,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Chỉnh sửa',
+                                        style: GoogleFonts.poppins(),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => PaymentScreen(
+                                                  amount: trip.price,
+                                                  ticketId: ticket.id,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF2474E5,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Thanh toán',
+                                        style: GoogleFonts.poppins(),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+
                             ],
                           ),
                         ),

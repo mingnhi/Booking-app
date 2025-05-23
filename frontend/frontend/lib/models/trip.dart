@@ -33,8 +33,8 @@ class Trip {
       vehicle_id: json['vehicle_id']?.toString() ?? '',
       departure_location: json['departure_location']?.toString() ?? '',
       arrival_location: json['arrival_location']?.toString() ?? '',
-      departure_time: DateTime.parse(json['departure_time']?.toString() ?? DateTime.now().toIso8601String()),
-      arrival_time: DateTime.parse(json['arrival_time']?.toString() ?? DateTime.now().toIso8601String()),
+      departure_time: DateTime.tryParse(json['departure_time']?.toString() ?? DateTime.now().toIso8601String()) ?? DateTime.now(),
+      arrival_time: DateTime.tryParse(json['arrival_time']?.toString() ?? DateTime.now().toIso8601String()) ?? DateTime.now(),
       price: (json['price'] is int)
           ? (json['price'] as int).toDouble()
           : (json['price'] as num?)?.toDouble() ?? 0.0,

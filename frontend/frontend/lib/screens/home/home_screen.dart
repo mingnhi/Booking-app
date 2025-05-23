@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         children: [
                           Text(
                             'Chào mừng, ${authService.currentUser?.fullName ?? "Khách"}!',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.montserrat(
                               color: primaryTextColor,
                               fontSize: 40,
                               fontWeight: FontWeight.bold,
@@ -252,9 +252,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       child: Text(
                         'Chuyến đi nổi bật',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.montserrat(
                           fontSize: 24,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: primaryTextColor,
                         ),
                       ),
@@ -351,9 +351,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       child: Text(
                         'Địa điểm phổ biến',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.montserrat(
                           fontSize: 24,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: primaryTextColor,
                         ),
                       ),
@@ -386,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               color: Colors.white,
                               child: InkWell(
                                 onTap: () {
-                                  Navigator.pushNamed(context, '/trip');
+                                  Navigator.pushNamed(context, '/trip/search');
                                 },
                                 borderRadius: BorderRadius.circular(16),
                                 child: Padding(
@@ -409,14 +409,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         ),
                                         textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        'ID: ${location.id}',
-                                        style: GoogleFonts.poppins(
-                                          color: secondaryTextColor,
-                                          fontSize: 12,
-                                        ),
                                       ),
                                     ],
                                   ),

@@ -138,7 +138,7 @@ class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAlive
                   leading: const Icon(Icons.home),
                   title: const Text('Về trang chủ'),
                   onTap: () {
-                    Navigator.pushReplacementNamed(context, '/home');
+                    Navigator.pushReplacementNamed(context, '/admin');
                   },
                 ),
                 ListTile(

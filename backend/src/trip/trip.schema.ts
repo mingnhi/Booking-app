@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
 
 export type TripDocument = Trip & Document;
 
@@ -31,3 +31,12 @@ export class Trip {
 }
 
 export const TripSchema = SchemaFactory.createForClass(Trip);
+TripSchema.pre(
+  'deleteOne',
+  { document: true, query: false },
+  async function (next) {
+    const tripId = this._id;
+    await mongoose.model('Seat').deleteMany({ trip_id: tripId });
+    next();
+  },
+);

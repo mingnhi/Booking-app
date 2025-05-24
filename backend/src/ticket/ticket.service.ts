@@ -31,12 +31,12 @@ export class TicketService {
       throw new NotFoundException('Không tìm thấy ghế');
     }
 
-    if (seat.status_seat !== SeatStatus.AVAILABLE) {
+    if (seat.status_seat === SeatStatus.BOOKED) {
       throw new BadRequestException(' Ghế đã được đặt');
     }
 
     await this.seatModel.findByIdAndUpdate(dto.seat_id, {
-      is_available: false,
+      status_seat: SeatStatus.BOOKED,
     });
     const ticket = new this.ticketModel({
       ...dto,

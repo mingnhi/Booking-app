@@ -17,6 +17,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('seats')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@SetMetadata('roles', ['user'])
 export class SeatController {
   constructor(private readonly seatService: SeatService) {}
 
@@ -25,33 +26,22 @@ export class SeatController {
   // createSeat(@Body() createSeatDto: CreateSeatDto) {
   //   return this.seatService.create(createSeatDto);
   // }
-
-  @SetMetadata('roles', ['user', 'admin'])
   @Get()
   getAll() {
     return this.seatService.findAll();
   }
-
-  @SetMetadata('roles', ['user', 'admin'])
   @Get(':id')
   getOne(@Param('id') id: string) {
     return this.seatService.findOne(id);
   }
-  @SetMetadata('roles', ['user', 'admin'])
   @Get('trip/:tripId')
   getByTripId(@Param('tripId') tripId: string) {
     return this.seatService.findByTripId(tripId);
   }
-
-  // @SetMetadata('roles', ['admin'])
-  // @Put(':id')
-  // updateSeat(@Param('id') id: string, @Body() updateSeatDto: UpdateSeatDto) {
-  //   return this.seatService.update(id, updateSeatDto);
-  // }
-
-  // @SetMetadata('roles', ['admin'])
-  // @Delete(':id')
-  // delete(@Param('id') id: string) {
-  //   return this.seatService.remove(id);
-  // }
+  @Get('available/:tripId')
+  async getAvailableSeats(@Param('tripId') tripId: string) {
+    const availableSeats =
+      await this.seatService.findAvailableSeatsByTrip(tripId);
+    return availableSeats;
+  }
 }

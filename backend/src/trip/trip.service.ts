@@ -10,6 +10,7 @@ import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { Seat, SeatDocument, SeatStatus } from 'src/seat/seat.schema';
 import { Location, LocationDocument } from 'src/location/location.schema';
+import { SeatService } from 'src/seat/seat.service';
 // import { PopulatedTrip } from './dto/populated';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class TripService {
     @InjectModel(Trip.name) private tripModel: Model<TripDocument>,
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
+    private readonly seatService: SeatService,
   ) {}
 
   async create(createTripDto: CreateTripDto): Promise<Trip> {
@@ -67,14 +69,22 @@ export class TripService {
     return updated;
   }
 
-  async remove(id: string): Promise<Trip> {
-    const deleted = await this.tripModel.findByIdAndDelete(id).exec();
-    if (!deleted) {
+  // async remove(id: string): Promise<Trip> {
+  //   const deleted = await this.tripModel.findByIdAndDelete(id).exec();
+  //   if (!deleted) {
+  //     throw new NotFoundException('Trip with ID ${id} not found');
+  //   }
+  //   return deleted;
+  // }
+
+  async remove(id: string): Promise<void> {
+    const trip = await this.tripModel.findById(id);
+    if (!trip) {
       throw new NotFoundException('Trip with ID ${id} not found');
     }
-    return deleted;
+    await this.seatService.removeByTripId(id);
+    await trip.deleteOne();
   }
-
   async searchTrips(
     departure_location?: string,
     arrival_location?: string,

@@ -28,6 +28,7 @@ import { VehicleService } from 'src/vehicle/vehicle.service';
 import { CreateVehicleDto } from 'src/vehicle/dto/create-vehicle.dto';
 import { UpdateVehicleDto } from 'src/vehicle/dto/update-vehicle.dto';
 import { PaymentService } from 'src/payment/payment.service';
+import { Payment } from 'src/payment/payment.shema';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -176,6 +177,13 @@ export class AdminController {
     @Param('id') id: string,
     @Body('payment_status') status: 'PENDING' | 'COMPLETED' | 'FAILED',
   ) {
+    return this.paymentService.update(id, status);
+  }
+  @Put(':id')
+  async updatePaymentStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ): Promise<Payment> {
     return this.paymentService.update(id, status);
   }
 }

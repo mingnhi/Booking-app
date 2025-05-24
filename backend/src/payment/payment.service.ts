@@ -18,7 +18,7 @@ export class PaymentService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Ticket.name) private ticketModel: Model<TicketDocument>,
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
@@ -82,6 +82,23 @@ export class PaymentService {
         ' Đã xảy ra lỗi khi xử lý thanh toán ',
       );
     }
+  }
+
+  async findByUserId(userId: string): Promise<Payment[]> {
+    return this.paymentModel
+      .find({ user_id: userId })
+      .populate('user_id', 'full_name')
+      .populate({
+        path: 'ticket_id',
+        populate: [
+          {
+            path: 'trip_id',
+            select: 'departure_location arrival_location price',
+          },
+          { path: 'seat_id', select: 'seat_number' },
+        ],
+      })
+      .exec();
   }
 
   async findAll(): Promise<Payment[]> {

@@ -18,7 +18,10 @@ export class Payment {
   @Prop({ enum: ['paypal', 'cash'], required: true })
   payment_method: string;
 
-  @Prop({ enum: ['PENDING', 'COMPLETED', 'FAILED'], default: 'PENDING' })
+  @Prop({
+    enum: ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'],
+    default: 'PENDING',
+  })
   payment_status: string;
 
   @Prop()

@@ -43,7 +43,7 @@ export class AdminController {
     private readonly locationService: LocationService,
     private readonly vehicleService: VehicleService,
     private readonly paymentService: PaymentService,
-  ) {}
+  ) { }
   // @Post('seat')
   // createSeat(@Body() createSeatDto: CreateSeatDto) {
   //   return this.seatService.create(createSeatDto);

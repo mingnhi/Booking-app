@@ -18,7 +18,7 @@ export class PaymentService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Ticket.name) private ticketModel: Model<TicketDocument>,
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
@@ -137,5 +137,53 @@ export class PaymentService {
     payment.payment_status = status;
     payment.payment_date = new Date();
     return payment.save();
+  }
+
+  async refundPayment(
+    paymentId: string,
+    userId: string,
+  ): Promise<{ message: string }> {
+    const session = await this.paymentModel.startSession();
+    session.startTransaction();
+
+    try {
+      const payment = await this.paymentModel.findById(paymentId).session(session);
+      if (!payment) {
+        throw new NotFoundException('Payment not found');
+      }
+
+      if (payment.user_id.toString() !== userId) {
+        throw new ForbiddenException('Bạn không có quyền hoàn tiền giao dịch');
+      }
+
+      if (payment.payment_status !== 'COMPLETED') {
+        throw new ConflictException('Chỉ có thể hoàn tiền khi giao dịch hoàn tất');
+      }
+      payment.payment_status = 'REFUNDED';
+      payment.payment_date = new Date();
+      await payment.save({ session });
+
+      const ticket = await this.ticketModel.findById(payment.ticket_id).session(session);
+      if (ticket) {
+        ticket.ticket_status = 'CANCELLED';
+        await ticket.save({ session });
+
+        if (ticket.seat_id) {
+          await this.seatModel.findByIdAndUpdate(
+            ticket.seat_id,
+            { status_seat: SeatStatus.AVAILABLE },
+            { session }
+          );
+        }
+      }
+      await session.commitTransaction();
+      return { message: 'Hoàn tiền thành công' };
+    } catch (error) {
+      await session.abortTransaction();
+      console.error('Lỗi khi hoàn tiền: ', error);
+      throw new InternalServerErrorException('lỗi khi xử lý hoàn tiền');
+    } finally {
+      session.endSession();
+    }
   }
 }

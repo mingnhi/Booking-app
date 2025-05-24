@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Req,
   SetMetadata,
@@ -18,7 +19,7 @@ import { Request } from '@nestjs/common';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) { }
+  constructor(private readonly paymentService: PaymentService) {}
   @UseGuards(JwtAuthGuard, RolesGuard)
   @SetMetadata('roles', ['user'])
   @Post()
@@ -47,6 +48,12 @@ export class PaymentController {
   async findByUserId(@Request() req) {
     const userId = req.user.userId;
     return this.paymentService.findByUserId(userId);
+  }
+
+  @Post('refund/:paymentId')
+  async refund(@Param('paymentId') paymentId: string, @Req() req) {
+    const userId = req.user.userId; // lấy từ JWT payload
+    return this.paymentService.refundPayment(paymentId, userId);
   }
 
   @Get('success')

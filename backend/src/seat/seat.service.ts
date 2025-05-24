@@ -8,12 +8,14 @@ import { Types } from 'mysql2';
 
 @Injectable()
 export class SeatService {
-  constructor(@InjectModel(Seat.name) private seatModel: Model<SeatDocument>) { }
+  constructor(@InjectModel(Seat.name) private seatModel: Model<SeatDocument>) {}
   async create(createSeatDto: CreateSeatDto): Promise<Seat> {
     return this.seatModel.create(createSeatDto);
   }
 
-  async findAvailableSeatsByTrip(tripId: string): Promise<{ total: number; seats: Seat[] }> {
+  async findAvailableSeatsByTrip(
+    tripId: string,
+  ): Promise<{ total: number; seats: Seat[] }> {
     const availableSeats = await this.seatModel.find({
       trip_id: new mongoose.Types.ObjectId(tripId),
       status_seat: SeatStatus.AVAILABLE,

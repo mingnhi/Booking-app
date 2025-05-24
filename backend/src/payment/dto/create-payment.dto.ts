@@ -20,7 +20,7 @@ export class CreatePaymentDto {
 
   @IsEnum(['PENDING', 'COMPLETED', 'FAILED'])
   @IsOptional()
-  payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED';
+  payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
 
   @IsOptional()
   payment_date?: Date;

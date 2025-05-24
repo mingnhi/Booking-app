@@ -139,6 +139,24 @@ export class PaymentService {
     return payment.save();
   }
 
+  async updateCaptureId(paypalPaymentId, captureId) {
+    if (!captureId) {
+      throw new Error('captureId is required');
+    }
+
+    const payment = await this.paymentModel.findOneAndUpdate(
+      { paypal_payment_id: paypalPaymentId },
+      { paypal_capture_id: captureId, payment_status: 'PENDING' },
+      { new: true }
+    );
+
+    if (!payment) {
+      throw new Error('Payment not found');
+    }
+
+    return payment;
+  }
+
   async refundPayment(
     paymentId: string,
     userId: string,

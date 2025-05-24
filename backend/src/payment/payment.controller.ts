@@ -2,8 +2,11 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   SetMetadata,
   UseGuards,
@@ -50,10 +53,27 @@ export class PaymentController {
     return this.paymentService.findByUserId(userId);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['user'])
   @Post('refund/:paymentId')
   async refund(@Param('paymentId') paymentId: string, @Req() req) {
     const userId = req.user.userId; // lấy từ JWT payload
     return this.paymentService.refundPayment(paymentId, userId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['user'])
+  @Put('update-capture-id/:paypalPaymentId')
+  @HttpCode(HttpStatus.OK)
+  async updateCaptureId(
+    @Param('paypalPaymentId') paypalPaymentId: string,
+    @Body('paypal_capture_id') captureId: string,
+  ) {
+    const payment = await this.paymentService.updateCaptureId(paypalPaymentId, captureId);
+    return {
+      message: 'CaptureId updated successfully',
+      payment,
+    };
   }
 
   @Get('success')

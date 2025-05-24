@@ -179,11 +179,4 @@ export class AdminController {
   ) {
     return this.paymentService.update(id, status);
   }
-  @Put(':id')
-  async updatePaymentStatus(
-    @Param('id') id: string,
-    @Body('status') status: string,
-  ): Promise<Payment> {
-    return this.paymentService.update(id, status);
-  }
 }

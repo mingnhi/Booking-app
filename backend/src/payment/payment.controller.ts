@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Post,
   Req,
   SetMetadata,
@@ -13,6 +12,8 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { Payment } from './payment.shema';
+import { Request } from '@nestjs/common';
+
 // import { UpdatePayMentDto } from './dto/update-payment.dto';
 
 @Controller('payment')
@@ -42,8 +43,9 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @SetMetadata('roles', ['user'])
-  @Get('user/:userId')
-  async findByUserId(@Param('userId') userId: string) {
+  @Get('mypayment')
+  async findByUserId(@Request() req) {
+    const userId = req.user.userId;
     return this.paymentService.findByUserId(userId);
   }
 

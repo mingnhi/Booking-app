@@ -86,7 +86,7 @@ export class PaymentService {
 
   async findByUserId(userId: string): Promise<Payment[]> {
     return this.paymentModel
-      .find({ user_id: userId })
+      .find({ user_id: userId, ticket_id: { $ne: null } })
       .populate('user_id', 'full_name')
       .populate({
         path: 'ticket_id',

@@ -28,4 +28,8 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsString()
   paypal_payment_id?: string;
+
+  @IsOptional()
+  @IsString()
+  paypal_capture_id?: string;
 }

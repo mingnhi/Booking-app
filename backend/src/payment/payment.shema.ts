@@ -28,6 +28,8 @@ export class Payment {
   payment_date: Date;
   @Prop()
   paypal_payment_id?: string;
+  @Prop()
+  paypal_capture_id?: string;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);

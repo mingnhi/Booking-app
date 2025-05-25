@@ -31,5 +31,5 @@ export class CreatePaymentDto {
 
   @IsOptional()
   @IsString()
-  paypal_capture_id?: string;
+  sale_id?: string;
 }

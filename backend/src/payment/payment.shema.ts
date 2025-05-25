@@ -29,7 +29,7 @@ export class Payment {
   @Prop()
   paypal_payment_id?: string;
   @Prop()
-  paypal_capture_id?: string;
+  sale_id?: string;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);

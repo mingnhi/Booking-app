@@ -61,21 +61,6 @@ export class PaymentController {
     return this.paymentService.refundPayment(paymentId, userId);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @SetMetadata('roles', ['user'])
-  @Put('update-capture-id/:paypalPaymentId')
-  @HttpCode(HttpStatus.OK)
-  async updateCaptureId(
-    @Param('paypalPaymentId') paypalPaymentId: string,
-    @Body('paypal_capture_id') captureId: string,
-  ) {
-    const payment = await this.paymentService.updateCaptureId(paypalPaymentId, captureId);
-    return {
-      message: 'CaptureId updated successfully',
-      payment,
-    };
-  }
-
   @Get('success')
   success() {
     return { message: 'Payment completed successfully' };

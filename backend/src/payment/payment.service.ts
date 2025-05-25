@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Payment, PaymentDocument } from './payment.shema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { Ticket, TicketDocument } from 'src/ticket/ticket.schema';
 import { Seat, SeatDocument, SeatStatus } from 'src/seat/seat.schema';
@@ -18,7 +18,7 @@ export class PaymentService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Ticket.name) private ticketModel: Model<TicketDocument>,
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
@@ -52,7 +52,7 @@ export class PaymentService {
       }
       if (payment_method === 'paypal' && !sale_id) {
         throw new Error('Thiếu sale_id trong giao dịch PayPal');
-      }      
+      }
 
       ticket.ticket_status =
         payment_status === 'COMPLETED' ? 'COMPLETED' : 'BOOKED';
@@ -66,7 +66,7 @@ export class PaymentService {
 
       const payment = new this.paymentModel({
         user_id: userId,
-        ticket_id,
+        ticket_id: new mongoose.Types.ObjectId(ticket_id),
         amount,
         payment_method,
         payment_status,
@@ -91,8 +91,8 @@ export class PaymentService {
 
   async findByUserId(userId: string): Promise<Payment[]> {
     return this.paymentModel
-      .find({ user_id: userId, ticket_id: { $ne: null } })
-      .populate('user_id', 'full_name')
+      .find({ user_id: userId })
+      .populate('user_id')
       .populate({
         path: 'ticket_id',
         populate: [
@@ -100,7 +100,10 @@ export class PaymentService {
             path: 'trip_id',
             select: 'departure_location arrival_location price',
           },
-          { path: 'seat_id', select: 'seat_number' },
+          {
+            path: 'seat_id',
+            select: 'seat_number status_seat',
+          },
         ],
       })
       .exec();

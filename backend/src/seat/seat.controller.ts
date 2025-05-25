@@ -44,4 +44,8 @@ export class SeatController {
       await this.seatService.findAvailableSeatsByTrip(tripId);
     return availableSeats;
   }
+  @Put(':id')
+  updateSeat(@Param('id') id: string, @Body() updateSeatDto: UpdateSeatDto) {
+    return this.seatService.update(id, updateSeatDto);
+  }
 }

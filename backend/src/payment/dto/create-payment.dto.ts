@@ -1,6 +1,7 @@
 // src/payment/dto/create-payment.dto.ts
 import {
   IsEnum,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -8,6 +9,7 @@ import {
 } from 'class-validator';
 
 export class CreatePaymentDto {
+  @IsMongoId()
   @IsString()
   @IsNotEmpty()
   ticket_id: string;

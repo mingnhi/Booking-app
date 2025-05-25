@@ -31,7 +31,6 @@ export class PaymentService {
         payment_method,
         payment_status,
         paypal_payment_id,
-        sale_id,
       } = createPaymentDto;
 
       const ticket = await this.ticketModel.findById(ticket_id);
@@ -50,9 +49,9 @@ export class PaymentService {
       if (payment_method === 'cash' && paypal_payment_id) {
         throw new Error('Thanh toán tiền mặt không cần mã PayPal');
       }
-      if (payment_method === 'paypal' && !sale_id) {
-        throw new Error('Thiếu sale_id trong giao dịch PayPal');
-      }
+      // if (payment_method === 'paypal' && !sale_id) {
+      //   throw new Error('Thiếu sale_id trong giao dịch PayPal');
+      // }
 
       ticket.ticket_status =
         payment_status === 'COMPLETED' ? 'COMPLETED' : 'BOOKED';
@@ -71,7 +70,6 @@ export class PaymentService {
         payment_method,
         payment_status,
         paypal_payment_id,
-        sale_id,
         payment_date: new Date(),
       });
 

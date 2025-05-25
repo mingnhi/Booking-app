@@ -481,36 +481,36 @@ class _TripListScreenState extends State<TripListScreen> {
                                     ),
                                   ],
                                 ),
-                                Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      // Navigate to trip detail screen with trip ID
-                                      Navigator.pushNamed(
-                                        context,
-                                        '/trip/detail',
-                                        arguments: trip.id,
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
-                                      backgroundColor: const Color(0xFFFFD333),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      elevation: 2,
-                                    ),
-                                    child: Text(
-                                      'Chọn chỗ',
-                                      style: GoogleFonts.montserrat(
-                                        color: Colors.black,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                // Positioned(
+                                //   right: 0,
+                                //   bottom: 0,
+                                //   // child: ElevatedButton(
+                                //   //   onPressed: () {
+                                //   //     // Navigate to trip detail screen with trip ID
+                                //   //     Navigator.pushNamed(
+                                //   //       context,
+                                //   //       '/trip/detail',
+                                //   //       arguments: trip.id,
+                                //   //     );
+                                //   //   },
+                                //   //   style: ElevatedButton.styleFrom(
+                                //   //     padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+                                //   //     backgroundColor: const Color(0xFFFFD333),
+                                //   //     shape: RoundedRectangleBorder(
+                                //   //       borderRadius: BorderRadius.circular(8),
+                                //   //     ),
+                                //   //     elevation: 2,
+                                //   //   ),
+                                //   //   child: Text(
+                                //   //     'Chọn chỗ',
+                                //   //     style: GoogleFonts.montserrat(
+                                //   //       color: Colors.black,
+                                //   //       fontSize: 15,
+                                //   //       fontWeight: FontWeight.bold,
+                                //   //     ),
+                                //   //   ),
+                                //   // ),
+                                // ),
                               ],
                             ),
                           ],

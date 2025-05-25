@@ -39,18 +39,43 @@ class SeatService extends ChangeNotifier {
     final token = await _storage.read(key: 'accessToken');
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/seats/trip/$tripId'), // Sử dụng route đúng của backend
+        Uri.parse('$baseUrl/seats/trip/$tripId'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
         seats = data.map((e) => Seat.fromJson(e)).toList();
-        print('Fetched seats for tripId $tripId: $seats'); // Log để debug
+        print('Fetched seats for tripId $tripId: $seats');
       } else {
         throw Exception('Failed to fetch seats by tripId: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error fetching seats by tripId: $e');
+      seats = [];
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAvailableSeatsByTripId(String tripId) async {
+    isLoading = true;
+    notifyListeners();
+    final token = await _storage.read(key: 'accessToken');
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/seats/available/$tripId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        seats = (data['seats'] as List).map((e) => Seat.fromJson(e)).toList();
+        print('Fetched available seats for tripId $tripId: ${seats.length} seats');
+      } else {
+        throw Exception('Failed to fetch available seats: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching available seats by tripId: $e');
       seats = [];
     } finally {
       isLoading = false;

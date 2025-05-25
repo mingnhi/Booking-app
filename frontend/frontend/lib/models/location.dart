@@ -25,5 +25,11 @@ class Location {
     );
   }
 
-  Map<String, dynamic> toJson() => {'location': location};
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'name': location,
+    'contact_phone': contact_phone,
+    'createdAt': createdAt?.toIso8601String(),
+    'updatedAt': updatedAt?.toIso8601String(),
+  };
 }

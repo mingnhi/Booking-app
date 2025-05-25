@@ -11,6 +11,20 @@ class TripService extends ChangeNotifier {
   bool isLoading = false;
   List<Trip> trips = [];
   String? errorMessage;
+  // Thêm danh sách lịch sử tìm kiếm
+  List<Map<String, dynamic>> recentSearches = [];
+
+  // Cập nhật phương thức để thêm tìm kiếm gần đây với tripId
+  void addRecentSearch(String departureId, String arrivalId, DateTime date, {String? tripId}) {
+    recentSearches.insert(0, {
+      'departureId': departureId,
+      'arrivalId': arrivalId,
+      'date': date,
+      'tripId': tripId, // Thêm tripId
+    });
+    if (recentSearches.length > 5) recentSearches.removeLast();
+    notifyListeners();
+  }
 
   Future<void> fetchTrips({bool allowUnauthenticated = false}) async {
     isLoading = true;
@@ -63,9 +77,9 @@ class TripService extends ChangeNotifier {
       final body = {
         if (departureLocation != null) 'departure_location': departureLocation,
         if (arrivalLocation != null) 'arrival_location': arrivalLocation,
-        if (departureTime != null) 'departure_time': departureTime.toIso8601String(), // Sửa đổi ở đây
+        if (departureTime != null) 'departure_time': DateFormat('yyyy-MM-dd').format(departureTime),
       };
-      print('Search trips request body (TripService): $body'); // Log body để kiểm tra
+      print('Search trips request body (TripService): $body');
       final response = await http.post(
         Uri.parse('$baseUrl/trip/search'),
         headers: {
@@ -74,7 +88,7 @@ class TripService extends ChangeNotifier {
         },
         body: jsonEncode(body),
       );
-      print('Search trips response: ${response.statusCode} - ${response.body}'); // Log response
+      print('Search trips response: ${response.statusCode} - ${response.body}');
       if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = jsonDecode(response.body);
         trips = data.map((e) => Trip.fromJson(e as Map<String, dynamic>)).toList();

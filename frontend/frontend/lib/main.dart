@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/admin/admin_dashboard.dart';
 import 'package:frontend/screens/admin/seat_management_screen.dart';
@@ -32,7 +33,6 @@ import 'package:frontend/services/vehicle_service.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import 'login_prompt_screen.dart';
 
 void main() {
@@ -169,14 +169,24 @@ class MyApp extends StatelessWidget {
             }
             return const Scaffold(body: Center(child: Text('ID địa điểm không hợp lệ hoặc quyền truy cập bị từ chối')));
           },
-          '/trip': (context) => TripListScreen(),
+          '/trip/list': (context) => TripListScreen(
+            trips: ModalRoute.of(context)!.settings.arguments is Map
+                ? (ModalRoute.of(context)!.settings.arguments as Map)['trips'] ?? []
+                : [],
+            departureId: ModalRoute.of(context)!.settings.arguments is Map
+                ? (ModalRoute.of(context)!.settings.arguments as Map)['departureId']
+                : null,
+            arrivalId: ModalRoute.of(context)!.settings.arguments is Map
+                ? (ModalRoute.of(context)!.settings.arguments as Map)['arrivalId']
+                : null,
+          ),
           '/trip/search': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
             return authService.currentUser != null
                 ? const TripSearchScreen()
                 : const LoginPromptScreen();
           },
-          '/trip/detail/:id': (context) => TripDetailScreen(),
+          '/trip/detail/id': (context) => TripDetailScreen(), // Sửa thành /trip/detail
           '/seat': (context) => SeatListScreen(),
           '/seat/create': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
@@ -230,14 +240,14 @@ class MyApp extends StatelessWidget {
       '/auth/profile',
       '/trip',
       '/location',
-      '/trip/detail/:id',
+      '/trip/detail/id', // Cập nhật thành /trip/detail/id
       '/admin',
       '/admin/seats',
       '/admin/tickets',
       '/admin/trips',
       '/admin/users',
     ];
-    return validRoutes.contains(routeName) || routeName.startsWith('/trip/detail/');
+    return validRoutes.contains(routeName) || routeName.startsWith('/trip/detail/id');
   }
 }
 

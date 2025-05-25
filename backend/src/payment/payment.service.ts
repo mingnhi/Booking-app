@@ -18,7 +18,7 @@ export class PaymentService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Ticket.name) private ticketModel: Model<TicketDocument>,
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
@@ -153,7 +153,9 @@ export class PaymentService {
     session.startTransaction();
 
     try {
-      const payment = await this.paymentModel.findById(paymentId).session(session);
+      const payment = await this.paymentModel
+        .findById(paymentId)
+        .session(session);
       if (!payment) {
         throw new NotFoundException('Payment not found');
       }
@@ -163,13 +165,17 @@ export class PaymentService {
       }
 
       if (payment.payment_status !== 'PENDING') {
-        throw new ConflictException('Chỉ có thể hoàn tiền khi giao dịch hoàn tất');
+        throw new ConflictException(
+          'Chỉ có thể hoàn tiền khi giao dịch hoàn tất',
+        );
       }
       payment.payment_status = 'REFUNDED';
       payment.payment_date = new Date();
       await payment.save({ session });
 
-      const ticket = await this.ticketModel.findById(payment.ticket_id).session(session);
+      const ticket = await this.ticketModel
+        .findById(payment.ticket_id)
+        .session(session);
       if (ticket) {
         ticket.ticket_status = 'CANCELLED';
         await ticket.save({ session });
@@ -178,7 +184,7 @@ export class PaymentService {
           await this.seatModel.findByIdAndUpdate(
             ticket.seat_id,
             { status_seat: SeatStatus.AVAILABLE },
-            { session }
+            { session },
           );
         }
       }
@@ -191,5 +197,25 @@ export class PaymentService {
     } finally {
       session.endSession();
     }
+  }
+
+  async updateSaleId(
+    paypalPaymentId: string,
+    saleId: string,
+  ): Promise<{ message: string }> {
+    const payment = await this.paymentModel.findOne({
+      paypal_payment_id: paypalPaymentId,
+    });
+
+    if (!payment) {
+      throw new NotFoundException(
+        'Không tìm thấy thanh toán với PayPal ID này',
+      );
+    }
+
+    payment.sale_id = saleId;
+    await payment.save();
+
+    return { message: 'Đã cập nhật saleId thành công' };
   }
 }

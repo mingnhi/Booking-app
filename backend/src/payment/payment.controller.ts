@@ -61,6 +61,16 @@ export class PaymentController {
     return this.paymentService.refundPayment(paymentId, userId);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['user'])
+  @Put('update-sale-id/:paypalPaymentId')
+  async updateSaleId(
+    @Param('paypalPaymentId') paypalPaymentId: string,
+    @Body('sale_id') saleId: string,
+  ) {
+    return this.paymentService.updateSaleId(paypalPaymentId, saleId);
+  }
+
   @Get('success')
   success() {
     return { message: 'Payment completed successfully' };

@@ -86,10 +86,9 @@ class _TicketScreenState extends State<TicketScreen> {
       _availableTrips = tripService.trips
           .where((trip) => trip.departure_time.isAfter(DateTime.now()))
           .toList();
-      _availableSeats = []; // Khởi tạo rỗng, sẽ cập nhật sau khi gọi API
+      _availableSeats = [];
     });
 
-    // Gọi API để lấy ghế AVAILABLE
     seatService.fetchAvailableSeatsByTripId(_selectedTripId!).then((_) {
       setState(() {
         _availableSeats = seatService.seats;
@@ -239,7 +238,7 @@ class _TicketScreenState extends State<TicketScreen> {
         print('Lỗi khi lưu thay đổi vé: $e');
         String errorMessage = e.toString();
         if (errorMessage.contains('404')) {
-          errorMessage = 'Vé không tồn tại. Vui lòng làm mới danh sách.';
+          errorMessage = 'Vé hoặc ghế không tồn tại. Vui lòng làm mới danh sách.';
         } else if (errorMessage.contains('403')) {
           errorMessage = 'Bạn không có quyền cập nhật vé này.';
         } else if (errorMessage.contains('400')) {
@@ -297,16 +296,20 @@ class _TicketScreenState extends State<TicketScreen> {
             ),
           );
           if (seat.statusSeat == 'BOOKED') {
-            await seatService.updateSeat(
-                seat.id,
-                Seat(
-                  id: seat.id,
-                  tripId: seat.tripId,
-                  seatNumber: seat.seatNumber,
-                  statusSeat: 'AVAILABLE',
-                  createdAt: seat.createdAt,
-                  updatedAt: DateTime.now(),
-                ));
+            final updatedSeat = await seatService.updateSeat(
+              seat.id,
+              Seat(
+                id: seat.id,
+                tripId: seat.tripId,
+                seatNumber: seat.seatNumber,
+                statusSeat: 'AVAILABLE',
+                createdAt: seat.createdAt,
+                updatedAt: DateTime.now(),
+              ),
+            );
+            if (updatedSeat == null) {
+              throw Exception('Không thể cập nhật trạng thái ghế');
+            }
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -646,9 +649,8 @@ class _TicketScreenState extends State<TicketScreen> {
                               setState(() {
                                 _selectedTripId = value;
                                 _selectedSeatId = null;
-                                _availableSeats = []; // Reset ghế, sẽ tải lại
+                                _availableSeats = [];
                               });
-                              // Tải lại ghế AVAILABLE cho chuyến đi mới
                               Provider.of<SeatService>(context, listen: false)
                                   .fetchAvailableSeatsByTripId(_selectedTripId!)
                                   .then((_) {

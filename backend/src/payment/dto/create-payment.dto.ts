@@ -7,8 +7,10 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-
+import { Types } from 'mongoose';
+import { Transform } from 'class-transformer';
 export class CreatePaymentDto {
+  @Transform(({ value }) => new Types.ObjectId(value))
   @IsMongoId()
   @IsString()
   @IsNotEmpty()

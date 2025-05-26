@@ -5,4 +5,5 @@ class PayPalConfig {
 
   static const String returnUrl = 'https://booking-app-1-bzfs.onrender.com/payment/success';
   static const String cancelUrl = 'https://booking-app-1-bzfs.onrender.com/payment/cancel';
+  static const String refundUrl = 'https://booking-app-1-bzfs.onrender.com/payment/refund';
 }

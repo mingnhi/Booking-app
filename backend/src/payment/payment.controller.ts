@@ -55,7 +55,7 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @SetMetadata('roles', ['user'])
-  @Post('refund/:paymentId')
+  @Put('refund/:paymentId')
   async refund(@Param('paymentId') paymentId: string, @Req() req) {
     const userId = req.user.userId; // lấy từ JWT payload
     return this.paymentService.refundPayment(paymentId, userId);

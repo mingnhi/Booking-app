@@ -4,7 +4,6 @@ import { Seat, SeatDocument, SeatStatus } from './seat.schema';
 import mongoose, { Model } from 'mongoose';
 import { CreateSeatDto } from './dto/create-seat.dto';
 import { UpdateSeatDto } from './dto/update-seat.dto';
-import { Types } from 'mysql2';
 
 @Injectable()
 export class SeatService {

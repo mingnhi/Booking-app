@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Ticket, TicketDocument } from './ticket.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Seat, SeatDocument, SeatStatus } from 'src/seat/seat.schema';
@@ -78,20 +78,81 @@ export class TicketService {
     return ticket;
   }
 
+  // async update(id: string, updateDto: UpdateTicketDto): Promise<Ticket> {
+  //   const ticket = await this.ticketModel.findById(id);
+  //   if (!ticket) throw new NotFoundException('Không tìm thấy vé');
+
+  //   // Nếu hủy vé => cập nhật ghế thành trống
+  //   if (updateDto.ticket_status === 'CANCELLED') {
+  //     await this.seatModel.findByIdAndUpdate(ticket.seat_id, {
+  //       is_available: true,
+  //     });
+  //   }
+
+  //   ticket.ticket_status = updateDto.ticket_status ?? ticket.ticket_status;
+  //   await ticket.save();
+
+  //   const updatedTicket = await this.ticketModel
+  //     .findById(ticket._id)
+  //     .populate('user_id', 'full_name phone_number')
+  //     .populate('trip_id', 'departure_location arrival_location price')
+  //     .populate('seat_id', 'seat_number')
+  //     .exec();
+  //   if (!updatedTicket) {
+  //     throw new NotFoundException('Không tìm thấy vé sau khi cập nhật');
+  //   }
+  //   return updatedTicket;
+  // }
+
   async update(id: string, updateDto: UpdateTicketDto): Promise<Ticket> {
     const ticket = await this.ticketModel.findById(id);
     if (!ticket) throw new NotFoundException('Không tìm thấy vé');
 
-    // Nếu hủy vé => cập nhật ghế thành trống
+    // Kiểm tra nếu có seat_id mới trong updateDto
+    if (
+      updateDto.seat_id &&
+      updateDto.seat_id.toString() !== ticket.seat_id?.toString()
+    ) {
+      // Kiểm tra ghế mới có tồn tại không
+      const newSeat = await this.seatModel.findById(updateDto.seat_id);
+      if (!newSeat) {
+        throw new NotFoundException('Không tìm thấy ghế mới');
+      }
+
+      // Kiểm tra trạng thái ghế mới
+      if (newSeat.status_seat === SeatStatus.BOOKED) {
+        throw new BadRequestException('Ghế mới đã được đặt');
+      }
+
+      // Cập nhật trạng thái ghế cũ thành AVAILABLE
+      await this.seatModel.findByIdAndUpdate(ticket.seat_id, {
+        status_seat: SeatStatus.AVAILABLE,
+        updated_at: new Date(),
+      });
+
+      // Cập nhật trạng thái ghế mới thành BOOKED
+      await this.seatModel.findByIdAndUpdate(updateDto.seat_id, {
+        status_seat: SeatStatus.BOOKED,
+        updated_at: new Date(),
+      });
+
+      // Gán seat_id mới cho vé
+      ticket.seat_id = new Types.ObjectId(updateDto.seat_id);
+    }
+
+    // Nếu hủy vé, cập nhật ghế thành AVAILABLE
     if (updateDto.ticket_status === 'CANCELLED') {
       await this.seatModel.findByIdAndUpdate(ticket.seat_id, {
-        is_available: true,
+        status_seat: SeatStatus.AVAILABLE,
+        updated_at: new Date(),
       });
     }
 
+    // Cập nhật ticket_status nếu có
     ticket.ticket_status = updateDto.ticket_status ?? ticket.ticket_status;
     await ticket.save();
 
+    // Populate dữ liệu trả về
     const updatedTicket = await this.ticketModel
       .findById(ticket._id)
       .populate('user_id', 'full_name phone_number')

@@ -26,8 +26,8 @@ class _CustomNavBarState extends State<CustomNavBar> {
       child: BottomNavigationBar(
         currentIndex: widget.currentIndex,
         onTap: (index) {
-          if (index == 0) {
-            // Home luôn có thể truy cập
+          if (index == 0 || index == 1) {
+            // Home và Tìm kiếm không yêu cầu đăng nhập
             widget.onTap(index);
           } else if (authService.currentUser == null) {
             // Nếu chưa đăng nhập, chuyển đến màn hình yêu cầu đăng nhập

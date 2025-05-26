@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../services/trip_service.dart';
+import 'package:intl/intl.dart';
+import '../../services/trip_service.dart'; // Corrected import
 import '../../services/seat_service.dart';
 import '../../services/location_service.dart';
 import '../../services/ticket_service.dart';
 import '../../services/auth_service.dart';
-import '../../models/location.dart';
-import '../../models/ticket.dart';
-import '../../models/seat.dart';
 import '../../models/trip.dart';
+import '../../models/seat.dart';
+import '../../models/ticket.dart';
+import '../../models/location.dart';
 
 class TripDetailScreen extends StatefulWidget {
-  const TripDetailScreen({super.key});
+  final String tripId; // Ensure tripId is defined
 
-  static const routeName = '/trip/detail/:id';
+  const TripDetailScreen({super.key, required this.tripId});
+
+  static const routeName = '/trip/detail/id';
 
   @override
   _TripDetailScreenState createState() => _TripDetailScreenState();
@@ -22,9 +25,32 @@ class TripDetailScreen extends StatefulWidget {
 
 class _TripDetailScreenState extends State<TripDetailScreen> {
   static const Color primaryColor = Color(0xFF2474E5);
-  String? _selectedSeatId;
   bool _isBooking = false;
+  String? _selectedSeatId;
   String? _tripId;
+
+  @override
+  void initState() {
+    super.initState();
+    _tripId = widget.tripId;
+    Future.microtask(() async {
+      final tripService = Provider.of<TripService>(context, listen: false);
+      final seatService = Provider.of<SeatService>(context, listen: false); // Fixed
+      final authService = Provider.of<AuthService>(context, listen: false);
+      try {
+        await tripService.fetchTripById(widget.tripId, allowUnauthenticated: true);
+        if (authService.currentUser != null) {
+          await seatService.fetchAvailableSeatsByTripId(widget.tripId);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lỗi khi tải thông tin: $e')),
+          );
+        }
+      }
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -44,20 +70,31 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     if (tripId != null && tripId != _tripId) {
       _tripId = tripId;
       Future.microtask(() async {
-        final seatService = Provider.of<SeatService>(context, listen: false);
         final tripService = Provider.of<TripService>(context, listen: false);
+        final seatService = Provider.of<SeatService>(context, listen: false); // Fixed
+        final authService = Provider.of<AuthService>(context, listen: false);
         try {
-          await Future.wait([
-            seatService.fetchSeats(),
-            tripService.fetchTripById(tripId!),
-          ]);
+          if (authService.currentUser != null) {
+            await Future.wait([
+              tripService.fetchTripById(tripId!),
+              seatService.fetchAvailableSeatsByTripId(tripId),
+            ]);
+          } else {
+            await tripService.fetchTripById(tripId!, allowUnauthenticated: true);
+          }
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi khi tải thông tin chuyến đi: $e')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Lỗi khi tải thông tin chuyến đi: $e')),
+            );
+          }
         }
       });
     }
+  }
+
+  void _promptLogin(BuildContext context) {
+    Navigator.pushNamed(context, '/auth/login_prompt');
   }
 
   Future<void> _bookTicket(String tripId, String userId, BuildContext context) async {
@@ -82,14 +119,17 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       final newTicket = await ticketService.createTicket(ticketData);
       if (newTicket != null) {
         final seat = seatService.seats.firstWhere((s) => s.id == _selectedSeatId);
-        await seatService.updateSeat(seat.id, Seat(
-          id: seat.id,
-          tripId: seat.tripId,
-          seatNumber: seat.seatNumber,
-          statusSeat: 'BOOKED',
-          createdAt: seat.createdAt,
-          updatedAt: DateTime.now(),
-        ));
+        await seatService.updateSeat(
+          seat.id,
+          Seat(
+            id: seat.id,
+            tripId: seat.tripId,
+            seatNumber: seat.seatNumber,
+            statusSeat: 'BOOKED',
+            createdAt: seat.createdAt,
+            updatedAt: DateTime.now(),
+          ),
+        );
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -100,7 +140,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         setState(() {
           _selectedSeatId = null;
         });
-        await seatService.fetchSeats();
+        await seatService.fetchAvailableSeatsByTripId(tripId);
       } else {
         throw Exception('Không thể tạo vé');
       }
@@ -115,6 +155,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final isLoggedIn = authService.currentUser != null;
+
     if (_tripId == null || _tripId!.isEmpty) {
       return Scaffold(
         body: Center(
@@ -154,7 +197,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         ),
         body: Consumer4<TripService, SeatService, LocationService, TicketService>(
           builder: (context, tripService, seatService, locationService, ticketService, _) {
-            if (tripService.isLoading || seatService.isLoading || locationService.isLoading || _isBooking) {
+            if (tripService.isLoading || (isLoggedIn && seatService.isLoading) || _isBooking) {
               return const Center(child: CircularProgressIndicator(color: primaryColor));
             }
 
@@ -187,21 +230,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               orElse: () => Location(id: '', location: 'Không xác định', contact_phone: ''),
             );
 
-            final authService = Provider.of<AuthService>(context, listen: false);
             final userId = authService.currentUser?.id;
 
-            if (userId == null) {
-              return Center(
-                child: Text(
-                  'Vui lòng đăng nhập để đặt vé',
-                  style: GoogleFonts.poppins(color: Colors.redAccent, fontSize: 16),
-                ),
-              );
-            }
-
-            final availableSeats = seatService.seats
-                .where((seat) => seat.tripId == _tripId && seat.statusSeat == 'AVAILABLE')
-                .toList();
+            final availableSeats = isLoggedIn
+                ? seatService.seats.toList() // Rely on fetchAvailableSeatsByTripId filtering
+                : [];
 
             return SingleChildScrollView(
               child: Padding(
@@ -209,6 +242,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (!isLoggedIn)
+                      Center(
+                        child: Text(
+                          'Vui lòng đăng nhập để đặt vé',
+                          style: GoogleFonts.poppins(color: Colors.redAccent, fontSize: 16),
+                        ),
+                      ),
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -228,93 +268,111 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                             const SizedBox(height: 8),
                             ListTile(
                               leading: const Icon(Icons.location_on, color: primaryColor),
-                              title: Text('Địa điểm: ${location.location}', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text('Địa điểm: ${location.location}',
+                                  style: GoogleFonts.poppins(fontSize: 16)),
                             ),
                             ListTile(
                               leading: const Icon(Icons.arrow_forward, color: primaryColor),
-                              title: Text('Điểm đi: ${trip.departure_location}', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text('Điểm đi: ${trip.departure_location}',
+                                  style: GoogleFonts.poppins(fontSize: 16)),
                             ),
                             ListTile(
                               leading: const Icon(Icons.arrow_back, color: primaryColor),
-                              title: Text('Điểm đến: ${trip.arrival_location}', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text('Điểm đến: ${trip.arrival_location}',
+                                  style: GoogleFonts.poppins(fontSize: 16)),
                             ),
                             ListTile(
                               leading: const Icon(Icons.access_time, color: primaryColor),
-                              title: Text('Thời gian đi: ${trip.departure_time.toString()}', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text(
+                                'Thời gian đi: ${DateFormat('HH:mm dd/MM/yyyy').format(trip.departure_time)}',
+                                style: GoogleFonts.poppins(fontSize: 16),
+                              ),
                             ),
                             ListTile(
                               leading: const Icon(Icons.access_time_filled, color: primaryColor),
-                              title: Text('Thời gian đến: ${trip.arrival_time.toString()}', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text(
+                                'Thời gian đến: ${DateFormat('HH:mm dd/MM/yyyy').format(trip.arrival_time)}',
+                                style: GoogleFonts.poppins(fontSize: 16),
+                              ),
                             ),
                             ListTile(
                               leading: const Icon(Icons.attach_money, color: primaryColor),
-                              title: Text('Giá: ${trip.price.toStringAsFixed(0)} VNĐ', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text('Giá: ${trip.price.toStringAsFixed(0)} VNĐ',
+                                  style: GoogleFonts.poppins(fontSize: 16)),
                             ),
                             ListTile(
                               leading: const Icon(Icons.directions_bus, color: primaryColor),
-                              title: Text('Loại xe: ${trip.vehicle_id}', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text('Loại xe: ${trip.vehicle_id}',
+                                  style: GoogleFonts.poppins(fontSize: 16)),
                             ),
                             ListTile(
                               leading: const Icon(Icons.event_seat, color: primaryColor),
-                              title: Text('Tổng ghế: ${trip.totalSeats}', style: GoogleFonts.poppins(fontSize: 16)),
+                              title: Text('Tổng ghế: ${trip.totalSeats}',
+                                  style: GoogleFonts.poppins(fontSize: 16)),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Chọn ghế',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (availableSeats.isEmpty)
+                    if (isLoggedIn) ...[
+                      const SizedBox(height: 20),
                       Text(
-                        'Không có ghế khả dụng. Vui lòng chọn chuyến khác.',
-                        style: GoogleFonts.poppins(color: Colors.redAccent, fontSize: 16),
-                      )
-                    else
-                      DropdownButtonFormField<String>(
-                        value: _selectedSeatId,
-                        hint: Text('Chọn ghế', style: GoogleFonts.poppins(fontSize: 14)),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: primaryColor),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: primaryColor),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: primaryColor, width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
+                        'Chọn ghế',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
                         ),
-                        items: availableSeats.map((seat) => DropdownMenuItem<String>(
-                          value: seat.id,
-                          child: Text('Ghế ${seat.seatNumber}', style: GoogleFonts.poppins(fontSize: 14)),
-                        )).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedSeatId = value;
-                          });
-                        },
                       ),
+                      const SizedBox(height: 8),
+                      if (availableSeats.isEmpty)
+                        Text(
+                          'Không có ghế khả dụng. Vui lòng chọn chuyến khác.',
+                          style: GoogleFonts.poppins(color: Colors.redAccent, fontSize: 16),
+                        )
+                      else
+                        DropdownButtonFormField<String>(
+                          value: _selectedSeatId,
+                          hint: Text('Chọn ghế', style: GoogleFonts.poppins(fontSize: 14)),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: primaryColor),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: primaryColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: primaryColor, width: 2),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                          items: availableSeats.map((seat) {
+                            return DropdownMenuItem<String>(
+                              value: seat.id,
+                              child: Text('Ghế ${seat.seatNumber}', style: GoogleFonts.poppins(fontSize: 14)),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedSeatId = value;
+                            });
+                          },
+                        ),
+                    ],
                     const SizedBox(height: 20),
                     AnimatedOpacity(
                       opacity: _isBooking ? 0.7 : 1.0,
                       duration: const Duration(milliseconds: 300),
                       child: ElevatedButton(
-                        onPressed: availableSeats.isEmpty || _isBooking
+                        onPressed: _isBooking
                             ? null
-                            : () => _bookTicket(_tripId!, userId!, context),
+                            : () => isLoggedIn
+                            ? _bookTicket(_tripId!, userId!, context)
+                            : _promptLogin(context),
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 50),
                           elevation: 3,
@@ -328,7 +386,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                            : Text('Đặt vé ngay'),
+                            : Text(
+                          isLoggedIn ? 'Đặt vé ngay' : 'Đăng nhập để đặt vé',
+                          style: GoogleFonts.poppins(),
+                        ),
                       ),
                     ),
                   ],

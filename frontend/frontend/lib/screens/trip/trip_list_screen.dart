@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../services/auth_service.dart';
 import '../../services/location_service.dart';
 import '../../models/trip.dart';
 import '../home/customer_nav_bar.dart';
@@ -24,30 +25,33 @@ class TripListScreen extends StatefulWidget {
 }
 
 class _TripListScreenState extends State<TripListScreen> {
-  int _selectedIndex = 1; // Mặc định là TripListScreen (giả sử index 1)
+  int _selectedIndex = 1; // Mặc định là TripListScreen
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
     setState(() {
       _selectedIndex = index;
     });
+    final authService = Provider.of<AuthService>(context, listen: false);
     final arguments = {
       'departureId': widget.departureId,
       'arrivalId': widget.arrivalId,
     };
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/home', arguments: arguments);
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/trip/search', arguments: arguments);
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/tickets', arguments: arguments);
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/auth/profile', arguments: arguments);
-        break;
+    if (index == 0) {
+      Navigator.pushReplacementNamed(context, '/home', arguments: arguments);
+    } else if (index == 1) {
+      Navigator.pushReplacementNamed(context, '/trip/search', arguments: arguments);
+    } else if (authService.currentUser == null) {
+      Navigator.pushNamed(context, '/auth/login_prompt');
+    } else {
+      switch (index) {
+        case 2:
+          Navigator.pushReplacementNamed(context, '/tickets', arguments: arguments);
+          break;
+        case 3:
+          Navigator.pushReplacementNamed(context, '/auth/profile', arguments: arguments);
+          break;
+      }
     }
   }
 

@@ -180,13 +180,14 @@ class MyApp extends StatelessWidget {
                 ? (ModalRoute.of(context)!.settings.arguments as Map)['arrivalId']
                 : null,
           ),
-          '/trip/search': (context) {
-            final authService = Provider.of<AuthService>(context, listen: false);
-            return authService.currentUser != null
-                ? const TripSearchScreen()
-                : const LoginPromptScreen();
+          '/trip/search': (context) => const TripSearchScreen(),
+          '/trip/detail/id': (context) {
+            final tripId = ModalRoute.of(context)!.settings.arguments as String?;
+            if (tripId != null && tripId.isNotEmpty) {
+              return TripDetailScreen(tripId: tripId);
+            }
+            return const Scaffold(body: Center(child: Text('ID chuyến đi không hợp lệ')));
           },
-          '/trip/detail/id': (context) => TripDetailScreen(), // Sửa thành /trip/detail
           '/seat': (context) => SeatListScreen(),
           '/seat/create': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);

@@ -11,25 +11,31 @@ class TripService extends ChangeNotifier {
   bool isLoading = false;
   List<Trip> trips = [];
   String? errorMessage;
-  // Thêm danh sách lịch sử tìm kiếm
   List<Map<String, dynamic>> recentSearches = [];
 
-  // Cập nhật phương thức để thêm tìm kiếm gần đây với tripId
+  void safeNotifyListeners() {
+    try {
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print('Error in TripService notifyListeners: $e');
+    }
+  }
+
   void addRecentSearch(String departureId, String arrivalId, DateTime date, {String? tripId}) {
     recentSearches.insert(0, {
       'departureId': departureId,
       'arrivalId': arrivalId,
       'date': date,
-      'tripId': tripId, // Thêm tripId
+      'tripId': tripId,
     });
     if (recentSearches.length > 5) recentSearches.removeLast();
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   Future<void> fetchTrips({bool allowUnauthenticated = false}) async {
     isLoading = true;
     errorMessage = null;
-    notifyListeners();
+    safeNotifyListeners();
 
     try {
       String? token;
@@ -55,12 +61,12 @@ class TripService extends ChangeNotifier {
         throw Exception('Failed to fetch trips: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error fetching trips: $e');
+      if (kDebugMode) print('Error fetching trips: $e');
       errorMessage = 'Không thể tải danh sách chuyến đi.';
       trips = [];
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
@@ -68,27 +74,38 @@ class TripService extends ChangeNotifier {
     String? departureLocation,
     String? arrivalLocation,
     DateTime? departureTime,
+    bool allowUnauthenticated = false, // Thêm tham số
   }) async {
     isLoading = true;
-    notifyListeners();
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    errorMessage = null;
+    safeNotifyListeners();
+
     try {
+      String? token;
+      if (!allowUnauthenticated) {
+        token = await _storage.read(key: 'accessToken');
+        if (token == null) {
+          throw Exception('No access token found');
+        }
+      }
+
       final body = {
         if (departureLocation != null) 'departure_location': departureLocation,
         if (arrivalLocation != null) 'arrival_location': arrivalLocation,
         if (departureTime != null) 'departure_time': DateFormat('yyyy-MM-dd').format(departureTime),
       };
-      print('Search trips request body (TripService): $body');
+
+      if (kDebugMode) print('Search trips request body: $body');
       final response = await http.post(
         Uri.parse('$baseUrl/trip/search'),
         headers: {
-          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
         },
         body: jsonEncode(body),
       );
-      print('Search trips response: ${response.statusCode} - ${response.body}');
+
+      if (kDebugMode) print('Search trips response: ${response.statusCode} - ${response.body}');
       if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = jsonDecode(response.body);
         trips = data.map((e) => Trip.fromJson(e as Map<String, dynamic>)).toList();
@@ -97,30 +114,45 @@ class TripService extends ChangeNotifier {
         throw Exception('Failed to search trips: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error searching trips: $e');
+      if (kDebugMode) print('Error searching trips: $e');
+      errorMessage = 'Không thể tìm kiếm chuyến đi.';
       return [];
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
-  Future<void> fetchTripById(String tripId) async {
+  Future<Trip?> fetchTripById(String tripId, {bool allowUnauthenticated = false}) async {
     if (tripId.isEmpty) {
-      throw Exception('Trip ID cannot be empty');
+      errorMessage = 'Trip ID cannot be empty';
+      safeNotifyListeners();
+      return null;
     }
     isLoading = true;
-    notifyListeners();
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    errorMessage = null;
+    safeNotifyListeners();
+
     try {
-      print('Fetching trip with ID: $tripId');
+      String? token;
+      if (!allowUnauthenticated) {
+        token = await _storage.read(key: 'accessToken');
+        if (token == null) {
+          throw Exception('No access token found');
+        }
+      }
+
+      if (kDebugMode) print('Fetching trip with ID: $tripId');
       final response = await http.get(
-        Uri.parse('$baseUrl/admin/trip/$tripId'),
-        headers: {'Authorization': 'Bearer $token'},
+        Uri.parse('$baseUrl/admin/trip/$tripId'), // Sửa endpoint từ /admin/trip/:id thành /trip/:id
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
-      print('Fetch trip response: ${response.statusCode} - ${response.body}');
-      if (response.statusCode == 200) {
+
+      if (kDebugMode) print('Fetch trip response: ${response.statusCode} - ${response.body}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         final trip = Trip.fromJson(data);
         final index = trips.indexWhere((t) => t.id == tripId);
@@ -129,27 +161,38 @@ class TripService extends ChangeNotifier {
         } else {
           trips.add(trip);
         }
+        return trip;
       } else {
         throw Exception('Failed to fetch trip: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error fetching trip by ID: $e');
-      rethrow;
+      if (kDebugMode) print('Error fetching trip by ID: $e');
+      errorMessage = 'Không thể tải thông tin chuyến đi.';
+      return null;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
   Future<Trip?> createTrip(Trip trip) async {
     isLoading = true;
-    notifyListeners();
+    errorMessage = null;
+    safeNotifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      safeNotifyListeners();
+      return null;
+    }
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/admin/trip'),
-        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(trip.toJson()),
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -161,23 +204,33 @@ class TripService extends ChangeNotifier {
         throw Exception('Failed to create trip: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error creating trip: $e');
+      if (kDebugMode) print('Error creating trip: $e');
+      errorMessage = 'Error creating trip: $e';
       return null;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
   Future<Trip?> updateTrip(String id, Trip trip) async {
     isLoading = true;
-    notifyListeners();
+    errorMessage = null;
+    safeNotifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      safeNotifyListeners();
+      return null;
+    }
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/admin/trip/$id'),
-        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(trip.toJson()),
       );
       if (response.statusCode == 200) {
@@ -192,19 +245,26 @@ class TripService extends ChangeNotifier {
         throw Exception('Failed to update trip: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error updating trip: $e');
+      if (kDebugMode) print('Error updating trip: $e');
+      errorMessage = 'Error updating trip: $e';
       return null;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
   Future<bool> deleteTrip(String id) async {
     isLoading = true;
-    notifyListeners();
+    errorMessage = null;
+    safeNotifyListeners();
     final token = await _storage.read(key: 'accessToken');
-    if (token == null) throw Exception('No access token found');
+    if (token == null) {
+      errorMessage = 'No access token found';
+      isLoading = false;
+      safeNotifyListeners();
+      return false;
+    }
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/admin/trip/$id'),
@@ -217,11 +277,12 @@ class TripService extends ChangeNotifier {
         throw Exception('Failed to delete trip: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error deleting trip: $e');
+      if (kDebugMode) print('Error deleting trip: $e');
+      errorMessage = 'Error deleting trip: $e';
       return false;
     } finally {
       isLoading = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 }

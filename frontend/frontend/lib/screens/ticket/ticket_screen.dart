@@ -36,11 +36,22 @@ class _TicketScreenState extends State<TicketScreen> {
 
     Future.microtask(() async {
       try {
-        await Future.wait([
-          ticketService.fetchTickets(),
-          tripService.fetchTrips(),
-          seatService.fetchSeats(),
-        ]);
+        // Lấy danh sách chuyến đi trước
+        await tripService.fetchTrips();
+        // Lấy tripId đầu tiên nếu có, hoặc xử lý trường hợp không có chuyến đi
+        final tripId = tripService.trips.isNotEmpty ? tripService.trips.first.id : null;
+        if (tripId != null) {
+          await Future.wait([
+            ticketService.fetchTickets(),
+            seatService.fetchAvailableSeatsByTripId(tripId),
+          ]);
+        } else {
+          // Nếu không có chuyến đi, chỉ lấy vé
+          await ticketService.fetchTickets();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Không tìm thấy chuyến đi nào')),
+          );
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi khi tải dữ liệu: $e')),
@@ -55,11 +66,22 @@ class _TicketScreenState extends State<TicketScreen> {
     final seatService = Provider.of<SeatService>(context, listen: false);
 
     try {
-      await Future.wait([
-        ticketService.fetchTickets(),
-        tripService.fetchTrips(),
-        seatService.fetchSeats(),
-      ]);
+      // Lấy danh sách chuyến đi trước
+      await tripService.fetchTrips();
+      // Lấy tripId đầu tiên nếu có, hoặc xử lý trường hợp không có chuyến đi
+      final tripId = tripService.trips.isNotEmpty ? tripService.trips.first.id : null;
+      if (tripId != null) {
+        await Future.wait([
+          ticketService.fetchTickets(),
+          seatService.fetchAvailableSeatsByTripId(tripId),
+        ]);
+      } else {
+        // Nếu không có chuyến đi, chỉ làm mới vé
+        await ticketService.fetchTickets();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không tìm thấy chuyến đi nào để làm mới')),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi khi làm mới dữ liệu: $e')),

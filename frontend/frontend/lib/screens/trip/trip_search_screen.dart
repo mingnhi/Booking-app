@@ -54,7 +54,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
       Future.microtask(() async {
         if (mounted) {
           final locationService = Provider.of<LocationService>(context, listen: false);
-          await locationService.fetchLocations();
+          await locationService.fetchLocations(allowUnauthenticated: true);
           setState(() {});
         }
       });
@@ -78,18 +78,22 @@ class _TripSearchScreenState extends State<TripSearchScreen>
     setState(() {
       _selectedIndex = index;
     });
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/home');
-        break;
-      case 1:
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/tickets');
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/auth/profile');
-        break;
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (index == 0) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else if (index == 1) {
+      // Đã ở TripSearchScreen
+    } else if (authService.currentUser == null) {
+      Navigator.pushNamed(context, '/auth/login_prompt');
+    } else {
+      switch (index) {
+        case 2:
+          Navigator.pushReplacementNamed(context, '/tickets');
+          break;
+        case 3:
+          Navigator.pushReplacementNamed(context, '/auth/profile');
+          break;
+      }
     }
   }
 
@@ -119,61 +123,60 @@ class _TripSearchScreenState extends State<TripSearchScreen>
           : null;
 
       if (departureLocation == null || arrivalLocation == null) {
-        throw Exception('Không thể tìm thấy tên địa điểm cho ID đã chọn');
+        throw Exception('Vui lòng chọn điểm đi và điểm đến');
       }
 
       final results = await tripService.searchTrips(
         departureLocation: departureLocation,
         arrivalLocation: arrivalLocation,
         departureTime: _departureTime,
+        allowUnauthenticated: true, // Cho phép không cần token
       );
 
-      // Lưu tìm kiếm gần đây với tripId nếu có kết quả
+      // Lưu tìm kiếm gần đây
       if (_departureId != null && _arrivalId != null && results.isNotEmpty) {
-        // Lấy tripId từ chuyến đi đầu tiên trong kết quả
         final tripId = results[0].id;
         tripService.addRecentSearch(
           _departureId!,
           _arrivalId!,
-          DateTime.now(),
-          tripId: tripId, // Lưu tripId
+          _departureTime ?? DateTime.now(),
+          tripId: tripId,
         );
       }
 
-      Navigator.pushNamed(
-        context,
-        '/trip/list',
-        arguments: {
-          'trips': results,
-          'departureId': _departureId,
-          'arrivalId': _arrivalId,
-        },
-      );
+      if (mounted) {
+        Navigator.pushNamed(
+          context,
+          '/trip/list',
+          arguments: {
+            'trips': results,
+            'departureId': _departureId,
+            'arrivalId': _arrivalId,
+          },
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tìm kiếm chuyến đi: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi tìm kiếm chuyến đi: $e')),
+        );
+      }
     }
   }
 
   void _selectRecentSearch(Map<String, dynamic> search) {
-    setState(() {
-      _departureId = search['departureId'];
-      _arrivalId = search['arrivalId'];
-      _departureTime = null; // Không cần ngày
-    });
-  }
-
-  void _navigateToTripDetail(String tripId) {
-    Navigator.pushNamed(
-      context,
-      '/trip/detail/id',
-      arguments: tripId, // Truyền tripId trực tiếp
-    );
-  }
-
-  void _viewAllRecentSearches() {
-    print("Xem tất cả tìm kiếm gần đây");
+    final tripId = search['tripId'] as String?;
+    if (tripId != null) {
+      // Điều hướng trực tiếp đến chi tiết chuyến đi
+      Navigator.pushNamed(context, '/trip/detail/id', arguments: tripId);
+    } else {
+      // Chọn lại điểm đi và điểm đến
+      setState(() {
+        _departureId = search['departureId'];
+        _arrivalId = search['arrivalId'];
+        _departureTime = null;
+      });
+    }
   }
 
   @override
@@ -195,7 +198,6 @@ class _TripSearchScreenState extends State<TripSearchScreen>
           bottom: false,
           child: Consumer3<TripService, LocationService, AuthService>(
             builder: (context, tripService, locationService, authService, _) {
-              print('Recent searches length: ${tripService.recentSearches.length}');
               if (locationService.isLoading) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -300,7 +302,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                         height: 30,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: const Color(0xFF2474E5), // Màu xanh
+                                          color: const Color(0xFF2474E5),
                                         ),
                                       ),
                                       Container(
@@ -431,9 +433,9 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          height: 100, // Chiều cao cố định cho danh sách ngang
+                          height: 100,
                           child: ListView.builder(
-                            scrollDirection: Axis.horizontal, // Chuyển sang chiều ngang
+                            scrollDirection: Axis.horizontal,
                             itemCount: tripService.recentSearches.length,
                             itemBuilder: (context, index) {
                               final search = tripService.recentSearches[index];
@@ -450,10 +452,8 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                               )
                                   .location;
 
-                              final tripId = search['tripId'] as String?;
-
                               return GestureDetector(
-                                onTap:_departureId != null && _arrivalId != null ? _searchTrips : null,
+                                onTap: () => _selectRecentSearch(search),
                                 child: Card(
                                   margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
                                   color: Colors.white,
@@ -462,19 +462,17 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                   ),
                                   elevation: 2,
                                   child: Container(
-                                    width: 200, // Chiều rộng cố định
+                                    width: 200,
                                     padding: const EdgeInsets.all(8.0),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        // Cột chứa Điểm đi và Điểm đến
                                         Expanded(
                                           child: Column(
                                             mainAxisAlignment: MainAxisAlignment.center,
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              // Khung 1: Điểm đi
                                               Row(
                                                 children: [
                                                   Stack(
@@ -485,7 +483,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                                         height: 12,
                                                         decoration: BoxDecoration(
                                                           shape: BoxShape.circle,
-                                                          color: const Color(0xFF2474E5), // Màu xanh
+                                                          color: const Color(0xFF2474E5),
                                                         ),
                                                       ),
                                                       Container(
@@ -512,7 +510,6 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                                   ),
                                                 ],
                                               ),
-                                              // Đường đứt đứng giữa hai khung
                                               Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6.0),
                                                 child: Column(
@@ -527,7 +524,6 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                                   )).toList(),
                                                 ),
                                               ),
-                                              // Khung 3: Điểm đến
                                               Row(
                                                 children: [
                                                   Stack(
@@ -538,7 +534,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                                         height: 12,
                                                         decoration: BoxDecoration(
                                                           shape: BoxShape.circle,
-                                                          color: Colors.redAccent, // Màu đỏ
+                                                          color: Colors.redAccent,
                                                         ),
                                                       ),
                                                       Container(
@@ -568,7 +564,6 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                             ],
                                           ),
                                         ),
-                                        // Dấu mũi tên ở góc phải
                                         const Icon(
                                           Icons.arrow_forward,
                                           size: 20,

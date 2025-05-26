@@ -70,13 +70,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final authService = Provider.of<AuthService>(context, listen: false);
     if (index == 0) {
       // Đã ở Home, không cần làm gì
+    } else if (index == 1) {
+      // Không yêu cầu đăng nhập cho mục Tìm kiếm
+      Navigator.pushReplacementNamed(context, '/trip/search');
     } else if (authService.currentUser == null) {
       Navigator.pushNamed(context, '/auth/login_prompt');
     } else {
       switch (index) {
-        case 1:
-          Navigator.pushReplacementNamed(context, '/trip/search');
-          break;
         case 2:
           Navigator.pushReplacementNamed(context, '/tickets');
           break;
@@ -285,8 +285,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: homeService.featuredTrips.length > 2
-                            ? 2
+                        itemCount: homeService.featuredTrips.length > 3
+                            ? 3
                             : homeService.featuredTrips.length,
                         itemBuilder: (context, index) {
                           final trip = homeService.featuredTrips[index];

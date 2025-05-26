@@ -30,7 +30,6 @@ export class PaymentService {
         amount,
         payment_method,
         payment_status,
-        paypal_payment_id,
         order_id,
       } = createPaymentDto;
 
@@ -43,17 +42,8 @@ export class PaymentService {
 
       if (ticket.user_id.toString() !== userId) throw new ForbiddenException();
 
-      if (payment_method === 'paypal') {
-        if (!paypal_payment_id) {
-          throw new Error('Thiếu mã thanh toán PayPal');
-        }
-        if (!order_id) {
-          throw new Error('Thiếu order ID từ PayPal');
-        }
-      }
-
-      if (payment_method === 'cash' && (paypal_payment_id || order_id)) {
-        throw new Error('Thanh toán tiền mặt không cần mã PayPal');
+      if (payment_method === 'paypal' && !order_id) {
+        throw new Error('Thiếu order ID từ PayPal');
       }
 
       ticket.ticket_status =
@@ -72,7 +62,6 @@ export class PaymentService {
         amount,
         payment_method,
         payment_status,
-        paypal_payment_id,
         payment_date: new Date(),
         order_id,
       });
@@ -203,23 +192,16 @@ export class PaymentService {
     }
   }
 
-  async updateOrderId(
-    paypalPaymentId: string,
-    orderId: string,
-  ): Promise<{ message: string }> {
-    const payment = await this.paymentModel.findOne({
-      paypal_payment_id: paypalPaymentId,
-    });
+  async updateOrderId(orderId: string): Promise<{ message: string }> {
+    const payment = await this.paymentModel.findOne({ order_id: null });
 
     if (!payment) {
-      throw new NotFoundException(
-        'Không tìm thấy thanh toán với PayPal ID này',
-      );
+      throw new NotFoundException('Không tìm thấy thanh toán chưa có Order ID');
     }
 
     payment.order_id = orderId;
     await payment.save();
 
-    return { message: 'Đã cập nhật saleId thành công' };
-  }
+    return { message: 'Đã cập nhật Order ID thành công' };
+  }  
 }

@@ -27,8 +27,7 @@ export class Payment {
 
   @Prop()
   payment_date: Date;
-  @Prop()
-  paypal_payment_id?: string;
+
   @Prop()
   order_id?: string;
 }

@@ -31,9 +31,5 @@ export class CreatePaymentDto {
 
   @IsOptional()
   @IsString()
-  paypal_payment_id?: string;
-
-  @IsOptional()
-  @IsString()
   order_id?: string;
 }

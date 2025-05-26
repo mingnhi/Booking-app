@@ -63,12 +63,9 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @SetMetadata('roles', ['user'])
-  @Put('orderId/:paypalPaymentId')
-  async updateOrderid(
-    @Param('paypalPaymentId') paypalPaymentId: string,
-    @Body('order-id') orderId: string,
-  ) {
-    return this.paymentService.updateOrderId(paypalPaymentId, orderId);
+  @Put('order-id')
+  async updateOrderId(@Body('order_id') orderId: string) {
+    return this.paymentService.updateOrderId(orderId);
   }
 
   @Get('success')

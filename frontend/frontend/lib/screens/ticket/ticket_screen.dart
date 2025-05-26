@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/payment/payment_screen.dart';
+import 'package:frontend/screens/payment/paymentrefund_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/ticket_service.dart';
@@ -10,6 +11,8 @@ import '../../models/trip.dart';
 import '../../models/seat.dart';
 import '../home/customer_nav_bar.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/models/payment.dart';
+import 'package:frontend/services/payment_service.dart';
 
 class TicketScreen extends StatefulWidget {
   const TicketScreen({super.key});
@@ -24,6 +27,7 @@ class _TicketScreenState extends State<TicketScreen> {
   Ticket? _selectedTicket;
   String? _selectedTripId;
   String? _selectedSeatId;
+  String? _ticketStatus;
   List<Trip> _availableTrips = [];
   List<Seat> _availableSeats = [];
 
@@ -33,25 +37,15 @@ class _TicketScreenState extends State<TicketScreen> {
     final ticketService = Provider.of<TicketService>(context, listen: false);
     final tripService = Provider.of<TripService>(context, listen: false);
     final seatService = Provider.of<SeatService>(context, listen: false);
-
+    final paymentService = Provider.of<PaymentService>(context, listen: false);
     Future.microtask(() async {
       try {
-        // Lấy danh sách chuyến đi trước
-        await tripService.fetchTrips();
-        // Lấy tripId đầu tiên nếu có, hoặc xử lý trường hợp không có chuyến đi
-        final tripId = tripService.trips.isNotEmpty ? tripService.trips.first.id : null;
-        if (tripId != null) {
-          await Future.wait([
-            ticketService.fetchTickets(),
-            seatService.fetchAvailableSeatsByTripId(tripId),
-          ]);
-        } else {
-          // Nếu không có chuyến đi, chỉ lấy vé
-          await ticketService.fetchTickets();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Không tìm thấy chuyến đi nào')),
-          );
-        }
+        await Future.wait([
+          ticketService.fetchTickets(),
+          tripService.fetchTrips(),
+          seatService.fetchSeats(),
+          paymentService.fetchPayments(),
+        ]);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi khi tải dữ liệu: $e')),
@@ -64,24 +58,14 @@ class _TicketScreenState extends State<TicketScreen> {
     final ticketService = Provider.of<TicketService>(context, listen: false);
     final tripService = Provider.of<TripService>(context, listen: false);
     final seatService = Provider.of<SeatService>(context, listen: false);
-
+    final paymentService = Provider.of<PaymentService>(context, listen: false);
     try {
-      // Lấy danh sách chuyến đi trước
-      await tripService.fetchTrips();
-      // Lấy tripId đầu tiên nếu có, hoặc xử lý trường hợp không có chuyến đi
-      final tripId = tripService.trips.isNotEmpty ? tripService.trips.first.id : null;
-      if (tripId != null) {
-        await Future.wait([
-          ticketService.fetchTickets(),
-          seatService.fetchAvailableSeatsByTripId(tripId),
-        ]);
-      } else {
-        // Nếu không có chuyến đi, chỉ làm mới vé
-        await ticketService.fetchTickets();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không tìm thấy chuyến đi nào để làm mới')),
-        );
-      }
+      await Future.wait([
+        ticketService.fetchTickets(),
+        tripService.fetchTrips(),
+        seatService.fetchSeats(),
+        paymentService.fetchPayments(),
+      ]);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi khi làm mới dữ liệu: $e')),
@@ -105,39 +89,22 @@ class _TicketScreenState extends State<TicketScreen> {
       _selectedTicket = ticket;
       _selectedTripId = ticket.trip_id;
       _selectedSeatId = ticket.seat_id;
+      _ticketStatus = ticket.ticket_status;
+
       _availableTrips = tripService.trips
           .where((trip) => trip.departure_time.isAfter(DateTime.now()))
           .toList();
-      _availableSeats = [];
-    });
+      _availableSeats = seatService.seats
+          .where(
+            (seat) =>
+        seat.tripId == _selectedTripId &&
+            (seat.statusSeat == 'AVAILABLE' || seat.id == _selectedSeatId),
+      )
+          .toList();
 
-    seatService.fetchAvailableSeatsByTripId(_selectedTripId!).then((_) {
-      setState(() {
-        _availableSeats = seatService.seats;
-        final currentSeat = seatService.seats.firstWhere(
-              (seat) => seat.id == _selectedSeatId,
-          orElse: () => Seat(
-            id: _selectedSeatId ?? '',
-            tripId: _selectedTripId ?? '',
-            seatNumber: 0,
-            statusSeat: 'BOOKED',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-        if (!_availableSeats.contains(currentSeat) && currentSeat.id.isNotEmpty) {
-          _availableSeats.add(currentSeat);
-        }
-        print('Available trips: ${_availableTrips.length}');
-        print('Available seats: ${_availableSeats.length}');
-      });
-    }).catchError((e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tải ghế: $e')),
-      );
-      setState(() {
-        _availableSeats = [];
-      });
+      print('Available trips: ${_availableTrips.length}');
+      print('Available seats: ${_availableSeats.length}');
+      print('Seats in _availableSeats: ${_availableSeats.map((s) => "Seat ${s.seatNumber} (ID: ${s.id})").toList()}');
     });
   }
 
@@ -147,6 +114,7 @@ class _TicketScreenState extends State<TicketScreen> {
       _selectedTicket = null;
       _selectedTripId = null;
       _selectedSeatId = null;
+      _ticketStatus = null;
       _availableTrips = [];
       _availableSeats = [];
     });
@@ -155,11 +123,12 @@ class _TicketScreenState extends State<TicketScreen> {
   Future<void> _saveChanges() async {
     if (_formKey.currentState!.validate()) {
       final ticketService = Provider.of<TicketService>(context, listen: false);
-      final seatService = Provider.of<SeatService>(context, listen: false);
 
-      if (_selectedTripId == null || _selectedSeatId == null) {
+      if (_selectedTripId == null || _selectedSeatId == null || _ticketStatus == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Thông tin chuyến đi hoặc ghế không hợp lệ')),
+          SnackBar(
+            content: Text('Thông tin chuyến đi, ghế hoặc trạng thái không hợp lệ'),
+          ),
         );
         return;
       }
@@ -167,80 +136,20 @@ class _TicketScreenState extends State<TicketScreen> {
       final ticketData = {
         'trip_id': _selectedTripId,
         'seat_id': _selectedSeatId,
+        'ticket_status': _ticketStatus,
       };
 
       try {
         print('Ticket ID gửi đi: ${_selectedTicket!.id}');
         print('Gửi yêu cầu cập nhật vé: $ticketData');
-        final updatedTicket =
-        await ticketService.updateTicket(_selectedTicket!.id, ticketData);
+        final updatedTicket = await ticketService.updateTicket(
+          _selectedTicket!.id,
+          ticketData,
+        );
         if (updatedTicket != null) {
-          if (_selectedTicket!.seat_id != _selectedSeatId) {
-            // Cập nhật ghế cũ thành AVAILABLE
-            final oldSeat = seatService.seats.firstWhere(
-                  (s) => s.id == _selectedTicket!.seat_id,
-              orElse: () => Seat(
-                id: _selectedTicket!.seat_id,
-                tripId: _selectedTicket!.trip_id,
-                seatNumber: 0,
-                statusSeat: 'BOOKED',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
-            );
-            if (oldSeat.id.isNotEmpty) {
-              print('Cập nhật ghế cũ ${oldSeat.id} thành AVAILABLE');
-              final updatedOldSeat = await seatService.updateSeat(
-                oldSeat.id,
-                Seat(
-                  id: oldSeat.id,
-                  tripId: oldSeat.tripId,
-                  seatNumber: oldSeat.seatNumber,
-                  statusSeat: 'AVAILABLE',
-                  createdAt: oldSeat.createdAt,
-                  updatedAt: DateTime.now(),
-                ),
-              );
-              if (updatedOldSeat == null) {
-                throw Exception('Không thể cập nhật trạng thái ghế cũ');
-              }
-            }
-
-            // Cập nhật ghế mới thành BOOKED
-            final newSeat = seatService.seats.firstWhere(
-                  (s) => s.id == _selectedSeatId,
-              orElse: () => Seat(
-                id: _selectedSeatId!,
-                tripId: _selectedTripId!,
-                seatNumber: 0,
-                statusSeat: 'AVAILABLE',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
-            );
-            if (newSeat.id.isNotEmpty) {
-              print('Cập nhật ghế mới ${newSeat.id} thành BOOKED');
-              final updatedNewSeat = await seatService.updateSeat(
-                newSeat.id,
-                Seat(
-                  id: newSeat.id,
-                  tripId: newSeat.tripId,
-                  seatNumber: newSeat.seatNumber,
-                  statusSeat: 'BOOKED',
-                  createdAt: newSeat.createdAt,
-                  updatedAt: DateTime.now(),
-                ),
-              );
-              if (updatedNewSeat == null) {
-                throw Exception('Không thể cập nhật trạng thái ghế mới');
-              }
-            }
-          }
-
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Cập nhật vé thành công',
-                  style: GoogleFonts.poppins()),
+              content: Text('Cập nhật vé thành công', style: GoogleFonts.poppins()),
               backgroundColor: const Color(0xFF2474E5),
             ),
           );
@@ -249,6 +158,7 @@ class _TicketScreenState extends State<TicketScreen> {
             _selectedTicket = null;
             _selectedTripId = null;
             _selectedSeatId = null;
+            _ticketStatus = null;
             _availableTrips = [];
             _availableSeats = [];
           });
@@ -260,7 +170,7 @@ class _TicketScreenState extends State<TicketScreen> {
         print('Lỗi khi lưu thay đổi vé: $e');
         String errorMessage = e.toString();
         if (errorMessage.contains('404')) {
-          errorMessage = 'Vé hoặc ghế không tồn tại. Vui lòng làm mới danh sách.';
+          errorMessage = 'Vé không tồn tại. Vui lòng làm mới danh sách.';
         } else if (errorMessage.contains('403')) {
           errorMessage = 'Bạn không có quyền cập nhật vé này.';
         } else if (errorMessage.contains('400')) {
@@ -283,8 +193,10 @@ class _TicketScreenState extends State<TicketScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Xác nhận xóa', style: GoogleFonts.poppins()),
-        content:
-        Text('Bạn có chắc chắn muốn xóa vé này?', style: GoogleFonts.poppins()),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa vé này?',
+          style: GoogleFonts.poppins(),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -292,8 +204,10 @@ class _TicketScreenState extends State<TicketScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Xóa',
-                style: GoogleFonts.poppins(color: Colors.red)),
+            child: Text(
+              'Xóa',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -301,39 +215,10 @@ class _TicketScreenState extends State<TicketScreen> {
 
     if (confirm == true) {
       final ticketService = Provider.of<TicketService>(context, listen: false);
-      final seatService = Provider.of<SeatService>(context, listen: false);
 
       try {
         final success = await ticketService.deleteTicket(ticketId);
         if (success) {
-          final seat = seatService.seats.firstWhere(
-                (s) => s.id == seatId,
-            orElse: () => Seat(
-              id: seatId,
-              tripId: tripId,
-              seatNumber: 0,
-              statusSeat: 'BOOKED',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-          );
-          if (seat.statusSeat == 'BOOKED') {
-            final updatedSeat = await seatService.updateSeat(
-              seat.id,
-              Seat(
-                id: seat.id,
-                tripId: seat.tripId,
-                seatNumber: seat.seatNumber,
-                statusSeat: 'AVAILABLE',
-                createdAt: seat.createdAt,
-                updatedAt: DateTime.now(),
-              ),
-            );
-            if (updatedSeat == null) {
-              throw Exception('Không thể cập nhật trạng thái ghế');
-            }
-          }
-
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Xóa vé thành công', style: GoogleFonts.poppins()),
@@ -366,8 +251,13 @@ class _TicketScreenState extends State<TicketScreen> {
             backgroundColor: const Color(0xFF2474E5),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            textStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -377,7 +267,10 @@ class _TicketScreenState extends State<TicketScreen> {
           title: Text(
             'Vé của tôi',
             style: GoogleFonts.poppins(
-                fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
@@ -390,12 +283,17 @@ class _TicketScreenState extends State<TicketScreen> {
         body: Stack(
           children: [
             Consumer3<TicketService, TripService, SeatService>(
-              builder: (context, ticketService, tripService, seatService, child) {
-                if (ticketService.isLoading ||
-                    tripService.isLoading ||
-                    seatService.isLoading) {
+              builder: (
+                  context,
+                  ticketService,
+                  tripService,
+                  seatService,
+                  child,
+                  ) {
+                if (ticketService.isLoading || tripService.isLoading || seatService.isLoading) {
                   return const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF2474E5)));
+                    child: CircularProgressIndicator(color: Color(0xFF2474E5)),
+                  );
                 }
 
                 if (ticketService.errorMessage != null) {
@@ -403,18 +301,17 @@ class _TicketScreenState extends State<TicketScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.error,
-                          size: 80,
-                          color: Colors.red,
-                        ),
+                        const Icon(Icons.error, size: 80, color: Colors.red),
                         const SizedBox(height: 20),
                         Text(
                           ticketService.errorMessage!.contains('404')
                               ? 'Không tìm thấy vé. Vui lòng kiểm tra hoặc liên hệ hỗ trợ.'
                               : ticketService.errorMessage!,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(fontSize: 16, color: Colors.red),
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: Colors.red,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton(
@@ -441,7 +338,9 @@ class _TicketScreenState extends State<TicketScreen> {
                           'Bạn chưa có vé nào',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -480,7 +379,7 @@ class _TicketScreenState extends State<TicketScreen> {
                         orElse: () => Seat(
                           id: ticket.seat_id,
                           tripId: ticket.trip_id,
-                          seatNumber: 0,
+                          seatNumber: ticket.seatNumber ?? 0,
                           statusSeat: 'BOOKED',
                           createdAt: DateTime.now(),
                           updatedAt: DateTime.now(),
@@ -488,14 +387,16 @@ class _TicketScreenState extends State<TicketScreen> {
                       );
 
                       final availableSeats = seatService.seats
-                          .where((s) =>
-                      s.tripId == trip.id && s.statusSeat == 'AVAILABLE')
+                          .where(
+                            (s) => s.tripId == trip.id && s.statusSeat == 'AVAILABLE',
+                      )
                           .length;
 
                       return Card(
                         elevation: 4,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         margin: const EdgeInsets.only(bottom: 16.0),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
@@ -513,12 +414,22 @@ class _TicketScreenState extends State<TicketScreen> {
                                       color: const Color(0xFF2474E5),
                                     ),
                                   ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _deleteTicket(
+                                      ticket.id,
+                                      ticket.seat_id,
+                                      ticket.trip_id,
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 8),
                               ListTile(
-                                leading: const Icon(Icons.directions_bus,
-                                    color: Color(0xFF2474E5)),
+                                leading: const Icon(
+                                  Icons.directions_bus,
+                                  color: Color(0xFF2474E5),
+                                ),
                                 title: Text(
                                   '${trip.departure_location} → ${trip.arrival_location}',
                                   style: GoogleFonts.poppins(fontSize: 16),
@@ -529,8 +440,10 @@ class _TicketScreenState extends State<TicketScreen> {
                                 ),
                               ),
                               ListTile(
-                                leading: const Icon(Icons.event_seat,
-                                    color: Color(0xFF2474E5)),
+                                leading: const Icon(
+                                  Icons.event_seat,
+                                  color: Color(0xFF2474E5),
+                                ),
                                 title: Text(
                                   'Ghế: ${seat.seatNumber}',
                                   style: GoogleFonts.poppins(fontSize: 16),
@@ -541,32 +454,40 @@ class _TicketScreenState extends State<TicketScreen> {
                                 ),
                               ),
                               ListTile(
-                                leading: const Icon(Icons.access_time,
-                                    color: Color(0xFF2474E5)),
+                                leading: const Icon(
+                                  Icons.access_time,
+                                  color: Color(0xFF2474E5),
+                                ),
                                 title: Text(
                                   'Thời gian đi: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.departure_time)}',
                                   style: GoogleFonts.poppins(fontSize: 16),
                                 ),
                               ),
                               ListTile(
-                                leading: const Icon(Icons.confirmation_number,
-                                    color: Color(0xFF2474E5)),
+                                leading: const Icon(
+                                  Icons.confirmation_number,
+                                  color: Color(0xFF2474E5),
+                                ),
                                 title: Text(
                                   'Trạng thái: ${ticket.ticket_status}',
                                   style: GoogleFonts.poppins(fontSize: 16),
                                 ),
                               ),
                               ListTile(
-                                leading: const Icon(Icons.attach_money,
-                                    color: Color(0xFF2474E5)),
+                                leading: const Icon(
+                                  Icons.attach_money,
+                                  color: Color(0xFF2474E5),
+                                ),
                                 title: Text(
                                   'Giá: ${trip.price.toStringAsFixed(0)} VNĐ',
                                   style: GoogleFonts.poppins(fontSize: 16),
                                 ),
                               ),
                               ListTile(
-                                leading: const Icon(Icons.calendar_today,
-                                    color: Color(0xFF2474E5)),
+                                leading: const Icon(
+                                  Icons.calendar_today,
+                                  color: Color(0xFF2474E5),
+                                ),
                                 title: Text(
                                   'Đặt lúc: ${DateFormat('dd/MM/yyyy HH:mm').format(ticket.booked_at)}',
                                   style: GoogleFonts.poppins(fontSize: 16),
@@ -580,6 +501,9 @@ class _TicketScreenState extends State<TicketScreen> {
                                   children: [
                                     ElevatedButton(
                                       onPressed: () => _startEditing(ticket),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF5B9EE5),
+                                      ),
                                       child: Text(
                                         'Chỉnh sửa',
                                         style: GoogleFonts.poppins(),
@@ -598,8 +522,57 @@ class _TicketScreenState extends State<TicketScreen> {
                                           ),
                                         );
                                       },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF2474E5),
+                                      ),
                                       child: Text(
                                         'Thanh toán',
+                                        style: GoogleFonts.poppins(),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        final paymentService = context.read<PaymentService>();
+                                        await paymentService.fetchPayments();
+                                        final payment = paymentService.getPaymentByTicketId(ticket.id);
+                                        print('Payment tìm được: $payment');
+                                        if (payment == null) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Không tìm thấy thanh toán cho vé này'),
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => RefundScreen(
+                                              paymentId: payment.id!,
+                                              captureId: payment.captureId ?? '',
+                                              amount: trip.price,
+                                            ),
+                                          ),
+                                        ).then((value) {
+                                          if (value == true) {
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => PaymentScreen(
+                                                  amount: trip.price,
+                                                  ticketId: ticket.id,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        });
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                      child: Text(
+                                        'Hoàn tiền',
                                         style: GoogleFonts.poppins(),
                                       ),
                                     ),
@@ -616,10 +589,7 @@ class _TicketScreenState extends State<TicketScreen> {
               },
             ),
             if (_isEditing)
-              ModalBarrier(
-                color: Colors.black54,
-                dismissible: false,
-              ),
+              ModalBarrier(color: Colors.black54, dismissible: false),
             if (_isEditing)
               Center(
                 child: Container(
@@ -656,7 +626,8 @@ class _TicketScreenState extends State<TicketScreen> {
                             decoration: InputDecoration(
                               labelText: 'Chuyến đi',
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                             items: _availableTrips.map((trip) {
                               return DropdownMenuItem<String>(
@@ -671,49 +642,17 @@ class _TicketScreenState extends State<TicketScreen> {
                               setState(() {
                                 _selectedTripId = value;
                                 _selectedSeatId = null;
-                                _availableSeats = [];
-                              });
-                              Provider.of<SeatService>(context, listen: false)
-                                  .fetchAvailableSeatsByTripId(_selectedTripId!)
-                                  .then((_) {
-                                setState(() {
-                                  _availableSeats =
-                                      Provider.of<SeatService>(context, listen: false).seats;
-                                  if (_selectedTicket!.seat_id != null &&
-                                      _availableSeats.every((seat) =>
-                                      seat.id != _selectedTicket!.seat_id)) {
-                                    final currentSeat =
-                                    Provider.of<SeatService>(context, listen: false)
-                                        .seats
-                                        .firstWhere(
-                                          (seat) =>
-                                      seat.id == _selectedTicket!.seat_id,
-                                      orElse: () => Seat(
-                                        id: _selectedTicket!.seat_id,
-                                        tripId: _selectedTicket!.trip_id,
-                                        seatNumber: 0,
-                                        statusSeat: 'BOOKED',
-                                        createdAt: DateTime.now(),
-                                        updatedAt: DateTime.now(),
-                                      ),
-                                    );
-                                    if (currentSeat.id.isNotEmpty) {
-                                      _availableSeats.add(currentSeat);
-                                    }
-                                  }
-                                  print('Available seats: ${_availableSeats.length}');
-                                });
-                              }).catchError((e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Lỗi khi tải ghế: $e')),
-                                );
-                                setState(() {
-                                  _availableSeats = [];
-                                });
+                                _availableSeats = Provider.of<SeatService>(context, listen: false)
+                                    .seats
+                                    .where(
+                                      (seat) =>
+                                  seat.tripId == _selectedTripId &&
+                                      (seat.statusSeat == 'AVAILABLE' || seat.id == _selectedTicket!.seat_id),
+                                )
+                                    .toList();
                               });
                             },
-                            validator: (value) =>
-                            value == null ? 'Vui lòng chọn chuyến đi' : null,
+                            validator: (value) => value == null ? 'Vui lòng chọn chuyến đi' : null,
                           ),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
@@ -721,7 +660,8 @@ class _TicketScreenState extends State<TicketScreen> {
                             decoration: InputDecoration(
                               labelText: 'Ghế',
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                             items: _availableSeats.map((seat) {
                               return DropdownMenuItem<String>(
@@ -737,8 +677,32 @@ class _TicketScreenState extends State<TicketScreen> {
                                 _selectedSeatId = value;
                               });
                             },
-                            validator: (value) =>
-                            value == null ? 'Vui lòng chọn ghế' : null,
+                            validator: (value) => value == null ? 'Vui lòng chọn ghế' : null,
+                          ),
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<String>(
+                            value: _ticketStatus,
+                            decoration: InputDecoration(
+                              labelText: 'Trạng thái vé',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            items: ['BOOKED', 'CANCELLED', 'COMPLETED'].map((status) {
+                              return DropdownMenuItem<String>(
+                                value: status,
+                                child: Text(
+                                  status,
+                                  style: GoogleFonts.poppins(),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _ticketStatus = value;
+                              });
+                            },
+                            validator: (value) => value == null ? 'Vui lòng chọn trạng thái vé' : null,
                           ),
                           const SizedBox(height: 24),
                           Row(

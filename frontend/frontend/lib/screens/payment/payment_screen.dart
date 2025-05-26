@@ -1,215 +1,155 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:frontend/config/paypal_config.dart';
 import 'package:frontend/services/payment_service.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PaymentScreen extends StatefulWidget {
-  final double amount;
   final String ticketId;
+  final double amount;
 
-  const PaymentScreen({
-    super.key,
-    required this.amount,
-    required this.ticketId,
-  });
+  const PaymentScreen({Key? key, required this.ticketId, required this.amount})
+    : super(key: key);
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  String? selectedMethod = 'paypal';
-  InAppWebViewController? webViewController;
-  late PaymentService paymentService;
-  String? approvalUrl;
-  String? executeUrl;
-  bool isLoading = true;
+  String? orderId;
+  String? paypalPaymentId;
+  String? captureId;
+  Future<void> _startPaypalPayment() async {
+    final paymentService = Provider.of<PaymentService>(context, listen: false);
+    try {
+      final orderData = await paymentService.createPayPalOrder(
+        amount: widget.amount,
+      );
 
-  @override
-  void initState() {
-    super.initState();
-    paymentService = PaymentService();
-    _initiatePayment();
+      if (orderData == null) {
+        throw Exception('Không thể tạo đơn hàng PayPal');
+      }
+
+      // Kiểm tra nếu 'links' là null hoặc không có dữ liệu
+      final links = orderData['links'];
+      if (links == null || links.isEmpty) {
+        throw Exception('Không tìm thấy liên kết thanh toán');
+      }
+
+      final approveLink = links.firstWhere(
+        (link) => link['rel'] == 'approve',
+        orElse: () => null,
+      );
+
+      // Nếu không có approveLink, throw exception
+      if (approveLink == null) {
+        throw Exception('Không tìm thấy liên kết thanh toán');
+      }
+
+      final approveUrl = approveLink['href'];
+
+      setState(() {
+        orderId = orderData['id'];
+      });
+
+      // Kiểm tra xem có thể mở được URL không
+      if (await canLaunchUrl(Uri.parse(approveUrl))) {
+        await launchUrl(
+          Uri.parse(approveUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        throw Exception('Không thể mở liên kết PayPal');
+      }
+    } catch (e) {
+      print('Lỗi khi tạo đơn hàng PayPal: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi tạo thanh toán: $e')));
+    }
   }
 
-  Future<void> _initiatePayment() async {
-    setState(() {
-      isLoading = true;
-    });
 
+  Future<void> _confirmPayment() async {
+    if (orderId == null) return;
+
+    final paymentService = Provider.of<PaymentService>(context, listen: false);
     try {
-      final approval = await paymentService.createAndSavePaypalPayment(
+      final captureData = await paymentService.captureOrder(orderId!);
+
+      if (captureData == null ||
+          captureData['purchase_units'] == null ||
+          captureData['purchase_units'][0]['payments'] == null ||
+          captureData['purchase_units'][0]['payments']['captures'] == null) {
+        throw Exception('Dữ liệu xác nhận thanh toán không hợp lệ');
+      }
+
+      final id =
+          captureData['purchase_units'][0]['payments']['captures'][0]['id'];
+      final status = captureData['status'] ?? 'unknown';
+
+      setState(() {
+        captureId = id;
+      });
+      print('captureId: $captureId');
+      await paymentService.createPayment(
         ticketId: widget.ticketId,
+        orderId: orderId!,
+        captureId: captureId!,
         amount: widget.amount,
         paymentMethod: 'paypal',
-        paymentStatus: 'PENDING',
+        paymentStatus: status,
       );
+      print('Sending payment to backend:');
+      print('ticketId: ${widget.ticketId}');
+      print('orderId: $orderId');
+      print('amount: ${widget.amount}');
+      print('paymentMethod: paypal');
+      print('status: $status');
 
-      if (approval != null) {
-        setState(() {
-          approvalUrl = approval;
-          isLoading = false;
-        });
-      } else {
-        _showSnackBar('Không thể tạo thanh toán. Vui lòng thử lại.');
-        Navigator.pop(context);
-      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Thanh toán thành công!')));
+
+      Navigator.pop(context); // hoặc chuyển sang màn hình khác
     } catch (e) {
-      _showSnackBar('Lỗi khi khởi tạo thanh toán: $e');
-      setState(() {
-        isLoading = false;
-      });
-      Navigator.pop(context);
+      print('Lỗi khi capture đơn hàng: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi xác nhận thanh toán')));
     }
-  }
-
-  Future<void> _handleSuccess(String payerId) async {
-    if (executeUrl != null) {
-      try {
-        final success = await paymentService.executePayment(executeUrl!, payerId);
-        if (success) {
-          _showSnackBar('Thanh toán thành công!');
-        } else {
-          _showSnackBar('Thanh toán thất bại. Vui lòng thử lại.');
-        }
-      } catch (e) {
-        _showSnackBar('Lỗi khi thực hiện thanh toán: $e');
-      }
-    } else {
-      _showSnackBar('Không tìm thấy URL thực thi thanh toán.');
-    }
-    Navigator.pop(context);
-  }
-
-  Future<void> _handleCashPayment() async {
-    try {
-      await paymentService.createAndSavePaypalPayment(
-        ticketId: widget.ticketId,
-        amount: widget.amount,
-        paymentMethod: 'cash',
-        paymentStatus: 'PENDING',
-      );
-      _showSnackBar('Thanh toán bằng tiền mặt đã được ghi nhận!');
-    } catch (e) {
-      _showSnackBar('Lỗi khi ghi nhận thanh toán bằng tiền mặt: $e');
-    }
-    Navigator.pop(context);
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Thanh toán'),
-        centerTitle: true,
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Chọn phương thức thanh toán:',
-                  style: TextStyle(fontSize: 16),
-                ),
-                const SizedBox(width: 16),
-                Radio<String>(
-                  value: 'paypal',
-                  groupValue: selectedMethod,
-                  onChanged: (String? value) async {
-                    setState(() {
-                      selectedMethod = value;
-                      isLoading = true;
-                    });
-                    if (value == 'paypal') {
-                      await _initiatePayment();
-                    } else {
-                      setState(() {
-                        isLoading = false;
-                      });
-                    }
-                  },
-                ),
-                const Text('Paypal'),
-                const SizedBox(width: 16),
-                Radio<String>(
-                  value: 'cash',
-                  groupValue: selectedMethod,
-                  onChanged: (String? value) {
-                    setState(() {
-                      selectedMethod = value;
-                      approvalUrl = null; // Reset approvalUrl khi chọn tiền mặt
-                      isLoading = false;
-                    });
-                  },
-                ),
-                const Text('Tiền mặt'),
-              ],
+      appBar: AppBar(title: Text('Thanh toán PayPal')),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Text(
+              'Tổng thanh toán: \$${widget.amount.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 24),
             ),
-          ),
-          Expanded(
-            child: selectedMethod == 'paypal'
-                ? approvalUrl != null
-                ? InAppWebView(
-              initialUrlRequest: URLRequest(
-                url: WebUri(approvalUrl!),
-              ),
-              onWebViewCreated: (controller) {
-                webViewController = controller;
-              },
-              onLoadStop: (controller, url) async {
-                if (url == null) return;
-                final uri = Uri.parse(url.toString());
-                if (uri.toString().startsWith(PayPalConfig.returnUrl)) {
-                  final payerId = uri.queryParameters['PayerID'];
-                  if (payerId != null) {
-                    await _handleSuccess(payerId);
-                  }
-                } else if (uri.toString().startsWith(PayPalConfig.cancelUrl)) {
-                  _showSnackBar('Thanh toán đã bị hủy.');
-                  Navigator.pop(context);
-                }
-              },
-              onLoadError: (controller, url, code, message) {
-                _showSnackBar('Lỗi tải trang thanh toán: $message');
-                setState(() {
-                  isLoading = false;
-                });
-              },
-            )
-                : const Center(
-              child: Text(
-                'Không thể tải trang thanh toán PayPal.',
-                style: TextStyle(color: Colors.red),
-              ),
-            )
-                : Center(
-              child: ElevatedButton(
-                onPressed: _handleCashPayment,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                ),
-                child: const Text(
-                  'Xác nhận thanh toán bằng tiền mặt',
-                  style: TextStyle(fontSize: 16),
-                ),
+            SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: _startPaypalPayment,
+              icon: Icon(Icons.payment),
+              label: Text('Thanh toán với PayPal'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
               ),
             ),
-          ),
-        ],
+            if (orderId != null) ...[
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _confirmPayment,
+                child: Text('Xác nhận đã thanh toán'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

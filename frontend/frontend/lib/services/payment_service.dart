@@ -4,218 +4,270 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/config/paypal_config.dart';
 import 'package:frontend/models/payment.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 // import '../models/payment_model.dart';
 
 class PaymentService extends ChangeNotifier {
   final String baseUrl = "https://booking-app-1-bzfs.onrender.com"; // replace!
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
+  List<Payment> _payments = [];
+  String? lastExecuteUrl;
+  List<Payment> get payments => _payments;
 
-  Future<String?> _getAccessToken() async {
-    final auth = base64Encode(
-      utf8.encode('${PayPalConfig.clientId}:${PayPalConfig.secret}'),
+  Future<void> fetchPayments() async {
+    final token = await _storage.read(key: 'accessToken');
+    if (token == null) return;
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/payment/mypayment'),
+      headers: {'Authorization': 'Bearer $token'},
     );
-    final response = await http.post(
-      Uri.parse('${PayPalConfig.baseUrl}/v1/oauth2/token'),
-      headers: {
-        'Authorization': 'Basic $auth',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'grant_type=client_credentials',
-    );
+
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['access_token'];
+      final List<dynamic> data = jsonDecode(response.body);
+      print('Dữ liệu nhận được từ API: $data');
+      _payments = data.map((item) => Payment.fromJson(item)).toList();
+      notifyListeners(); // thông báo thay đổi để UI rebuild
     } else {
-      print('Lỗi lấy token: ${response.body}');
+      print(
+        'Lỗi khi fetch payments: ${response.statusCode} - ${response.body}',
+      );
+    }
+  }
+
+  Payment? getPaymentByTicketId(String ticketId) {
+    try {
+      return _payments.firstWhere((payment) => payment.ticketId == ticketId);
+    } catch (e) {
       return null;
     }
   }
 
-  Future<String?> createAndSavePaypalPayment({
-    required String ticketId,
-    required double amount,
-    required String paymentMethod,
-    required String paymentStatus,
-  }) async {
-    final accessToken = await _getAccessToken();
-    if (accessToken == null) return null;
-
-    // Bước 1: Tạo payment trên PayPal
+  Future<String> getAccessToken() async {
     final response = await http.post(
-      Uri.parse('${PayPalConfig.baseUrl}/v1/payments/payment'),
+      Uri.parse('${PayPalConfig.baseUrl}/v1/oauth2/token'),
+      headers: {
+        'Authorization':
+            'Basic ${base64Encode(utf8.encode('${PayPalConfig.clientId}:${PayPalConfig.secret}'))}',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials',
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['access_token'];
+    } else {
+      throw Exception('Failed to get access token');
+    }
+  }
+
+  Future<Map<String, dynamic>?> createPayPalOrder({
+    required double amount,
+  }) async {
+    final accessToken = await getAccessToken();
+
+    final response = await http.post(
+      Uri.parse('${PayPalConfig.baseUrl}/v2/checkout/orders'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
       },
       body: jsonEncode({
-        "intent": "sale",
-        "payer": {"payment_method": "paypal"},
-        "transactions": [
+        'intent': 'CAPTURE',
+        'purchase_units': [
           {
-            "amount": {"total": amount.toStringAsFixed(2), "currency": "USD"},
-            "description": "Bus ticket payment",
+            'amount': {
+              'currency_code': 'USD',
+              'value': amount.toStringAsFixed(2),
+            },
           },
         ],
-        "redirect_urls": {
-          "return_url": PayPalConfig.returnUrl,
-          "cancel_url": PayPalConfig.cancelUrl,
+        'application_context': {
+          'return_url': PayPalConfig.returnUrl,
+          'cancel_url': PayPalConfig.cancelUrl,
         },
       }),
     );
 
-    if (response.statusCode == 201) {
+    print('PayPal Order Response: ${response.statusCode} - ${response.body}');
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final approvalUrl =
-          data['links'].firstWhere(
-            (link) => link['rel'] == 'approval_url',
-          )['href'];
-      final executeUrl =
-          data['links'].firstWhere((link) => link['rel'] == 'execute')['href'];
-      final paypalPaymentId = data['id']; // ID của giao dịch PayPal
+      final approveLink = (data['links'] as List<dynamic>).firstWhere(
+        (link) => link['rel'] == 'approve',
+        orElse: () => null,
+      );
 
-      // Bước 2: Gửi dữ liệu về backend
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) {
-        print('Không tìm thấy token');
-        return null;
+      if (approveLink != null && approveLink['href'] != null) {
+        final url = approveLink['href'];
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        } else {
+          throw Exception('Không thể mở liên kết PayPal');
+        }
+        return data;
+      } else {
+        throw Exception('Không tìm thấy liên kết approve từ PayPal');
       }
+    } else {
+      throw Exception(
+        'Lỗi khi tạo thanh toán PayPal: ${response.statusCode} - ${response.body}',
+      );
+    }
+  }
 
-      final body = {
+
+  Future<void> createPayment({
+    required String ticketId,
+    required String orderId,
+    required String paymentMethod,
+    required double amount,
+    required String paymentStatus,
+    required String captureId,
+  }) async {
+    final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('Token không tồn tại');
+
+    if (orderId.isEmpty) {
+      print('Error: orderId is empty');
+      return;
+    }
+    final response = await http.post(
+      Uri.parse('$baseUrl/payment'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
         'ticket_id': ticketId,
+        'order_id': orderId,
         'amount': amount,
         'payment_method': paymentMethod,
         'payment_status': paymentStatus,
-        'paypal_payment_id': paypalPaymentId,
-      };
-      print('Body gửi lên backend: ${jsonEncode(body)}');
-      final backendResponse = await http.post(
-        Uri.parse('$baseUrl/payment'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(body),
-      );
-
-      if (backendResponse.statusCode == 201 ||
-          backendResponse.statusCode == 200) {
-        print('Đã lưu thanh toán PayPal thành công vào backend.');
-      } else {
-        print('Lỗi khi lưu thanh toán vào backend: ${backendResponse.body}');
-      }
-
-      return approvalUrl;
+        'capture_id': captureId,
+      }),
+    );
+    if (response.statusCode == 201) {
+      print('Payment info sent to backend successfully.');
     } else {
-      print('Lỗi tạo thanh toán PayPal: ${response.body}');
+      print(
+        'Error sending payment to backend: ${response.statusCode} - ${response.body}',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>?> captureOrder(String orderId) async {
+    final accessToken = await getAccessToken();
+
+    final response = await http.post(
+      Uri.parse('${PayPalConfig.baseUrl}/v2/checkout/orders/$orderId/capture'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    print('Capture Order Response: ${response.statusCode} - ${response.body}');
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("Error capturing PayPal order: ${response.body}");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getOrderDetails(String orderId) async {
+    final accessToken = await getAccessToken();
+
+    final response = await http.get(
+      Uri.parse('${PayPalConfig.baseUrl}/v2/checkout/orders/$orderId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    print(
+      'Get Order Details Response: ${response.statusCode} - ${response.body}',
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("Error fetching order details: ${response.body}");
       return null;
     }
   }
 
 
-  // Future<Map<String, String>?> createPaypalPayment(double amount) async {
-  //   final accessToken = await _getAccessToken();
-  //   if (accessToken == null) return null;
 
-  //   final response = await http.post(
-  //     Uri.parse('${PayPalConfig.baseUrl}/v1/payments/payment'),
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Authorization': 'Bearer $accessToken',
-  //     },
-  //     body: jsonEncode({
-  //       "intent": "sale",
-  //       "payer": {"payment_method": "paypal"},
-  //       "transactions": [
-  //         {
-  //           "amount": {"total": amount.toStringAsFixed(2), "currency": "USD"},
-  //           "description": "Bus ticket payment",
-  //         },
-  //       ],
-  //       "redirect_urls": {
-  //         "return_url": PayPalConfig.returnUrl,
-  //         "cancel_url": PayPalConfig.cancelUrl,
-  //       },
-  //     }),
-  //   );
+  Future<Map<String, dynamic>?> refundPayment({
+    required String captureId,
+    required double amount,
+  }) async {
+    try {
+      final accessToken = await getAccessToken();
 
-  //   if (response.statusCode == 201) {
-  //     final data = jsonDecode(response.body);
-  //     final approvalUrl =
-  //         data['links'].firstWhere(
-  //           (link) => link['rel'] == 'approval_url',
-  //         )['href'];
-  //     final executeUrl =
-  //         data['links'].firstWhere((link) => link['rel'] == 'execute')['href'];
-  //     return {'approvalUrl': approvalUrl, 'executeUrl': executeUrl};
-  //   } else {
-  //     print('Lỗi tạo thanh toán: ${response.body}');
-  //     return null;
-  //   }
-  // }
+      final response = await http.post(
+        Uri.parse(
+          '${PayPalConfig.baseUrl}/v2/payments/captures/$captureId/refund',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({
+          'amount': {
+            'value': amount.toStringAsFixed(2),
+            'currency_code': 'USD',
+          },
+        }),
+      );
 
-  Future<bool> executePayment(String executeUrl, String payerId) async {
-    final accessToken = await _getAccessToken();
-    if (accessToken == null) return false;
+      print('Refund Response: ${response.statusCode} - ${response.body}');
 
-    final response = await http.post(
-      Uri.parse(executeUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode({'payer_id': payerId}),
-    );
-
-    if (response.statusCode == 200) {
-      print('Thanh toán thành công!');
-      return true;
-    } else {
-      print(' Lỗi xác nhận thanh toán: ${response.body}');
-      return false;
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print('Refund failed: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Exception during refund: $e');
+      return null;
     }
   }
 
-  // Future<void> savePaymentToBackend({
-  //   required String ticketId,
-  //   required double amount,
-  //   required String paymentMethod,
-  //   String? paypalPaymentId,
-  // }) async {
-  //   final token = await _storage.read(key: 'accessToken');
-  //   print("Token gửi lên: $token");
-  //   if (token == null) {
-  //     print('Không tìm thấy token');
-  //     return;
-  //   }
 
-  //   final body = {
-  //     'ticket_id': ticketId,
-  //     'amount': amount,
-  //     'payment_method': paymentMethod,
-  //     'payment_status': paymentMethod == 'paypal' ? 'COMPLETED' : 'PENDING',
-  //   };
+  Future<void> refundPaypalPayment({
+    required String paymentId,
+    required Map<String, dynamic> refundData,
+  }) async {
+    final token = await _storage.read(key: 'accessToken');
+    if (token == null) throw Exception('Token không tồn tại');
 
-  //   if (paymentMethod == 'paypal' && paypalPaymentId != null) {
-  //     body['paypal_payment_id'] = paypalPaymentId;
-  //   }
-  //   print('Dữ liệu gửi lên backend: ${jsonEncode(body)}');
+    final response = await http.put(
+      Uri.parse('$baseUrl/payment/refund/$paymentId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'paymentId': paymentId,
+        'refundData': refundData, // bạn có thể lưu thêm thông tin chi tiết
+      }),
+    );
 
-  //   final response = await http.post(
-  //     Uri.parse('$baseUrl/payment'),
-  //     headers: {
-  //       'Authorization': 'Bearer $token',
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: jsonEncode(body),
-  //   );
-
-  //   print('Mã phản hồi: ${response.statusCode}');
-  //   print('Phản hồi từ backend: ${response.body}');
-
-  //   if (response.statusCode != 201 && response.statusCode != 200) {
-  //     print(' Gửi về backend thất bại: ${response.body}');
-  //   } else {
-  //     print(' Gửi payment thành công về backend');
-  //   }
-  // }
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      print('Lưu thông tin hoàn tiền thành công.');
+    } else {
+      print(
+        'Lỗi khi lưu thông tin hoàn tiền: ${response.statusCode} - ${response.body}',
+      );
+      throw Exception('Failed to save refund info');
+    }
+  }
 }

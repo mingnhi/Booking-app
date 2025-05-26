@@ -22,7 +22,7 @@ export class CreatePaymentDto {
   @IsEnum(['paypal', 'cash'])
   payment_method: 'paypal' | 'cash';
 
-  @IsEnum(['PENDING', 'COMPLETED', 'FAILED'])
+  @IsEnum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'])
   @IsOptional()
   payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
 

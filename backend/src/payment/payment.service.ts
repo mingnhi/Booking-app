@@ -159,7 +159,7 @@ export class PaymentService {
         throw new ForbiddenException('Bạn không có quyền hoàn tiền giao dịch');
       }
 
-      if (payment.payment_status !== 'PENDING') {
+      if (payment.payment_status !== 'COMPLETED') {
         throw new ConflictException(
           'Chỉ có thể hoàn tiền khi giao dịch hoàn tất',
         );

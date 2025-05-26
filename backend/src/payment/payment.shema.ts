@@ -20,7 +20,6 @@ export class Payment {
 
   @Prop({
     enum: ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'],
-    default: 'PENDING',
   })
   payment_status: string;
 
@@ -29,7 +28,7 @@ export class Payment {
   @Prop()
   paypal_payment_id?: string;
   @Prop()
-  sale_id?: string;
+  order_id?: string;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);

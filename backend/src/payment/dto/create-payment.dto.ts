@@ -35,5 +35,5 @@ export class CreatePaymentDto {
 
   @IsOptional()
   @IsString()
-  sale_id?: string;
+  order_id?: string;
 }

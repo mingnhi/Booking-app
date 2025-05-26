@@ -31,6 +31,7 @@ export class PaymentService {
         payment_method,
         payment_status,
         order_id,
+        capture_id
       } = createPaymentDto;
 
       const ticket = await this.ticketModel.findById(ticket_id);
@@ -64,6 +65,7 @@ export class PaymentService {
         payment_status,
         payment_date: new Date(),
         order_id,
+        capture_id,
       });
 
       await payment.save();

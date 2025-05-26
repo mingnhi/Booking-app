@@ -30,6 +30,8 @@ export class Payment {
 
   @Prop()
   order_id?: string;
+  @Prop()
+  capture_id?: string;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);

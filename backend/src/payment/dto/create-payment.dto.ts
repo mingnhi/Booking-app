@@ -32,4 +32,8 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsString()
   order_id?: string;
+
+  @IsOptional()
+  @IsString()
+  capture_id?: string;
 }

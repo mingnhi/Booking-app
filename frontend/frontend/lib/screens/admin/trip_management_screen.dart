@@ -372,8 +372,8 @@ class _TripManagementScreenState extends State<TripManagementScreen> {
             return AlertDialog(
               title: Text(
                 isEditing
-                    ? 'Chỉnh sửa chuyến đi'
-                    : 'Chi tiết chuyến đi ${trip.id}',
+                    ? 'Chỉnh sửa ch uyến đi'
+                    : 'Chi tiết chuyến đi',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
               ),
               content: SingleChildScrollView(

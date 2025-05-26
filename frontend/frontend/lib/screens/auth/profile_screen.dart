@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         Navigator.pushReplacementNamed(context, '/trip/search');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/my-tickets');
+        Navigator.pushReplacementNamed(context, '/tickets');
         break;
       case 3:
         break;
@@ -297,12 +297,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                                   icon: Icons.phone,
                                   title: 'Số Điện Thoại',
                                   value: authService.currentUser!.phoneNumber ?? 'Không có dữ liệu',
-                                ),
-                                const SizedBox(height: 16),
-                                _buildProfileItem(
-                                  icon: Icons.admin_panel_settings,
-                                  title: 'Vai Trò',
-                                  value: authService.currentUser!.role,
                                 ),
                                 const SizedBox(height: 16),
                                 Center(

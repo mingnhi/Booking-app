@@ -33,7 +33,6 @@ class LocationService extends ChangeNotifier {
         }
       }
 
-      // Sử dụng endpoint công khai /location thay vì /admin/location
       final response = await http.get(
         Uri.parse('$baseUrl/location'),
         headers: {

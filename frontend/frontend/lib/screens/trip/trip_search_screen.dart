@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import '../../models/location.dart';
 import '../../services/trip_service.dart';
 import '../../services/location_service.dart';
 import '../../services/auth_service.dart';
@@ -24,7 +26,6 @@ class _TripSearchScreenState extends State<TripSearchScreen>
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
   int _selectedIndex = 1; // Mặc định là TripSearchScreen
-  List<Trip> _searchResults = [];
 
   @override
   void initState() {
@@ -48,11 +49,15 @@ class _TripSearchScreenState extends State<TripSearchScreen>
     );
     _animationController!.forward();
 
-    Future.microtask(() async {
-      if (mounted) {
-        final locationService = Provider.of<LocationService>(context, listen: false);
-        await locationService.fetchLocations();
-      }
+    // Khởi tạo locale cho 'vi_VN'
+    initializeDateFormatting('vi_VN', null).then((_) {
+      Future.microtask(() async {
+        if (mounted) {
+          final locationService = Provider.of<LocationService>(context, listen: false);
+          await locationService.fetchLocations();
+          setState(() {});
+        }
+      });
     });
   }
 
@@ -122,17 +127,53 @@ class _TripSearchScreenState extends State<TripSearchScreen>
         arrivalLocation: arrivalLocation,
         departureTime: _departureTime,
       );
-      setState(() {
-        _searchResults = results;
-      });
+
+      // Lưu tìm kiếm gần đây với tripId nếu có kết quả
+      if (_departureId != null && _arrivalId != null && results.isNotEmpty) {
+        // Lấy tripId từ chuyến đi đầu tiên trong kết quả
+        final tripId = results[0].id;
+        tripService.addRecentSearch(
+          _departureId!,
+          _arrivalId!,
+          DateTime.now(),
+          tripId: tripId, // Lưu tripId
+        );
+      }
+
+      Navigator.pushNamed(
+        context,
+        '/trip/list',
+        arguments: {
+          'trips': results,
+          'departureId': _departureId,
+          'arrivalId': _arrivalId,
+        },
+      );
     } catch (e) {
-      setState(() {
-        _searchResults = [];
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi khi tìm kiếm chuyến đi: $e')),
       );
     }
+  }
+
+  void _selectRecentSearch(Map<String, dynamic> search) {
+    setState(() {
+      _departureId = search['departureId'];
+      _arrivalId = search['arrivalId'];
+      _departureTime = null; // Không cần ngày
+    });
+  }
+
+  void _navigateToTripDetail(String tripId) {
+    Navigator.pushNamed(
+      context,
+      '/trip/detail/id',
+      arguments: tripId, // Truyền tripId trực tiếp
+    );
+  }
+
+  void _viewAllRecentSearches() {
+    print("Xem tất cả tìm kiếm gần đây");
   }
 
   @override
@@ -154,6 +195,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
           bottom: false,
           child: Consumer3<TripService, LocationService, AuthService>(
             builder: (context, tripService, locationService, authService, _) {
+              print('Recent searches length: ${tripService.recentSearches.length}');
               if (locationService.isLoading) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -250,7 +292,27 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: const BorderSide(color: Color(0xFF2474E5), width: 2),
                                   ),
-                                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF2474E5)),
+                                  prefixIcon: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: const Color(0xFF2474E5), // Màu xanh
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 10,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 items: locationService.locations.map((loc) {
                                   return DropdownMenuItem<String>(
@@ -277,7 +339,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: const BorderSide(color: Color(0xFF2474E5), width: 2),
                                   ),
-                                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF2474E5)),
+                                  prefixIcon: const Icon(Icons.location_on, color: Colors.redAccent, size: 30),
                                 ),
                                 items: locationService.locations.map((loc) {
                                   return DropdownMenuItem<String>(
@@ -291,13 +353,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                 onChanged: (value) => setState(() => _arrivalId = value),
                               ),
                               const SizedBox(height: 16),
-                              ListTile(
-                                title: const Text('Ngày đi'),
-                                subtitle: Text(
-                                  _departureTime != null
-                                      ? DateFormat('dd/MM/yyyy').format(_departureTime!)
-                                      : 'Chọn ngày',
-                                ),
+                              InkWell(
                                 onTap: () async {
                                   final picked = await showDatePicker(
                                     context: context,
@@ -311,6 +367,27 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                     });
                                   }
                                 },
+                                child: InputDecorator(
+                                  decoration: InputDecoration(
+                                    labelText: 'Ngày đi',
+                                    labelStyle: GoogleFonts.poppins(color: Colors.blueGrey.shade800),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFF2474E5)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFF2474E5), width: 2),
+                                    ),
+                                    prefixIcon: const Icon(Icons.calendar_today, color: Color(0xFF2474E5)),
+                                  ),
+                                  child: Text(
+                                    _departureTime != null
+                                        ? DateFormat('dd/MM/yyyy').format(_departureTime!)
+                                        : 'Chọn ngày',
+                                    style: GoogleFonts.poppins(fontSize: 14),
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 16),
                               SizedBox(
@@ -318,8 +395,8 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                                 child: ElevatedButton(
                                   onPressed: _departureId != null && _arrivalId != null ? _searchTrips : null,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFD4A017),
-                                    foregroundColor: Colors.white,
+                                    backgroundColor: const Color(0xFFFFD333),
+                                    foregroundColor: Colors.black,
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -336,101 +413,176 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      if (_searchResults.isNotEmpty)
-                        Text(
-                          'Kết quả tìm kiếm (${_searchResults.length} chuyến đi)',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      if (_searchResults.isEmpty && !tripService.isLoading)
-                        Center(
-                          child: Text(
-                            'Không tìm thấy chuyến đi phù hợp.',
-                            style: GoogleFonts.poppins(
-                              color: Colors.grey.shade600,
-                              fontSize: 16,
+                      // Phần Tìm kiếm gần đây
+                      if (tripService.recentSearches.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Tìm kiếm gần đây',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      if (tripService.isLoading)
-                        const Center(child: CircularProgressIndicator()),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _searchResults.length,
-                        itemBuilder: (context, index) {
-                          final trip = _searchResults[index];
-                          final locationService = Provider.of<LocationService>(context, listen: false);
-
-                          String departureName = 'Không xác định';
-                          String arrivalName = 'Không xác định';
-                          try {
-                            if (_departureId != null) {
-                              departureName = locationService.locations
-                                  .firstWhere((loc) => loc.id == _departureId)
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 100, // Chiều cao cố định cho danh sách ngang
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal, // Chuyển sang chiều ngang
+                            itemCount: tripService.recentSearches.length,
+                            itemBuilder: (context, index) {
+                              final search = tripService.recentSearches[index];
+                              final departureLoc = locationService.locations
+                                  .firstWhere(
+                                    (loc) => loc.id == search['departureId'],
+                                orElse: () => Location(id: '', location: 'Không rõ', contact_phone: ''),
+                              )
                                   .location;
-                            }
-                            if (_arrivalId != null) {
-                              arrivalName = locationService.locations
-                                  .firstWhere((loc) => loc.id == _arrivalId)
+                              final arrivalLoc = locationService.locations
+                                  .firstWhere(
+                                    (loc) => loc.id == search['arrivalId'],
+                                orElse: () => Location(id: '', location: 'Không rõ', contact_phone: ''),
+                              )
                                   .location;
-                            }
-                          } catch (e) {
-                            print('Lỗi khi ánh xạ ID địa điểm: $e');
-                          }
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
-                              title: Text(
-                                '$departureName → $arrivalName',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                              final tripId = search['tripId'] as String?;
+
+                              return GestureDetector(
+                                onTap:_departureId != null && _arrivalId != null ? _searchTrips : null,
+                                child: Card(
+                                  margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 2,
+                                  child: Container(
+                                    width: 200, // Chiều rộng cố định
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        // Cột chứa Điểm đi và Điểm đến
+                                        Expanded(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              // Khung 1: Điểm đi
+                                              Row(
+                                                children: [
+                                                  Stack(
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      Container(
+                                                        width: 15,
+                                                        height: 12,
+                                                        decoration: BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          color: const Color(0xFF2474E5), // Màu xanh
+                                                        ),
+                                                      ),
+                                                      Container(
+                                                        width: 4,
+                                                        height: 4,
+                                                        decoration: const BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text(
+                                                      departureLoc,
+                                                      style: GoogleFonts.poppins(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              // Đường đứt đứng giữa hai khung
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: List.generate(3, (index) => const Icon(
+                                                    Icons.circle,
+                                                    size: 4,
+                                                    color: Colors.grey,
+                                                  )).map((dot) => Padding(
+                                                    padding: const EdgeInsets.only(bottom: 2.0),
+                                                    child: dot,
+                                                  )).toList(),
+                                                ),
+                                              ),
+                                              // Khung 3: Điểm đến
+                                              Row(
+                                                children: [
+                                                  Stack(
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      Container(
+                                                        width: 15,
+                                                        height: 12,
+                                                        decoration: BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          color: Colors.redAccent, // Màu đỏ
+                                                        ),
+                                                      ),
+                                                      Container(
+                                                        width: 4,
+                                                        height: 4,
+                                                        decoration: const BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text(
+                                                      arrivalLoc,
+                                                      style: GoogleFonts.poppins(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Dấu mũi tên ở góc phải
+                                        const Icon(
+                                          Icons.arrow_forward,
+                                          size: 20,
+                                          color: Colors.black,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Thời gian đi: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.departure_time)}',
-                                    style: GoogleFonts.poppins(fontSize: 14),
-                                  ),
-                                  Text(
-                                    'Thời gian đến: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.arrival_time)}',
-                                    style: GoogleFonts.poppins(fontSize: 14),
-                                  ),
-                                  Text(
-                                    'Giá: ${trip.price} VNĐ',
-                                    style: GoogleFonts.poppins(fontSize: 14),
-                                  ),
-                                  Text(
-                                    'Loại xe: ${trip.vehicle_id} - Tổng ghế: ${trip.totalSeats}',
-                                    style: GoogleFonts.poppins(fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/trip/detail/:id',
-                                  arguments: trip.id,
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

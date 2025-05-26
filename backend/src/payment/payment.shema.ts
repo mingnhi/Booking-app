@@ -1,5 +1,6 @@
 // src/payment/schemas/payment.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Transform } from 'class-transformer';
 import { Document, Types } from 'mongoose';
 
 export type PaymentDocument = Payment & Document;
@@ -12,6 +13,7 @@ export class Payment {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user_id: Types.ObjectId;
 
+  @Transform(({ value }) => Number(value))
   @Prop({ required: true })
   amount: number;
 

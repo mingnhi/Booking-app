@@ -49,7 +49,7 @@ class PaymentService extends ChangeNotifier {
       Uri.parse('${PayPalConfig.baseUrl}/v1/oauth2/token'),
       headers: {
         'Authorization':
-            'Basic ${base64Encode(utf8.encode('${PayPalConfig.clientId}:${PayPalConfig.secret}'))}',
+        'Basic ${base64Encode(utf8.encode('${PayPalConfig.clientId}:${PayPalConfig.secret}'))}',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: 'grant_type=client_credentials',
@@ -96,7 +96,7 @@ class PaymentService extends ChangeNotifier {
     if (response.statusCode == 201 || response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final approveLink = (data['links'] as List<dynamic>).firstWhere(
-        (link) => link['rel'] == 'approve',
+            (link) => link['rel'] == 'approve',
         orElse: () => null,
       );
 

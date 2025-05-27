@@ -8,7 +8,7 @@ class PaymentScreen extends StatefulWidget {
   final double amount;
 
   const PaymentScreen({Key? key, required this.ticketId, required this.amount})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -36,7 +36,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       }
 
       final approveLink = links.firstWhere(
-        (link) => link['rel'] == 'approve',
+            (link) => link['rel'] == 'approve',
         orElse: () => null,
       );
 
@@ -84,7 +84,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       }
 
       final id =
-          captureData['purchase_units'][0]['payments']['captures'][0]['id'];
+      captureData['purchase_units'][0]['payments']['captures'][0]['id'];
       final status = captureData['status'] ?? 'unknown';
 
       setState(() {

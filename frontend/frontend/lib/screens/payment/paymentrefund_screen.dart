@@ -9,7 +9,7 @@ class RefundScreen extends StatefulWidget {
   final double amount;
 
   const RefundScreen({Key? key, required this.captureId,required this.paymentId, required this.amount})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<RefundScreen> createState() => _RefundScreenState();
@@ -77,46 +77,46 @@ class _RefundScreenState extends State<RefundScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Capture ID: ${widget.captureId}'),
-                    Text('Số tiền: \$${widget.amount.toStringAsFixed(2)}'),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Trạng thái thanh toán: ${paymentStatus == 'REFUNDED' ? 'Đã hoàn tiền' : 'Đã thanh toán'}',
-                      style: TextStyle(
-                        color:
-                            paymentStatus == 'REFUNDED'
-                                ? Colors.red
-                                : Colors.green,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed:
-                          paymentStatus == 'REFUNDED' ? null : handleRefund,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Hoàn tiền'),
-                    ),
-                    if (refundMessage != null) ...[
-                      const SizedBox(height: 20),
-                      Text(
-                        refundMessage!,
-                        style: TextStyle(
-                          color:
-                              refundMessage == 'Hoàn tiền thành công!'
-                                  ? Colors.green
-                                  : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ],
+        isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Capture ID: ${widget.captureId}'),
+            Text('Số tiền: \$${widget.amount.toStringAsFixed(2)}'),
+            const SizedBox(height: 10),
+            Text(
+              'Trạng thái thanh toán: ${paymentStatus == 'REFUNDED' ? 'Đã hoàn tiền' : 'Đã thanh toán'}',
+              style: TextStyle(
+                color:
+                paymentStatus == 'REFUNDED'
+                    ? Colors.red
+                    : Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed:
+              paymentStatus == 'REFUNDED' ? null : handleRefund,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Hoàn tiền'),
+            ),
+            if (refundMessage != null) ...[
+              const SizedBox(height: 20),
+              Text(
+                refundMessage!,
+                style: TextStyle(
+                  color:
+                  refundMessage == 'Hoàn tiền thành công!'
+                      ? Colors.green
+                      : Colors.red,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -16,17 +16,18 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
-  int _selectedIndex = 3; // Chỉ số hiện tại của thanh điều hướng (Tài khoản)
-  bool _isEditing = false;
+  int _selectedIndex = 3; // Current index of the navigation bar (Tài khoản)
+  bool _isEditing = true; // Default to editable state as per the image
   late TextEditingController _fullNameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  late TextEditingController _dobController; // Added for date of birth
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.blueAccent,
+      statusBarColor: Color(0xFF0052CC), // Match the AppBar color
       statusBarIconBrightness: Brightness.light,
     ));
 
@@ -46,6 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _fullNameController = TextEditingController();
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
+    _dobController = TextEditingController(); // Initialize date of birth controller
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authService = Provider.of<AuthService>(context, listen: false);
@@ -54,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           _fullNameController.text = authService.currentUser!.fullName;
           _emailController.text = authService.currentUser!.email;
           _phoneController.text = authService.currentUser!.phoneNumber ?? '';
+          _dobController.text = '03/07/2004'; // Static value to match the image; adjust as needed
         }
       });
     });
@@ -65,6 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _fullNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _dobController.dispose();
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
@@ -118,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        authService.currentUser = User.fromJson(data); // Sửa lại: không cần data['user']
+        authService.currentUser = User.fromJson(data);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cập nhật thông tin thành công!')),
         );
@@ -137,42 +141,62 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     }
   }
 
+  Future<void> _logout(AuthService authService) async {
+    try {
+      await authService.logout();
+      Navigator.pushReplacementNamed(context, '/auth/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Đăng xuất thất bại: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      extendBody: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white, // Match the white background
       appBar: AppBar(
-        title: Image.asset(
-          'assets/images/vexere_logo.png',
-          height: 40,
-          fit: BoxFit.contain,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pushNamed(
+            context,
+            '/tickets',
+          )
         ),
-        backgroundColor: Colors.blueAccent.shade100.withOpacity(0.8),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await Provider.of<AuthService>(context, listen: false).logout();
-              Navigator.pushReplacementNamed(context, '/auth/login');
-            },
+        title: Text(
+          'Thông tin tài khoản',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final authService = Provider.of<AuthService>(context, listen: false);
+              _logout(authService);
+            },
+            child: Text(
+              'Đăng xuất',
+              style: TextStyle(
+                color: Colors.white,
+                decoration: TextDecoration.underline, // thêm dòng này để gạch chân
+                decorationColor: Colors.white,
+                decorationThickness: 1,
+              ),
+            ),
+          )
         ],
+        backgroundColor: Color(0xFF2474E5), // Match the dark blue AppBar
+        elevation: 0,
       ),
       body: Container(
         height: MediaQuery.of(context).size.height,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.blueAccent, Colors.white],
-          ),
-        ),
+        color: Colors.white, // Ensure white background
         child: SafeArea(
-          top: true,
+          top: false,
           bottom: false,
           child: Consumer<AuthService>(
             builder: (context, authService, _) {
@@ -198,13 +222,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         ElevatedButton(
                           onPressed: () => Navigator.pushReplacementNamed(context, '/auth/login'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent.shade400,
+                            backgroundColor: const Color(0xFF003087),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            elevation: 5,
+                            elevation: 0,
                           ),
                           child: Text(
                             'Đăng Nhập Lại',
@@ -234,224 +258,99 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 return const Center(child: CircularProgressIndicator());
               }
               return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
                 child: FadeTransition(
                   opacity: _fadeAnimation!,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 16),
                       CircleAvatar(
                         radius: 60,
-                        backgroundColor: Colors.blue.shade50,
+                        backgroundColor: Colors.blue.shade100,
                         child: Icon(
                           Icons.person,
                           size: 80,
-                          color: Colors.blueAccent.shade400,
+                          color: Colors.black54,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        authService.currentUser!.fullName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueGrey.shade800,
-                        ),
+                      const SizedBox(height: 24),
+                      // Full Name Field
+                      _buildEditableField(
+                        label: 'Họ và tên',
+                        controller: _fullNameController,
+                        required: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Vui lòng nhập họ và tên';
+                          }
+                          return null;
+                        },
                       ),
-                      Text(
-                        'Thông tin cá nhân của bạn',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Card(
-                        elevation: 12,
-                        shadowColor: Colors.blueAccent.withOpacity(0.3),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: Colors.blueAccent.shade100.withOpacity(0.5), width: 1),
-                        ),
-                        color: Colors.white.withOpacity(0.95),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (!_isEditing) ...[
-                                _buildProfileItem(
-                                  icon: Icons.person,
-                                  title: 'Họ và Tên',
-                                  value: authService.currentUser!.fullName,
-                                ),
-                                const SizedBox(height: 16),
-                                _buildProfileItem(
-                                  icon: Icons.email,
-                                  title: 'Email',
-                                  value: authService.currentUser!.email,
-                                ),
-                                const SizedBox(height: 16),
-                                _buildProfileItem(
-                                  icon: Icons.phone,
-                                  title: 'Số Điện Thoại',
-                                  value: authService.currentUser!.phoneNumber ?? 'Không có dữ liệu',
-                                ),
-                                const SizedBox(height: 16),
-                                Center(
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isEditing = true;
-                                      });
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blueAccent.shade400,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      elevation: 5,
-                                    ),
-                                    child: Text(
-                                      'Chỉnh Sửa',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ] else ...[
-                                _buildEditableField(
-                                  controller: _fullNameController,
-                                  label: 'Họ và Tên',
-                                  icon: Icons.person,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Vui lòng nhập họ và tên';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                _buildEditableField(
-                                  controller: _emailController,
-                                  label: 'Email',
-                                  icon: Icons.email,
-                                  validator: (value) {
-                                    if (value == null || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                                      return 'Vui lòng nhập email hợp lệ';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                _buildEditableField(
-                                  controller: _phoneController,
-                                  label: 'Số Điện Thoại',
-                                  icon: Icons.phone,
-                                  validator: (value) {
-                                    if (value != null && value.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(value)) {
-                                      return 'Số điện thoại phải có 10 chữ số';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _isEditing = false;
-                                          _fullNameController.text = authService.currentUser!.fullName;
-                                          _emailController.text = authService.currentUser!.email;
-                                          _phoneController.text = authService.currentUser!.phoneNumber ?? '';
-                                        });
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.grey.shade400,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        elevation: 5,
-                                      ),
-                                      child: Text(
-                                        'Hủy',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        if (_fullNameController.text.isEmpty ||
-                                            _emailController.text.isEmpty) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin!')),
-                                          );
-                                          return;
-                                        }
-                                        _updateProfile(authService);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blueAccent.shade400,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        elevation: 5,
-                                      ),
-                                      child: Text(
-                                        'Lưu',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
+                      const SizedBox(height: 12),
+                      // Phone Number Field
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildEditableField(
+                              label: 'Số điện thoại',
+                              controller: _phoneController,
+                              required: true,
+                              validator: (value) {
+                                if (value != null && value.isNotEmpty && !RegExp(r'^\d{9}$').hasMatch(value)) {
+                                  return 'Số điện thoại phải có 9 chữ số';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 12),
+                      // Email Field
+                      _buildEditableField(
+                        label: 'Email',
+                        controller: _emailController,
+                        required: true,
+                        validator: (value) {
+                          if (value == null || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            return 'Vui lòng nhập email hợp lệ';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () async {
-                            await authService.logout();
-                            Navigator.pushReplacementNamed(context, '/auth/login');
+                          onPressed: () {
+                            if (_fullNameController.text.isEmpty ||
+                                _emailController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin!')),
+                              );
+                              return;
+                            }
+                            _updateProfile(authService);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
+                            backgroundColor: const Color(0xFF003087), // Dark blue
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            elevation: 5,
+                            elevation: 0,
                           ),
                           child: Text(
-                            'Đăng Xuất',
-                            style: GoogleFonts.roboto(
-                              fontSize: 18,
+                            'Lưu',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 80),
+                      const SizedBox(height: 32),
                     ],
                   ),
                 ),
@@ -467,75 +366,64 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-  Widget _buildProfileItem({
-    required IconData icon,
-    required String title,
-    required String value,
+  Widget _buildEditableField({
+    required String label,
+    required TextEditingController controller,
+    bool required = false,
+    String? Function(String?)? validator,
+    Widget? suffixIcon,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          color: Colors.blueAccent.shade400,
-          size: 24,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            if (required)
               Text(
-                title,
+                ' *',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blueGrey.shade800,
+                  color: Colors.red,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          readOnly: readOnly,
+          onTap: onTap,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFF5F5F5), // Light grey background
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF003087), width: 1),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            suffixIcon: suffixIcon,
           ),
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            color: Colors.black,
+          ),
+          validator: validator,
         ),
       ],
-    );
-  }
-
-  Widget _buildEditableField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.blueGrey.shade800,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.blueAccent.shade400),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.blueAccent.shade400, width: 2),
-        ),
-        prefixIcon: Icon(icon, color: Colors.blueAccent.shade400),
-      ),
-      style: GoogleFonts.poppins(
-        fontSize: 16,
-        color: Colors.blueGrey.shade800,
-      ),
-      validator: validator,
     );
   }
 }

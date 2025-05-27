@@ -167,13 +167,15 @@ class AdminService extends ChangeNotifier {
         _isLoading = false;
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to load ticket details: ${response.statusCode}');
+        throw Exception(
+          'Failed to load ticket details: ${response.statusCode}',
+        );
       }
     } catch (e) {
       _isLoading = false;
       _error = e.toString();
       print('Error in getTicketDetail: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -205,7 +207,10 @@ class AdminService extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> updateTicketStatus(String ticketId, String status) async {
+  Future<Map<String, dynamic>> updateTicketStatus(
+      String ticketId,
+      String status,
+      ) async {
     _isLoading = true;
     _error = null;
 
@@ -238,7 +243,7 @@ class AdminService extends ChangeNotifier {
       _isLoading = false;
       _error = e.toString();
       print('Error in updateTicketStatus: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -265,7 +270,7 @@ class AdminService extends ChangeNotifier {
       _isLoading = false;
       _error = e.toString();
       print('Error in deleteTicket: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -293,11 +298,14 @@ class AdminService extends ChangeNotifier {
       _isLoading = false;
       _error = e.toString();
       print('Error in getTripDetail: $e');
-      throw e;
+      rethrow;
     }
   }
 
-  Future<dynamic> updateTrip(String tripId, Map<String, dynamic> tripData) async {
+  Future<dynamic> updateTrip(
+      String tripId,
+      Map<String, dynamic> tripData,
+      ) async {
     _isLoading = true;
     _error = null;
 
@@ -330,7 +338,7 @@ class AdminService extends ChangeNotifier {
       _isLoading = false;
       _error = e.toString();
       print('Error in updateTrip: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -390,13 +398,293 @@ class AdminService extends ChangeNotifier {
         _isLoading = false;
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to create trip: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to create trip: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       _isLoading = false;
       _error = e.toString();
       print('Error in createTrip: $e');
-      throw e;
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getLocations() async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load locations: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in getLocations: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> getLocationDetail(String locationId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/location/$locationId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+          'Failed to load location details: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in getLocationDetail: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createLocation(Map<String, dynamic> locationData) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling POST $baseUrl/admin/location with data: $locationData');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(locationData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+          'Failed to create location: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in createLocation: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> updateLocation(
+      String locationId,
+      Map<String, dynamic> locationData,
+      ) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print(
+        'Calling PUT $baseUrl/admin/location/$locationId with data: $locationData',
+      );
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/location/$locationId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(locationData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Failed to update location: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in updateLocation: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteLocation(String locationId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling DELETE $baseUrl/admin/location/$locationId');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/location/$locationId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return true;
+      } else {
+        throw Exception('Failed to delete location: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in deleteLocation: $e');
+      rethrow;
+    }
+  }
+
+  // Cập nhật phương thức createSeat để sử dụng status_seat thay vì is_available
+  Future<dynamic> createSeat(Map<String, dynamic> seatData) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling POST $baseUrl/seats with data: $seatData');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/seats'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(seatData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+          'Failed to create seat: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in createSeat: $e');
+      rethrow;
+    }
+  }
+
+  // Cập nhật phương thức updateSeat để sử dụng status_seat thay vì is_available
+  Future<dynamic> updateSeat(
+      String seatId,
+      Map<String, dynamic> seatData,
+      ) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling PUT $baseUrl/seats/$seatId with data: $seatData');
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/seats/$seatId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(seatData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Failed to update seat: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in updateSeat: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteSeat(String seatId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling DELETE $baseUrl/seats/$seatId');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/seats/$seatId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return true;
+      } else {
+        throw Exception('Failed to delete seat: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in deleteSeat: $e');
+      rethrow;
     }
   }
 }

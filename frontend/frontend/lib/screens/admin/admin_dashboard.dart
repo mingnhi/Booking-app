@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/admin/location_management_screen.dart';
+import 'package:frontend/screens/admin/seat_management_screen.dart';
 import 'package:frontend/screens/admin/trip_management_screen.dart';
 import 'package:frontend/screens/admin/user_management_screen.dart';
 import 'package:frontend/screens/admin/ticket_management_screen.dart';
@@ -6,13 +8,14 @@ import 'package:frontend/utils/auth_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AdminDashboard extends StatefulWidget {
-  const AdminDashboard({Key? key}) : super(key: key);
+  const AdminDashboard({super.key});
 
   @override
   State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAliveClientMixin {
+class _AdminDashboardState extends State<AdminDashboard>
+    with AutomaticKeepAliveClientMixin {
   int _selectedIndex = 0;
   bool _isInit = false;
 
@@ -31,6 +34,8 @@ class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAlive
       const TripManagementScreen(),
       const TicketManagementScreen(),
       const UserManagementScreen(),
+      const SeatManagementScreen(),
+      const LocationManagementScreen(),
     ];
 
     // Kiểm tra quyền admin khi vào trang
@@ -46,6 +51,8 @@ class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAlive
     'Quản lý chuyến đi',
     'Quản lý vé',
     'Quản lý người dùng',
+    'Quản lý ghế',
+    'Quản lý dịa điểm',
   ];
 
   @override
@@ -133,6 +140,28 @@ class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAlive
                     Navigator.pop(context);
                   },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.directions_bus),
+                  title: const Text('Quản lý ghế'),
+                  selected: _selectedIndex == 3,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 3;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.directions_bus),
+                  title: const Text('Quản lý dịa điểm'),
+                  selected: _selectedIndex == 4,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 4;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.home),
@@ -152,10 +181,7 @@ class _AdminDashboardState extends State<AdminDashboard> with AutomaticKeepAlive
               ],
             ),
           ),
-          body: IndexedStack(
-            index: _selectedIndex,
-            children: _screens,
-          ),
+          body: IndexedStack(index: _selectedIndex, children: _screens),
         ),
       ),
     );

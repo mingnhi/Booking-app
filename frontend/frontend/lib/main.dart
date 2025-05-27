@@ -17,6 +17,7 @@ import 'package:frontend/screens/location/location_list_screen.dart';
 import 'package:frontend/screens/seat/seat_create_screen.dart';
 import 'package:frontend/screens/seat/seat_edit_screen.dart';
 import 'package:frontend/screens/seat/seat_list_screen.dart';
+import 'package:frontend/screens/ticket/PaidTicketsScreen.dart';
 import 'package:frontend/screens/ticket/ticket_screen.dart';
 import 'package:frontend/screens/trip/trip_detail_screen.dart';
 import 'package:frontend/screens/trip/trip_list_screen.dart';
@@ -26,6 +27,7 @@ import 'package:frontend/services/admin_service.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/services/home_service.dart';
 import 'package:frontend/services/location_service.dart';
+import 'package:frontend/services/payment_service.dart';
 import 'package:frontend/services/seat_service.dart';
 import 'package:frontend/services/ticket_service.dart';
 import 'package:frontend/services/trip_service.dart';
@@ -54,6 +56,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<SeatService>(create: (_) => SeatService()),
         ChangeNotifierProvider<TicketService>(create: (_) => TicketService()),
         ChangeNotifierProvider<VehicleService>(create: (_) => VehicleService()),
+        ChangeNotifierProvider<PaymentService>(create: (_) => PaymentService()),
       ],
       child: MaterialApp(
         title: 'Đăng ký tuyến xe',
@@ -85,7 +88,6 @@ class MyApp extends StatelessWidget {
             final authService = Provider.of<AuthService>(context, listen: false);
             final storage = FlutterSecureStorage();
             Future.delayed(const Duration(seconds: 3), () async {
-              // Chờ AuthService khôi phục trạng thái
               if (authService.currentUser != null) {
                 String? currentRoute = await storage.read(key: 'currentRoute');
                 print('Restored route: $currentRoute, user: ${authService.currentUser?.fullName}');
@@ -154,7 +156,7 @@ class MyApp extends StatelessWidget {
             }
             return const Scaffold(body: Center(child: Text('Dữ liệu chuyến đi không hợp lệ hoặc quyền truy cập bị từ chối')));
           },
-          '/location': (context) => LocationListScreen(),
+          '/location': (context) => const LocationListScreen(title: 'Chọn Địa Điểm'), // Provide default title
           '/location/create': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
             return authService.currentUser != null && authService.isAdmin()
@@ -188,7 +190,16 @@ class MyApp extends StatelessWidget {
             }
             return const Scaffold(body: Center(child: Text('ID chuyến đi không hợp lệ')));
           },
-          '/seat': (context) => SeatListScreen(),
+          '/seat': (context) {
+            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+            if (args == null || !args.containsKey('tripId') || !args.containsKey('vehicleId')) {
+              return const Scaffold(body: Center(child: Text('ID chuyến đi hoặc ID xe không hợp lệ')));
+            }
+            return SeatListScreen(
+              tripId: args['tripId'] as String,
+              vehicleId: args['vehicleId'] as String,
+            );
+          },
           '/seat/create': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
             return authService.currentUser != null && authService.isAdmin()
@@ -207,6 +218,13 @@ class MyApp extends StatelessWidget {
             final authService = Provider.of<AuthService>(context, listen: false);
             return authService.currentUser != null
                 ? const TicketScreen()
+                : const LoginPromptScreen();
+          },
+
+          '/paid_tickets': (context) {
+            final authService = Provider.of<AuthService>(context, listen: false);
+            return authService.currentUser != null
+                ? const PaidTicketsScreen()
                 : const LoginPromptScreen();
           },
         },
@@ -238,17 +256,19 @@ class MyApp extends StatelessWidget {
       '/home',
       '/trip/search',
       '/tickets',
+      '/paid_tickets',
       '/auth/profile',
       '/trip',
       '/location',
-      '/trip/detail/id', // Cập nhật thành /trip/detail/id
+      '/trip/detail/id',
+      '/seat',
       '/admin',
       '/admin/seats',
       '/admin/tickets',
       '/admin/trips',
       '/admin/users',
     ];
-    return validRoutes.contains(routeName) || routeName.startsWith('/trip/detail/id');
+    return validRoutes.contains(routeName) || routeName.startsWith('/trip/detail/id') || routeName.startsWith('/seat');
   }
 }
 

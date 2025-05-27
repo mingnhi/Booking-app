@@ -185,23 +185,59 @@ class _TripSearchScreenState extends State<TripSearchScreen>
     }
   }
 
-  void _selectRecentSearch(Map<String, dynamic> search) {
-    final tripId = search['tripId'] as String?;
-    if (tripId != null) {
-      Navigator.pushNamed(context, '/trip/detail/id', arguments: tripId);
-    } else {
-      setState(() {
-        _departureId = search['departureId'];
-        _arrivalId = search['arrivalId'];
-        final locationService = Provider.of<LocationService>(context, listen: false);
-        _departureLocationName = locationService.locations
-            .firstWhere((loc) => loc.id == _departureId, orElse: () => Location(id: '', location: 'Không rõ', contact_phone: ''))
-            .location;
-        _arrivalLocationName = locationService.locations
-            .firstWhere((loc) => loc.id == _arrivalId, orElse: () => Location(id: '', location: 'Không rõ', contact_phone: ''))
-            .location;
-        _departureTime = null;
-      });
+  void _selectRecentSearch(Map<String, dynamic> search) async {
+    final tripService = Provider.of<TripService>(context, listen: false);
+    final locationService = Provider.of<LocationService>(context, listen: false);
+
+    try {
+      // Get departure and arrival IDs from the recent search
+      final departureId = search['departureId'] as String?;
+      final arrivalId = search['arrivalId'] as String?;
+
+      if (departureId == null || arrivalId == null) {
+        throw Exception('Dữ liệu tìm kiếm gần đây không hợp lệ');
+      }
+
+      // Get departure and arrival locations
+      final departureLocation = locationService.locations
+          .firstWhere(
+            (loc) => loc.id == departureId,
+        orElse: () => throw Exception('Không tìm thấy điểm đi với ID: $departureId'),
+      )
+          .location;
+      final arrivalLocation = locationService.locations
+          .firstWhere(
+            (loc) => loc.id == arrivalId,
+        orElse: () => throw Exception('Không tìm thấy điểm đến với ID: $arrivalId'),
+      )
+          .location;
+
+      // Perform a new search with the departure and arrival locations
+      final results = await tripService.searchTrips(
+        departureLocation: departureLocation,
+        arrivalLocation: arrivalLocation,
+        departureTime: search['departureTime'] as DateTime? ?? DateTime.now(),
+        allowUnauthenticated: true,
+      );
+
+      // Navigate to TripListScreen with the search results
+      if (mounted) {
+        Navigator.pushNamed(
+          context,
+          '/trip/list',
+          arguments: {
+            'trips': results,
+            'departureId': departureId,
+            'arrivalId': arrivalId,
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi tải dữ liệu tìm kiếm gần đây: $e')),
+        );
+      }
     }
   }
 
@@ -549,7 +585,7 @@ class _TripSearchScreenState extends State<TripSearchScreen>
                               children: [
                                 Text(
                                   'Tìm kiếm gần đây',
-                                  style: GoogleFonts.poppins(
+                                  style: GoogleFonts.montserrat(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black,

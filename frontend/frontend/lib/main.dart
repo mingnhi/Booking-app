@@ -18,6 +18,7 @@ import 'package:frontend/screens/seat/seat_create_screen.dart';
 import 'package:frontend/screens/seat/seat_edit_screen.dart';
 import 'package:frontend/screens/seat/seat_list_screen.dart';
 import 'package:frontend/screens/ticket/PaidTicketsScreen.dart';
+import 'package:frontend/screens/ticket/ticket_detail_screen.dart';
 import 'package:frontend/screens/ticket/ticket_screen.dart';
 import 'package:frontend/screens/trip/trip_detail_screen.dart';
 import 'package:frontend/screens/trip/trip_list_screen.dart';
@@ -220,6 +221,13 @@ class MyApp extends StatelessWidget {
                 ? const TicketScreen()
                 : const LoginPromptScreen();
           },
+          '/ticket/detail': (context) {
+            final ticketId = ModalRoute.of(context)!.settings.arguments as String?;
+            if (ticketId != null && ticketId.isNotEmpty) {
+              return TicketDetailScreen(ticketId: ticketId);
+            }
+            return const Scaffold(body: Center(child: Text('ID vé không hợp lệ')));
+          },
 
           '/paid_tickets': (context) {
             final authService = Provider.of<AuthService>(context, listen: false);
@@ -256,6 +264,7 @@ class MyApp extends StatelessWidget {
       '/home',
       '/trip/search',
       '/tickets',
+      '/ticket/detail',
       '/paid_tickets',
       '/auth/profile',
       '/trip',

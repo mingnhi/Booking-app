@@ -49,7 +49,7 @@ class PaymentService extends ChangeNotifier {
       Uri.parse('${PayPalConfig.baseUrl}/v1/oauth2/token'),
       headers: {
         'Authorization':
-        'Basic ${base64Encode(utf8.encode('${PayPalConfig.clientId}:${PayPalConfig.secret}'))}',
+            'Basic ${base64Encode(utf8.encode('${PayPalConfig.clientId}:${PayPalConfig.secret}'))}',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: 'grant_type=client_credentials',
@@ -96,7 +96,7 @@ class PaymentService extends ChangeNotifier {
     if (response.statusCode == 201 || response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final approveLink = (data['links'] as List<dynamic>).firstWhere(
-            (link) => link['rel'] == 'approve',
+        (link) => link['rel'] == 'approve',
         orElse: () => null,
       );
 
@@ -117,7 +117,6 @@ class PaymentService extends ChangeNotifier {
       );
     }
   }
-
 
   Future<void> createPayment({
     required String ticketId,
@@ -202,8 +201,6 @@ class PaymentService extends ChangeNotifier {
     }
   }
 
-
-
   Future<Map<String, dynamic>?> refundPayment({
     required String captureId,
     required double amount,
@@ -241,7 +238,6 @@ class PaymentService extends ChangeNotifier {
     }
   }
 
-
   Future<void> refundPaypalPayment({
     required String paymentId,
     required Map<String, dynamic> refundData,
@@ -268,6 +264,23 @@ class PaymentService extends ChangeNotifier {
         'Lỗi khi lưu thông tin hoàn tiền: ${response.statusCode} - ${response.body}',
       );
       throw Exception('Failed to save refund info');
+    }
+  }
+
+  Future<void> updatePaymentStatus(String paymentId, String status) async {
+    try {
+      // Tìm payment theo ID
+      final paymentIndex = _payments.indexWhere((p) => p.id == paymentId);
+      if (paymentIndex != -1) {
+        _payments[paymentIndex] = _payments[paymentIndex].copyWith(
+          paymentStatus: status,
+        );
+        // Gửi yêu cầu cập nhật lên server (thay bằng API call thực tế)
+        // Ví dụ: await api.updatePayment(paymentId, {'payment_status': status});
+      }
+    } catch (e) {
+      print('Lỗi khi cập nhật trạng thái thanh toán: $e');
+      rethrow;
     }
   }
 }

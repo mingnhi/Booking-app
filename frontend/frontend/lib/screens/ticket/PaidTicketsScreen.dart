@@ -41,9 +41,9 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
         paymentService.fetchPayments(),
       ]);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi làm mới dữ liệu: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi làm mới dữ liệu: $e')));
     }
   }
 
@@ -61,8 +61,13 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
             backgroundColor: const Color(0xFF2474E5),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            textStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -85,31 +90,56 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
             ),
           ],
         ),
-        body: Consumer4<TicketService, TripService, SeatService, PaymentService>(
-          builder: (context, ticketService, tripService, seatService, paymentService, child) {
+        body: Consumer4<
+          TicketService,
+          TripService,
+          SeatService,
+          PaymentService
+        >(
+          builder: (
+            context,
+            ticketService,
+            tripService,
+            seatService,
+            paymentService,
+            child,
+          ) {
             if (ticketService.isLoading ||
                 tripService.isLoading ||
                 seatService.isLoading ||
                 paymentService.isLoading) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFF2474E5)));
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF2474E5)),
+              );
             }
 
-            // Lọc các vé đã thanh toán
-            final paidTickets = ticketService.tickets
-                .where((ticket) => paymentService.getPaymentByTicketId(ticket.id) != null)
-                .toList();
+            final paidTickets =
+                ticketService.tickets
+                    .where(
+                      (ticket) =>
+                          paymentService.getPaymentByTicketId(ticket.id) !=
+                          null,
+                    )
+                    .toList();
 
             if (paidTickets.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.directions_bus, size: 80, color: Color(0xFF2474E5)),
+                    const Icon(
+                      Icons.directions_bus,
+                      size: 80,
+                      color: Color(0xFF2474E5),
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       'Không có vé nào đã thanh toán',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -135,39 +165,50 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
                 itemBuilder: (context, index) {
                   final ticket = paidTickets[index];
                   final trip = tripService.trips.firstWhere(
-                        (t) => t.id == ticket.trip_id,
-                    orElse: () => Trip(
-                      id: '',
-                      vehicle_id: '',
-                      departure_location: 'Không xác định',
-                      arrival_location: 'Không xác định',
-                      departure_time: DateTime.now(),
-                      arrival_time: DateTime.now(),
-                      price: 0.0,
-                      distance: 0.0,
-                      totalSeats: 0,
-                    ),
+                    (t) => t.id == ticket.trip_id,
+                    orElse:
+                        () => Trip(
+                          id: '',
+                          vehicle_id: '',
+                          departure_location: 'Không xác định',
+                          arrival_location: 'Không xác định',
+                          departure_time: DateTime.now(),
+                          arrival_time: DateTime.now(),
+                          price: 0.0,
+                          distance: 0.0,
+                          totalSeats: 0,
+                        ),
                   );
                   final seat = seatService.seats.firstWhere(
-                        (s) => s.id == ticket.seat_id,
-                    orElse: () => Seat(
-                      id: ticket.seat_id,
-                      tripId: ticket.trip_id,
-                      seatNumber: ticket.seatNumber ?? 0,
-                      statusSeat: 'BOOKED',
-                      createdAt: DateTime.now(),
-                      updatedAt: DateTime.now(),
-                    ),
+                    (s) => s.id == ticket.seat_id,
+                    orElse:
+                        () => Seat(
+                          id: ticket.seat_id,
+                          tripId: ticket.trip_id,
+                          seatNumber: ticket.seatNumber ?? 0,
+                          statusSeat: 'BOOKED',
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                        ),
                   );
-                  final payment = paymentService.getPaymentByTicketId(ticket.id);
+                  final payment = paymentService.getPaymentByTicketId(
+                    ticket.id,
+                  );
 
-                  final availableSeats = seatService.seats
-                      .where((s) => s.tripId == trip.id && s.statusSeat == 'AVAILABLE')
-                      .length;
+                  final availableSeats =
+                      seatService.seats
+                          .where(
+                            (s) =>
+                                s.tripId == trip.id &&
+                                s.statusSeat == 'AVAILABLE',
+                          )
+                          .length;
 
                   return Card(
                     elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     margin: const EdgeInsets.only(bottom: 16.0),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -184,7 +225,10 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
                           ),
                           const SizedBox(height: 8),
                           ListTile(
-                            leading: const Icon(Icons.directions_bus, color: Color(0xFF2474E5)),
+                            leading: const Icon(
+                              Icons.directions_bus,
+                              color: Color(0xFF2474E5),
+                            ),
                             title: Text(
                               '${trip.departure_location} → ${trip.arrival_location}',
                               style: GoogleFonts.poppins(fontSize: 16),
@@ -195,7 +239,10 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
                             ),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.event_seat, color: Color(0xFF2474E5)),
+                            leading: const Icon(
+                              Icons.event_seat,
+                              color: Color(0xFF2474E5),
+                            ),
                             title: Text(
                               'Ghế: ${seat.seatNumber}',
                               style: GoogleFonts.poppins(fontSize: 16),
@@ -206,28 +253,40 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
                             ),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.access_time, color: Color(0xFF2474E5)),
+                            leading: const Icon(
+                              Icons.access_time,
+                              color: Color(0xFF2474E5),
+                            ),
                             title: Text(
                               'Thời gian đi: ${DateFormat('dd/MM/yyyy HH:mm').format(trip.departure_time)}',
                               style: GoogleFonts.poppins(fontSize: 16),
                             ),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.confirmation_number, color: Color(0xFF2474E5)),
+                            leading: const Icon(
+                              Icons.confirmation_number,
+                              color: Color(0xFF2474E5),
+                            ),
                             title: Text(
                               'Trạng thái: ${ticket.ticket_status}',
                               style: GoogleFonts.poppins(fontSize: 16),
                             ),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.attach_money, color: Color(0xFF2474E5)),
+                            leading: const Icon(
+                              Icons.attach_money,
+                              color: Color(0xFF2474E5),
+                            ),
                             title: Text(
                               'Giá: ${trip.price.toStringAsFixed(0)} VNĐ',
                               style: GoogleFonts.poppins(fontSize: 16),
                             ),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.calendar_today, color: Color(0xFF2474E5)),
+                            leading: const Icon(
+                              Icons.calendar_today,
+                              color: Color(0xFF2474E5),
+                            ),
                             title: Text(
                               'Đặt lúc: ${DateFormat('dd/MM/yyyy HH:mm').format(ticket.booked_at)}',
                               style: GoogleFonts.poppins(fontSize: 16),
@@ -236,30 +295,52 @@ class _PaidTicketsScreenState extends State<PaidTicketsScreen> {
                           const SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerRight,
-                            child: ElevatedButton(
-                              onPressed: payment != null
-                                  ? () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RefundScreen(
-                                      paymentId: payment.id!,
-                                      captureId: payment.captureId ?? '',
-                                      amount: trip.price,
-                                    ),
-                                  ),
-                                ).then((value) {
-                                  if (value == true) {
-                                    _refreshPaidTickets();
-                                  }
-                                });
-                              }
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                              ),
-                              child: Text('Hoàn tiền', style: GoogleFonts.poppins()),
-                            ),
+                            child:
+                                payment != null
+                                    ? (payment.paymentStatus == 'REFUNDED'
+                                        ? Text(
+                                          'Đã hoàn tiền',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 16,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                        : ElevatedButton(
+                                          onPressed: () async {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) => RefundScreen(
+                                                      paymentId: payment.id!,
+                                                      captureId:
+                                                          payment.captureId ??
+                                                          '',
+                                                      amount: trip.price,
+                                                    ),
+                                              ),
+                                            ).then((value) async {
+                                              if (value == true) {
+                                                // Cập nhật trạng thái payment_status thành REFUNDED
+                                                await paymentService
+                                                    .updatePaymentStatus(
+                                                      payment.id!,
+                                                      'REFUNDED',
+                                                    );
+                                                _refreshPaidTickets();
+                                              }
+                                            });
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent,
+                                          ),
+                                          child: Text(
+                                            'Hoàn tiền',
+                                            style: GoogleFonts.poppins(),
+                                          ),
+                                        ))
+                                    : const SizedBox.shrink(),
                           ),
                         ],
                       ),

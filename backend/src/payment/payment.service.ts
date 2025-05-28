@@ -31,7 +31,7 @@ export class PaymentService {
         payment_method,
         payment_status,
         order_id,
-        capture_id
+        capture_id,
       } = createPaymentDto;
 
       const ticket = await this.ticketModel.findById(ticket_id);
@@ -205,5 +205,5 @@ export class PaymentService {
     await payment.save();
 
     return { message: 'Đã cập nhật Order ID thành công' };
-  }  
+  }
 }

@@ -20,7 +20,7 @@ export class TripService {
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     private readonly seatService: SeatService,
-  ) { }
+  ) {}
 
   async create(createTripDto: CreateTripDto): Promise<Trip> {
     const newTrip = await this.tripModel.create(createTripDto);

@@ -12,6 +12,7 @@ import { TicketModule } from './ticket/ticket.module';
 import { AdminModule } from './admin/admin.module';
 import { VehicleModule } from './vehicle/vehicle.module';
 import { PaymentModule } from './payment/payment.module';
+import { ChatModule } from './chat/chat.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -32,6 +33,7 @@ import { PaymentModule } from './payment/payment.module';
     AdminModule,
     VehicleModule,
     PaymentModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

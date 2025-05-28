@@ -48,14 +48,22 @@ export class SeatService {
     return this.seatModel.find({ trip_id: tripId }).exec();
   }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.seatModel.findByIdAndDelete(id).exec();
-    if (!result) throw new NotFoundException('Seat not found');
-  }
-  async removeByTripId(tripId: string): Promise<void> {
-    const result = await this.seatModel.deleteMany({ trip_id: tripId }).exec();
-    if (result.deletedCount === 0) {
-      throw new NotFoundException(`No seats found for trip_id ${tripId}`);
+  async remove(id: string): Promise<{ message: string }> {
+    const deleted = await this.seatModel.findByIdAndDelete(id).exec();
+    if (!deleted) {
+      throw new NotFoundException('Seat not found');
     }
+    return { message: 'Seat deleted successfully' };
   }
+
+  // async remove(id: string): Promise<void> {
+  //   const result = await this.seatModel.findByIdAndDelete(id).exec();
+  //   if (!result) throw new NotFoundException('Seat not found');
+  // }
+  // async removeByTripId(tripId: string): Promise<void> {
+  //   const result = await this.seatModel.deleteMany({ trip_id: tripId }).exec();
+  //   if (result.deletedCount === 0) {
+  //     throw new NotFoundException(`No seats found for trip_id ${tripId}`);
+  //   }
+  // }
 }

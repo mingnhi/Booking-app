@@ -20,7 +20,7 @@ export class TripService {
     @InjectModel(Seat.name) private seatModel: Model<SeatDocument>,
     @InjectModel(Location.name) private locationModel: Model<LocationDocument>,
     private readonly seatService: SeatService,
-  ) {}
+  ) { }
 
   async create(createTripDto: CreateTripDto): Promise<Trip> {
     const newTrip = await this.tripModel.create(createTripDto);
@@ -69,22 +69,22 @@ export class TripService {
     return updated;
   }
 
-  // async remove(id: string): Promise<Trip> {
-  //   const deleted = await this.tripModel.findByIdAndDelete(id).exec();
-  //   if (!deleted) {
-  //     throw new NotFoundException('Trip with ID ${id} not found');
-  //   }
-  //   return deleted;
-  // }
-
-  async remove(id: string): Promise<void> {
-    const trip = await this.tripModel.findById(id);
-    if (!trip) {
+  async remove(id: string): Promise<Trip> {
+    const deleted = await this.tripModel.findByIdAndDelete(id).exec();
+    if (!deleted) {
       throw new NotFoundException('Trip with ID ${id} not found');
     }
-    await this.seatService.removeByTripId(id);
-    await trip.deleteOne();
+    return deleted;
   }
+
+  // async remove(id: string): Promise<void> {
+  //   const trip = await this.tripModel.findById(id);
+  //   if (!trip) {
+  //     throw new NotFoundException('Trip with ID ${id} not found');
+  //   }
+  //   await this.seatService.removeByTripId(id);
+  //   await trip.deleteOne();
+  // }
   async searchTrips(
     departure_location?: string,
     arrival_location?: string,

@@ -50,8 +50,6 @@ class AdminService extends ChangeNotifier {
   Future<List<dynamic>> getTrips() async {
     _isLoading = true;
     _error = null;
-    // Không gọi notifyListeners() ở đây
-
     try {
       final token = await _getValidToken();
       final response = await http.get(
@@ -73,6 +71,142 @@ class AdminService extends ChangeNotifier {
       _error = e.toString();
       print('Error in getTrips: $e');
       rethrow; // Ném lại lỗi để widget xử lý
+    }
+  }
+
+  Future<dynamic> getTripDetail(String tripId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/trip/$tripId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load trip details: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in getTripDetail: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> updateTrip(
+      String tripId,
+      Map<String, dynamic> tripData,
+      ) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling PUT $baseUrl/admin/trip/$tripId with data: $tripData');
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/trip/$tripId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(tripData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Failed to update trip: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in updateTrip: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteTrip(String tripId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling DELETE $baseUrl/admin/trip/$tripId');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/trip/$tripId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return true;
+      } else {
+        throw Exception('Failed to delete trip: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in deleteTrip: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createTrip(Map<String, dynamic> tripData) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling POST $baseUrl/admin/trip with data: $tripData');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/trip'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(tripData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+          'Failed to create trip: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in createTrip: $e');
+      rethrow;
     }
   }
 
@@ -118,6 +252,66 @@ class AdminService extends ChangeNotifier {
 
     if (response.statusCode != 200) {
       throw Exception('Cập nhật người dùng thất bại');
+    }
+  }
+
+  Future<List<dynamic>> getLocations() async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load locations: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in getLocations: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteUser(String userID) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling DELETE $baseUrl/admin/users/$userID');
+
+      final response = await http.delete(
+        Uri.parse(' $baseUrl/admin/users/$userID'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return true;
+      } else {
+        throw Exception('Failed to delete location: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in deleteLocation: $e');
+      rethrow;
     }
   }
 
@@ -270,170 +464,6 @@ class AdminService extends ChangeNotifier {
       _isLoading = false;
       _error = e.toString();
       print('Error in deleteTicket: $e');
-      rethrow;
-    }
-  }
-
-  Future<dynamic> getTripDetail(String tripId) async {
-    _isLoading = true;
-    _error = null;
-
-    try {
-      final token = await _getValidToken();
-      final response = await http.get(
-        Uri.parse('$baseUrl/admin/trip/$tripId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        _isLoading = false;
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to load trip details: ${response.statusCode}');
-      }
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      print('Error in getTripDetail: $e');
-      rethrow;
-    }
-  }
-
-  Future<dynamic> updateTrip(
-      String tripId,
-      Map<String, dynamic> tripData,
-      ) async {
-    _isLoading = true;
-    _error = null;
-
-    try {
-      final token = await _getValidToken();
-      print('Calling PUT $baseUrl/admin/trip/$tripId with data: $tripData');
-
-      final response = await http.put(
-        Uri.parse('$baseUrl/admin/trip/$tripId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(tripData),
-      );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        _isLoading = false;
-        return jsonDecode(response.body);
-      } else {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-          'Failed to update trip: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
-        );
-      }
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      print('Error in updateTrip: $e');
-      rethrow;
-    }
-  }
-
-  Future<bool> deleteTrip(String tripId) async {
-    _isLoading = true;
-    _error = null;
-
-    try {
-      final token = await _getValidToken();
-      print('Calling DELETE $baseUrl/admin/trip/$tripId');
-
-      final response = await http.delete(
-        Uri.parse('$baseUrl/admin/trip/$tripId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      print('Response status: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        _isLoading = false;
-        return true;
-      } else {
-        throw Exception('Failed to delete trip: ${response.statusCode}');
-      }
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      print('Error in deleteTrip: $e');
-      rethrow;
-    }
-  }
-
-  Future<dynamic> createTrip(Map<String, dynamic> tripData) async {
-    _isLoading = true;
-    _error = null;
-
-    try {
-      final token = await _getValidToken();
-      print('Calling POST $baseUrl/admin/trip with data: $tripData');
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/admin/trip'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(tripData),
-      );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        _isLoading = false;
-        return jsonDecode(response.body);
-      } else {
-        throw Exception(
-          'Failed to create trip: ${response.statusCode} - ${response.body}',
-        );
-      }
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      print('Error in createTrip: $e');
-      rethrow;
-    }
-  }
-
-  Future<List<dynamic>> getLocations() async {
-    _isLoading = true;
-    _error = null;
-
-    try {
-      final token = await _getValidToken();
-      final response = await http.get(
-        Uri.parse('$baseUrl/admin/location'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        _isLoading = false;
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to load locations: ${response.statusCode}');
-      }
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      print('Error in getLocations: $e');
       rethrow;
     }
   }
@@ -662,10 +692,10 @@ class AdminService extends ChangeNotifier {
 
     try {
       final token = await _getValidToken();
-      print('Calling DELETE $baseUrl/seats/$seatId');
+      print('Calling DELETE $baseUrl/admin/seat/$seatId');
 
       final response = await http.delete(
-        Uri.parse('$baseUrl/seats/$seatId'),
+        Uri.parse('$baseUrl/admin/seat/$seatId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

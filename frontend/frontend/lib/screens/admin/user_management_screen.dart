@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class UserManagementScreen extends StatefulWidget {
-  const UserManagementScreen({Key? key}) : super(key: key);
+  const UserManagementScreen({super.key});
 
   @override
   _UserManagementScreenState createState() => _UserManagementScreenState();
@@ -222,6 +222,19 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                               ],
                             ),
                           ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_forever,
+                                  color: Colors.red,
+                                ),
+                                SizedBox(width: 8),
+                                Text('Xóa người dùng'),
+                              ],
+                            ),
+                          ),
                         ],
                         onSelected: (value) {
                           if (value == 'view') {
@@ -230,6 +243,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             _showEditUserForm(context, user);
                           } else if (value == 'block') {
                             _showBlockConfirmation(context, user['_id']);
+                          } else if (value == 'delete') {
+                            _showDeleteConfirmation(
+                              context,
+                              user['_id'],
+                              user['full_name'],
+                            );
                           }
                         },
                       ),
@@ -370,7 +389,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   void _showEditUserForm(BuildContext context, dynamic user) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
 
     final fullNameController = TextEditingController(
       text: user['full_name'] ?? '',
@@ -392,7 +411,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
               ),
               content: Form(
-                key: _formKey,
+                key: formKey,
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -473,7 +492,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
+                    if (formKey.currentState!.validate()) {
                       Navigator.of(
                         context,
                       ).pop(); // Đóng dialog trước khi gọi API
@@ -563,6 +582,80 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: Text(
               'Khóa tài khoản',
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(
+      BuildContext context,
+      String userId,
+      String username,
+      ) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+        title: Text(
+          'Xác nhận xóa người dùng',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa người dùng "$username"? Hành động này không thể hoàn tác.',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Hủy', style: GoogleFonts.poppins()),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              try {
+                setState(() {
+                  isLoading = true;
+                });
+                final adminService = Provider.of<AdminService>(
+                  context,
+                  listen: false,
+                );
+                await adminService.deleteUser(userId);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Đã xóa người dùng thành công',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+
+                await _loadUsers();
+              } catch (e) {
+                setState(() {
+                  isLoading = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Lỗi khi xóa người dùng: $e',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(
+              'Xóa',
               style: GoogleFonts.poppins(color: Colors.white),
             ),
           ),

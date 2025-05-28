@@ -15,9 +15,9 @@ export class TripController {
 
   @Post('search')
   async searchTrips(
-    @Query('departure_location') departure_location?: string,
-    @Query('arrival_location') arrival_location?: string,
-    @Query('departure_time') departure_time?: string,
+    @Body('departure_location') departure_location?: string,
+    @Body('arrival_location') arrival_location?: string,
+    @Body('departure_time') departure_time?: string,
   ): Promise<Trip[]> {
     const departureTime = departure_time ? new Date(departure_time) : undefined;
     return this.tripService.searchTrips(

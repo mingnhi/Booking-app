@@ -148,7 +148,7 @@ export class ChatService {
     private readonly chatroomModel: Model<ChatroomDocument>,
     @InjectModel(Message.name)
     private readonly messageModel: Model<MessageDocument>,
-  ) { }
+  ) {}
 
   async getUserChatrooms(userId: string): Promise<Chatroom[]> {
     return this.chatroomModel
@@ -159,7 +159,9 @@ export class ChatService {
   }
 
   async getMessagesByRoom(chatRoomId: string): Promise<Message[]> {
-    const roomExists = await this.chatroomModel.exists({ _id: chatRoomId });
+    const roomExists = await this.chatroomModel
+      .exists({ _id: chatRoomId })
+      .sort({ createdAt: 1 });
     if (!roomExists) {
       throw new NotFoundException('Chat room not found');
     }
@@ -171,14 +173,10 @@ export class ChatService {
       .exec();
   }
 
-  async createMessage(
-    chatRoomId: string,
-    senderId: string,
-    content: string,
-  ): Promise<Message> {
+  async createMessage(chatRoomId: string, senderId: string, content: string) {
     return this.messageModel.create({
-      chat_room_id: new Types.ObjectId(chatRoomId),
-      sender_id: new Types.ObjectId(senderId),
+      chat_room_id: chatRoomId,
+      sender_id: senderId,
       content,
     });
   }

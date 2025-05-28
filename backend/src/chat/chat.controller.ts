@@ -56,13 +56,7 @@
 //   }
 // }
 // src/chat/chat.controller.ts
-import {
-  Controller,
-  Get,
-  Param,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // Đảm bảo bạn đã có JwtAuthGuard
 import { Request } from 'express';
@@ -70,7 +64,7 @@ import { Request } from 'express';
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
 export class ChatController {
-  constructor(private readonly chatService: ChatService) { }
+  constructor(private readonly chatService: ChatService) {}
 
   @Get('rooms')
   async getMyRooms(@Req() req: any) {

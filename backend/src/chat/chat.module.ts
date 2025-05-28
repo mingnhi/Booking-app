@@ -11,7 +11,10 @@ import { JwtModule } from '@nestjs/jwt';
 @Module({
   imports: [
     UsersModule,
-    JwtModule.register({ secret: 'dc429f605ae3fdd0bd7d644c968489db7ff08ece3a7b7082942102ee5dd03dad' }),
+    JwtModule.register({
+      secret:
+        'dc429f605ae3fdd0bd7d644c968489db7ff08ece3a7b7082942102ee5dd03dad',
+    }),
     MongooseModule.forFeature([
       { name: Chatroom.name, schema: ChatroomSchema },
       { name: Message.name, schema: MessageSchema },

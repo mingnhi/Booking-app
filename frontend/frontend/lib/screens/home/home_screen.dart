@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
                     Text(
                       homeService.errorMessage!,
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.montserrat(
                         color: primaryTextColor,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       },
                       child: Text(
                         'Thử lại',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.montserrat(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               return Center(
                 child: Text(
                   'Không có dữ liệu để hiển thị.',
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.montserrat(
                     fontSize: 16,
                     color: secondaryTextColor,
                   ),
@@ -222,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           const SizedBox(height: 20),
                           Text(
                             'Chúng tôi rất vinh dự được đồng hành cùng bạn trên mọi hành trình!',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.montserrat(
                               color: whiteColor,
                               fontSize: 18,
                               fontWeight: FontWeight.w500,
@@ -252,10 +252,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   ),
                                   child: Text(
                                     'Khám phá ngay',
-                                    style: GoogleFonts.poppins(
+                                    style: GoogleFonts.montserrat(
                                       color: primaryTextColor,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
@@ -490,7 +490,7 @@ class _FeaturedTripCardState extends State<FeaturedTripCard> with SingleTickerPr
                           children: [
                             Text(
                               '${widget.trip.departure_location} → ${widget.trip.arrival_location}',
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.montserrat(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
                                 color: widget.primaryTextColor,
@@ -500,18 +500,10 @@ class _FeaturedTripCardState extends State<FeaturedTripCard> with SingleTickerPr
                             const SizedBox(height: 8),
                             Text(
                               'Giá: ${widget.trip.price.toStringAsFixed(0)} VNĐ',
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.montserrat(
                                 color: widget.accentColor,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Khởi hành: ${widget.trip.departure_time.hour}:${widget.trip.departure_time.minute.toString().padLeft(2, '0')}',
-                              style: GoogleFonts.poppins(
-                                color: widget.secondaryTextColor,
-                                fontSize: 12,
                               ),
                             ),
                           ],
@@ -654,7 +646,7 @@ class _PopularLocationCardState extends State<PopularLocationCard> with SingleTi
                           right: 8,
                           child: Text(
                             widget.location.location,
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.montserrat(
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                               fontSize: 14,

@@ -212,11 +212,10 @@ class _TripSearchScreenState extends State<TripSearchScreen>
       )
           .location;
 
-      // Perform a new search with the departure and arrival locations
+      // Perform a new search with the departure and arrival locations, without departureTime
       final results = await tripService.searchTrips(
         departureLocation: departureLocation,
         arrivalLocation: arrivalLocation,
-        departureTime: search['departureTime'] as DateTime? ?? DateTime.now(),
         allowUnauthenticated: true,
       );
 

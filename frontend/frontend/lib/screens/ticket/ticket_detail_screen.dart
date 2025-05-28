@@ -281,15 +281,14 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFFF5722),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-            // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
             textStyle: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ),
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xFFFF5722),
+          backgroundColor: const Color(0xFF2474E5),
           title: Text(
             'Thông tin chi tiết vé',
             style: GoogleFonts.montserrat(
@@ -365,163 +364,218 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                   ),
                 );
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(0, 0 , 0, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 0),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(16.0),
-                          width: double.infinity,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Thông tin hành khách'),
-                              _buildDetailRow(
-                                title: 'Họ và tên',
-                                subtitle: _fullNameController.text,
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                  children: [
+                    Card(
+                      elevation: 0,
+                      margin: const EdgeInsets.symmetric(vertical: 0),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(20.0),
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle('Thông tin hành khách'),
+                            _buildDetailRow(
+                              title: 'Họ và tên',
+                              subtitle: _fullNameController.text,
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500,
                               ),
-                              _buildDetailRow(
-                                title: 'Số điện thoại',
-                                subtitle: _phoneController.text,
+                            ),
+                            _buildDetailRow(
+                              title: 'Số điện thoại',
+                              subtitle: _phoneController.text,
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500,
                               ),
-                              _buildDetailRow(
-                                title: 'Địa chỉ email',
-                                subtitle: _emailController.text,
+                            ),
+                            _buildDetailRow(
+                              title: 'Địa chỉ email',
+                              subtitle: _emailController.text,
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 0),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(16.0),
-                          width: double.infinity,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Thông tin lượt đi'),
-                              _buildDetailRow(
-                                title: 'Tuyến xe',
-                                subtitle: '${trip.departure_location} - ${trip.arrival_location}',
+                    ),
+                    Card(
+                      elevation: 0,
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(20.0),
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle(
+                              'Thông tin lượt đi',
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold, // Keep the bold weight
+                                color: const Color(0xFF2474E5), // Same color as 'Tuyến xe'
                               ),
-                              _buildDetailRow(
-                                title: 'Thời gian khởi hành',
-                                subtitle: DateFormat('HH:mm dd/MM/yyyy')
-                                    .format(trip.departure_time),
+                            ),
+                            _buildDetailRow(
+                              title: 'Tuyến xe',
+                              subtitle: '${trip.departure_location} - ${trip.arrival_location}',
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: const Color(0xFF2474E5),
+                                fontWeight: FontWeight.w500,
                               ),
-                              _buildDetailRow(
-                                title: 'Số lượng ghế',
-                                subtitle: '1',
+                            ),
+                            _buildDetailRow(
+                              title: 'Thời gian khởi hành',
+                              subtitle: DateFormat('HH:mm dd/MM/yyyy').format(trip.departure_time),
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: const Color(0xFF2474E5),
+                                fontWeight: FontWeight.w500,
                               ),
-                              _buildDetailRow(
-                                title: 'Số ghế',
-                                subtitle: 'Ghế ${seat.seatNumber}',
+                            ),
+                            _buildDetailRow(
+                              title: 'Số lượng ghế',
+                              subtitle: '1',
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: const Color(0xFF2474E5),
+                                fontWeight: FontWeight.w500,
                               ),
-                              _buildDetailRow(
-                                title: 'Trạng thái',
-                                subtitle: _ticket!.ticket_status,
+                            ),
+                            _buildDetailRow(
+                              title: 'Số ghế',
+                              subtitle: 'Ghế ${seat.seatNumber}',
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: const Color(0xFF2474E5),
+                                fontWeight: FontWeight.w500,
                               ),
-                              _buildDetailRow(
-                                title: 'Thời gian đặt vé',
-                                subtitle: DateFormat('HH:mm dd/MM/yyyy')
-                                    .format(_ticket!.booked_at),
+                            ),
+                            _buildDetailRow(
+                              title: 'Loại xe',
+                              subtitle: '${trip.vehicle_id} - ${trip.totalSeats} chỗ',
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: const Color(0xFF2474E5),
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
-                          ),
+                            ),
+                            _buildDetailRow(
+                              title: 'Trạng thái',
+                              subtitle: '${_ticket!.ticket_status}',
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: const Color(0xFF2474E5),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            _buildDetailRow(
+                              title: 'Thời gian lên xe',
+                              subtitle: DateFormat('HH:mm dd/MM/yyyy').format(_ticket!.booked_at),
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                color: const Color(0xFF2474E5),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 0),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
+                    ),
+                    Card(
+                      elevation: 0,
+                      margin: const EdgeInsets.symmetric(vertical: 0),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(20.0),
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle('Tổng tiền lượt đi'),
+                            _buildDetailRow(
+                              title: '',
+                              subtitle: '${NumberFormat.currency(locale: 'vi_VN', symbol: '').format(trip.price)}đ',
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFFF5722),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Container(
-                          padding: const EdgeInsets.all(16.0),
-                          width: double.infinity,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Tổng tiền'),
-                              _buildDetailRow(
-                                title: '',
-                                subtitle: '${trip.price.toStringAsFixed(0)} VNĐ',
-                                textStyle: GoogleFonts.montserrat(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Card(
+                      elevation: 0,
+                      margin: const EdgeInsets.symmetric(vertical: 0),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(30),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _startEditing,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF5B9EE5),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 18),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24)),
+                                  textStyle: GoogleFonts.montserrat(
+                                      fontSize: 16, fontWeight: FontWeight.w600),
                                 ),
+                                child: Text('Chỉnh sửa'),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 0),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: _startEditing,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF5B9EE5),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24)),
-                                    textStyle: GoogleFonts.montserrat(
-                                        fontSize: 16, fontWeight: FontWeight.w600),
-                                  ),
-                                  child: Text('Chỉnh sửa'),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => PaymentScreen(
-                                          amount: trip.price,
-                                          ticketId: _ticket!.id,
-                                        ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PaymentScreen(
+                                        amount: trip.price,
+                                        ticketId: _ticket!.id,
                                       ),
-                                    ).then((value) {
-                                      if (value == true) {
-                                        _fetchTicketDetails();
-                                      }
-                                    });
-                                  },
-                                  child: Text('Thanh toán'),
-                                ),
+                                    ),
+                                  ).then((value) {
+                                    if (value == true) {
+                                      _fetchTicketDetails();
+                                    }
+                                  });
+                                },
+                                child: Text('Thanh toán'),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -579,8 +633,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                                 '${trip.departure_location} → ${trip.arrival_location}',
                                 decoration: InputDecoration(
                                   labelText: 'Chuyến đi',
-                                  border:
-                                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 style: GoogleFonts.montserrat(),
                                 enabled: false,
@@ -592,8 +645,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                             value: _selectedSeatId,
                             decoration: InputDecoration(
                               labelText: 'Ghế',
-                              border:
-                              OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                             items: _availableSeats
                                 .where((seat) => seat.seatNumber != 0)
@@ -640,16 +692,17 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, {TextStyle? textStyle}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
         title,
-        style: GoogleFonts.montserrat(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
+        style: textStyle ??
+            GoogleFonts.montserrat(
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
       ),
     );
   }
@@ -661,25 +714,28 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (title.isNotEmpty)
-            Text(
-              title,
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
-            ),
           Text(
-            subtitle,
-            style: textStyle ??
-                GoogleFonts.montserrat(
-                  fontSize: 14,
-                  color: Colors.black,
-                ),
+            title,
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black54,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              subtitle,
+              style: textStyle ??
+                  GoogleFonts.montserrat(
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

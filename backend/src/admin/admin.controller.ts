@@ -6,7 +6,6 @@ import {
   Param,
   Post,
   Put,
-  Req,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
@@ -30,8 +29,8 @@ import { CreateVehicleDto } from 'src/vehicle/dto/create-vehicle.dto';
 import { UpdateVehicleDto } from 'src/vehicle/dto/update-vehicle.dto';
 import { PaymentService } from 'src/payment/payment.service';
 import { ChatService } from 'src/chat/chat.service';
-import { Types } from 'mongoose';
-import { CreateMessageDto } from 'src/chat/dto/create-message.dto';
+// import { Types } from 'mongoose';
+// import { CreateMessageDto } from 'src/chat/dto/create-message.dto';
 // import { Payment } from 'src/payment/payment.shema';
 
 @Controller('admin')
@@ -185,39 +184,39 @@ export class AdminController {
     return this.paymentService.update(id, status);
   }
 
-  @Get('chat/messages/:chatRoomId')
-  getChatMessages(@Param('chatRoomId') id: string) {
-    return this.chatService.getMessages(new Types.ObjectId(id));
-  }
+  // @Get('chat/messages/:chatRoomId')
+  // getChatMessages(@Param('chatRoomId') id: string) {
+  //   return this.chatService.getMessages(new Types.ObjectId(id));
+  // }
 
-  @Delete('chat/room/:id')
-  deleteChatRoom(@Param('id') id: string) {
-    return this.chatService.deleteChatRoom(new Types.ObjectId(id));
-  }
+  // @Delete('chat/room/:id')
+  // deleteChatRoom(@Param('id') id: string) {
+  //   return this.chatService.deleteChatRoom(new Types.ObjectId(id));
+  // }
 
-  @Post('chat/room')
-    async createChatRoom(
-      @Body('participants') participants: string[],
-      @Body('isGroup') isGroup: boolean,
-      @Body('name') name: string,
-    ) {
-      const participantIds = participants.map((id) => new Types.ObjectId(id));
-      return this.chatService.createChatRoom(participantIds, isGroup, name);
-  }
-  
-  @Post('chat/message')
-    async sendMessage(@Body() dto: CreateMessageDto, @Req() req) {
-      const senderId = new Types.ObjectId(req.user.userId);
-      return this.chatService.sendMessage(dto, senderId);
-  }
-  
-  @Get('chat/messages/:chatRoomId')
-  async getMessages(@Param('chatRoomId') chatRoomId: string) {
-    return this.chatService.getMessages(new Types.ObjectId(chatRoomId));
-  }
+  // @Post('chat/room')
+  // async createChatRoom(
+  //   @Body('participants') participants: string[],
+  //   @Body('isGroup') isGroup: boolean,
+  //   @Body('name') name: string,
+  // ) {
+  //   const participantIds = participants.map((id) => new Types.ObjectId(id));
+  //   return this.chatService.createChatRoom(participantIds, isGroup, name);
+  // }
 
-  @Delete('chat/room/:chatRoomId')
-  async deleteRoom(@Param('chatRoomId') chatRoomId: string) {
-    return this.chatService.deleteChatRoom(new Types.ObjectId(chatRoomId));
-  }
+  // @Post('chat/message')
+  // async sendMessage(@Body() dto: CreateMessageDto, @Req() req) {
+  //   const senderId = new Types.ObjectId(req.user.userId);
+  //   return this.chatService.sendMessage(dto, senderId);
+  // }
+
+  // @Get('chat/messages/:chatRoomId')
+  // async getMessages(@Param('chatRoomId') chatRoomId: string) {
+  //   return this.chatService.getMessages(new Types.ObjectId(chatRoomId));
+  // }
+
+  // @Delete('chat/room/:chatRoomId')
+  // async deleteRoom(@Param('chatRoomId') chatRoomId: string) {
+  //   return this.chatService.deleteChatRoom(new Types.ObjectId(chatRoomId));
+  // }
 }

@@ -7,9 +7,13 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
-import { Socket } from 'socket.io';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { Types } from 'mongoose';
+import { Server, Socket } from 'socket.io';
+import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectModel } from '@nestjs/mongoose';
+import { Message } from './message.schema';
+import { Model } from 'mongoose';
+import { Chatroom } from './chatroom.schema';
 
 @WebSocketGateway({
   cors: {
@@ -17,53 +21,58 @@ import { Types } from 'mongoose';
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  private clients: Record<string, string> = {};
+  private logger: Logger = new Logger('ChatGateway');
+  constructor(
+    private readonly jwtService: JwtService,
+    @InjectModel(Message.name) private messageModel: Model<Message>,
+    @InjectModel(Chatroom.name) private chatroomModel: Model<Chatroom>,
+  ) { }
 
-  constructor(private readonly chatService: ChatService) {}
-
-  handleConnection(client: Socket) {
-    const userId = client.handshake.query.userId as string;
-    if (userId) {
-      this.clients[client.id] = userId;
-      console.log(`User ${userId} conected`);
+  afterInit(server: Server) {
+    this.logger.log('Websocket Server Initialized');
+  }
+  handleDisconnect(client: Socket) {
+    this.logger.log(`Client disconnected: ${client.id}`);
+  }
+  async handleConnection(client: Socket) {
+    try {
+      const token = client.handshake.auth?.token;
+      const payload = this.jwtService.verify(token);
+      client.data.user = payload;
+      this.logger.log(`Client connected: ${payload.email}`);
+    } catch (e) {
+      this.logger.error('Invalid token');
+      client.disconnect();
     }
   }
-
-  handleDisconnect(client: Socket) {
-    const userId = this.clients[client.id];
-    delete this.clients[client.id];
-    console.log(`User ${userId} disconected`);
-  }
+  
+  @SubscribeMessage('message')
+    async handleMessage(
+      @MessageBody() data: { chat_room_id: string; content: string },
+      @ConnectedSocket() client: Socket,
+  ){
+      const sender = client.data.user;
+      const msg = await this.messageModel.create({
+        chat_room_id: data.chat_room_id,
+        sender_id: sender.userId,
+        content: data.content,
+      });
+    
+      client.broadcast.emit('message', msg);
+      client.emit('message', msg);
+    }
 
   @SubscribeMessage('send_message')
-  async handleSendMessage(
-    @MessageBody() dto: CreateMessageDto,
-    @ConnectedSocket() client: Socket,
-  ) {
-    const senderId = this.clients[client.id];
-    const message = await this.chatService.sendMessage(
-      dto,
-      new Types.ObjectId(senderId),
-    );
-    client.broadcast.emit(`chat room ${dto.chat_room_id}`, message);
-    return message;
-  }
-
-  @SubscribeMessage('mark_as_read')
-  async handleMarkAsRead(
-    @MessageBody() payload: { chatRoomId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    const userId = this.clients[client.id];
-    await this.chatService.markMessagesAsRead(
-      new Types.ObjectId(payload.chatRoomId),
-      new Types.ObjectId(userId),
-    );
-
-    client.broadcast.emit(`read_update_${payload.chatRoomId}`, {
-      userId,
+  async onMessage(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
+    const sender = client.data.user;
+    const message = await this.messageModel.create({
+      chat_room_id: data.chat_room_id,
+      sender_id: sender.sub,
+      content: data.content,
     });
 
-    return { message: 'Marked as read' };
-  }
+    client.broadcast.emit(`chat/${data.chat_room_id}`, message);
+    client.emit(`chat/${data.chat_room_id}`, message);
+  }  
+  
 }

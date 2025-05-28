@@ -22,7 +22,7 @@ class TripListScreen extends StatefulWidget {
 
   @override
   _TripListScreenState createState() => _TripListScreenState();
-}
+} 
 
 class _TripListScreenState extends State<TripListScreen> {
   int _selectedIndex = 1; // Mặc định là TripListScreen

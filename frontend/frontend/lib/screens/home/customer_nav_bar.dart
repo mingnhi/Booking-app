@@ -41,7 +41,10 @@ class _CustomNavBarState extends State<CustomNavBar> {
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF2474E5),
         unselectedItemColor: const Color(0xFF607D8B),
-        selectedLabelStyle: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500),
+        selectedLabelStyle: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
         unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
         elevation: 8.0,
         items: [
@@ -64,7 +67,11 @@ class _CustomNavBarState extends State<CustomNavBar> {
           BottomNavigationBarItem(
             icon: Consumer<TicketService>(
               builder: (context, ticketService, _) {
-                int ticketCount = ticketService.tickets.length;
+                // Chỉ đếm ticket có ticket_status là "BOOKED"
+                int ticketCount =
+                    ticketService.tickets
+                        .where((ticket) => ticket.ticket_status == 'BOOKED')
+                        .length;
                 return Stack(
                   children: [
                     AnimatedScale(
@@ -81,10 +88,16 @@ class _CustomNavBarState extends State<CustomNavBar> {
                             color: Colors.red,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
                           child: Text(
                             '$ticketCount',
-                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ),

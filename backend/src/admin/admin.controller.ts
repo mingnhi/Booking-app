@@ -28,7 +28,6 @@ import { VehicleService } from 'src/vehicle/vehicle.service';
 import { CreateVehicleDto } from 'src/vehicle/dto/create-vehicle.dto';
 import { UpdateVehicleDto } from 'src/vehicle/dto/update-vehicle.dto';
 import { PaymentService } from 'src/payment/payment.service';
-import { ChatService } from 'src/chat/chat.service';
 // import { Types } from 'mongoose';
 // import { CreateMessageDto } from 'src/chat/dto/create-message.dto';
 // import { Payment } from 'src/payment/payment.shema';
@@ -46,7 +45,6 @@ export class AdminController {
     private readonly locationService: LocationService,
     private readonly vehicleService: VehicleService,
     private readonly paymentService: PaymentService,
-    private readonly chatService: ChatService,
   ) {}
   // @Post('seat')
   // createSeat(@Body() createSeatDto: CreateSeatDto) {

@@ -9,7 +9,6 @@ import { LocationModule } from 'src/location/location.module';
 // import { Vehicle } from 'src/vehicle/vehicle.shema';
 import { VehicleModule } from 'src/vehicle/vehicle.module';
 import { PaymentModule } from 'src/payment/payment.module';
-import { ChatModule } from 'src/chat/chat.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { ChatModule } from 'src/chat/chat.module';
     LocationModule,
     VehicleModule,
     PaymentModule,
-    ChatModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

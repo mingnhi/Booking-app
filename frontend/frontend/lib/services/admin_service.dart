@@ -103,9 +103,9 @@ class AdminService extends ChangeNotifier {
   }
 
   Future<dynamic> updateTrip(
-      String tripId,
-      Map<String, dynamic> tripData,
-      ) async {
+    String tripId,
+    Map<String, dynamic> tripData,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -402,9 +402,9 @@ class AdminService extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> updateTicketStatus(
-      String ticketId,
-      String status,
-      ) async {
+    String ticketId,
+    String status,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -535,9 +535,9 @@ class AdminService extends ChangeNotifier {
   }
 
   Future<dynamic> updateLocation(
-      String locationId,
-      Map<String, dynamic> locationData,
-      ) async {
+    String locationId,
+    Map<String, dynamic> locationData,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -618,7 +618,7 @@ class AdminService extends ChangeNotifier {
       print('Calling POST $baseUrl/seats with data: $seatData');
 
       final response = await http.post(
-        Uri.parse('$baseUrl/seats'),
+        Uri.parse('$baseUrl/admin/seats'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -647,9 +647,9 @@ class AdminService extends ChangeNotifier {
 
   // Cập nhật phương thức updateSeat để sử dụng status_seat thay vì is_available
   Future<dynamic> updateSeat(
-      String seatId,
-      Map<String, dynamic> seatData,
-      ) async {
+    String seatId,
+    Map<String, dynamic> seatData,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -714,6 +714,119 @@ class AdminService extends ChangeNotifier {
       _isLoading = false;
       _error = e.toString();
       print('Error in deleteSeat: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> getVehicles() async {
+    _isLoading = true;
+    _error = null;
+    try {
+      final token = await _getValidToken();
+      final respose = await http.get(
+        Uri.parse('$baseUrl/admin/vehicle'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (respose.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(respose.body);
+      } else {
+        throw Exception('Có lỗi khi tải dữ liệu phương tiện');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print("Lỗi vị trí :$error");
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createVehicle(Map<String, dynamic> vehicleData) async {
+    _isLoading = true;
+    _error = null;
+    try {
+      final token = await _getValidToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/vehicle'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(vehicleData),
+      );
+      print('Status Vehicle : ${response.statusCode}');
+      print('Body : ${response.body}');
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print(error);
+    }
+  }
+
+  Future<dynamic> updateVehicle(
+    Map<String, dynamic> vehicleData,
+    String vehicleId,
+  ) async {
+    _isLoading = true;
+    _error = null;
+    try {
+      final token = await _getValidToken();
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/vehicle/$vehicleId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(vehicleData),
+      );
+      print('Status-Update-Vehicle ${response.statusCode}');
+      print('Body : ${response.body}');
+      if (response.statusCode == 201) {
+        _isLoading = false;
+        throw Exception("Có lỗi khi tải dữ liệu");
+      } else if (response.statusCode == 404) {
+        _isLoading = false;
+        throw Exception("Lỗi quyền truy cập");
+      }
+      {}
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print(error);
+    }
+  }
+
+  Future<dynamic> deleteVehicle(String vehicleId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling DELETE $baseUrl/admin/location/$vehicleId');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/vehicle/$vehicleId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return true;
+      } else {
+        throw Exception('Failed to delete location: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in deleteLocation: $e');
       rethrow;
     }
   }

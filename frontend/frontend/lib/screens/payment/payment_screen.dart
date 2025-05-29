@@ -29,7 +29,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         throw Exception('Không thể tạo đơn hàng PayPal');
       }
 
-      // Kiểm tra nếu 'links' là null hoặc không có dữ liệu
       final links = orderData['links'];
       if (links == null || links.isEmpty) {
         throw Exception('Không tìm thấy liên kết thanh toán');
@@ -40,7 +39,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         orElse: () => null,
       );
 
-      // Nếu không có approveLink, throw exception
       if (approveLink == null) {
         throw Exception('Không tìm thấy liên kết thanh toán');
       }
@@ -51,7 +49,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         orderId = orderData['id'];
       });
 
-      // Kiểm tra xem có thể mở được URL không
       if (await canLaunchUrl(Uri.parse(approveUrl))) {
         await launchUrl(
           Uri.parse(approveUrl),

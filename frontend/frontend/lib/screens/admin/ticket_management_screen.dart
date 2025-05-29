@@ -14,6 +14,19 @@ class TicketManagementScreen extends StatefulWidget {
 class _TicketManagementScreenState extends State<TicketManagementScreen> {
   List<dynamic> tickets = [];
   bool isLoading = true;
+  String? selectedStatus;
+  DateTime? startDate;
+  DateTime? endDate;
+  String? selectedTripId;
+  String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -45,15 +58,211 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
     });
   }
 
+  List<dynamic> get filteredTickets {
+    return tickets.where((ticket) {
+      // Lọc theo trạng thái
+      if (selectedStatus != null && ticket['ticket_status'] != selectedStatus) {
+        return false;
+      }
+
+      // Lọc theo ngày
+      if (startDate != null || endDate != null) {
+        final ticketDate = DateTime.parse(ticket['booked_at']);
+        if (startDate != null && ticketDate.isBefore(startDate!)) {
+          return false;
+        }
+        if (endDate != null &&
+            ticketDate.isAfter(endDate!.add(const Duration(days: 1)))) {
+          return false;
+        }
+      }
+
+      // Lọc theo chuyến đi
+      if (selectedTripId != null &&
+          ticket['trip_id'].toString() != selectedTripId) {
+        return false;
+      }
+
+      // Tìm kiếm theo ID
+      if (searchQuery.isNotEmpty) {
+        final ticketId = ticket['_id'].toString().toLowerCase();
+        if (!ticketId.contains(searchQuery.toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+  }
+
+  Future<void> _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2025, 12, 31),
+      initialDateRange:
+          startDate != null && endDate != null
+              ? DateTimeRange(start: startDate!, end: endDate!)
+              : null,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).primaryColor,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        startDate = picked.start;
+        endDate = picked.end;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body:
-      isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : tickets.isEmpty
-          ? _buildEmptyState()
-          : _buildTicketList(),
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        // Hàng filter đầu tiên
+                        Row(
+                          children: [
+                            Text(
+                              'Lọc theo trạng thái:',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            DropdownButton<String>(
+                              value: selectedStatus,
+                              hint: Text(
+                                'Tất cả',
+                                style: GoogleFonts.poppins(),
+                              ),
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text(
+                                    'Tất cả',
+                                    style: GoogleFonts.poppins(),
+                                  ),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'BOOKED',
+                                  child: Text(
+                                    'Đã xác nhận',
+                                    style: GoogleFonts.poppins(),
+                                  ),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'CANCELLED',
+                                  child: Text(
+                                    'Đã hủy',
+                                    style: GoogleFonts.poppins(),
+                                  ),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'COMPLETED',
+                                  child: Text(
+                                    'Hoàn tất',
+                                    style: GoogleFonts.poppins(),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedStatus = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Hàng filter thứ hai
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText: 'Tìm kiếm theo ID vé',
+                                  prefixIcon: const Icon(Icons.search),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    searchQuery = value;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => _selectDateRange(context),
+                              icon: const Icon(Icons.date_range),
+                              label: Text(
+                                'Chọn ngày',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (startDate != null || endDate != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Khoảng thời gian: ',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${DateFormat('dd/MM/yyyy').format(startDate ?? DateTime.now())} - ${DateFormat('dd/MM/yyyy').format(endDate ?? DateTime.now())}',
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.clear, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      startDate = null;
+                                      endDate = null;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child:
+                        filteredTickets.isEmpty
+                            ? _buildEmptyState()
+                            : _buildTicketList(),
+                  ),
+                ],
+              ),
     );
   }
 
@@ -89,10 +298,10 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
     return RefreshIndicator(
       onRefresh: _loadTickets,
       child: ListView.builder(
-        itemCount: tickets.length,
+        itemCount: filteredTickets.length,
         padding: const EdgeInsets.all(16),
         itemBuilder: (context, index) {
-          final ticket = tickets[index];
+          final ticket = filteredTickets[index];
           final purchaseDate = DateTime.parse(ticket['booked_at']);
           final formatter = DateFormat('dd/MM/yyyy HH:mm');
 
@@ -227,60 +436,60 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-        title: Text(
-          'Chi tiết vé',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDetailRow('ID', ticket['_id'].toString()),
-              _buildDetailRow(
-                'Trạng thái',
-                _getStatusText(ticket['ticket_status'].toString()),
-              ),
-              _buildDetailRow(
-                'Người dùng',
-                ticket['user'] != null
-                    ? (ticket['user']['full_name']?.toString() ??
-                    ticket['user_id'].toString())
-                    : ticket['user_id'].toString(),
-              ),
-              _buildDetailRow(
-                'Chuyến đi',
-                ticket['trip_id'] is Map
-                    ? "${ticket['trip_id']['departure_location'].toString()} → ${ticket['trip_id']['arrival_location'].toString()}"
-                    : ticket['trip_id'].toString(),
-              ),
+            title: Text(
+              'Chi tiết vé',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailRow('ID', ticket['_id'].toString()),
+                  _buildDetailRow(
+                    'Trạng thái',
+                    _getStatusText(ticket['ticket_status'].toString()),
+                  ),
+                  _buildDetailRow(
+                    'Người dùng',
+                    ticket['user'] != null
+                        ? (ticket['user']['full_name']?.toString() ??
+                            ticket['user_id'].toString())
+                        : ticket['user_id'].toString(),
+                  ),
+                  _buildDetailRow(
+                    'Chuyến đi',
+                    ticket['trip_id'] is Map
+                        ? "${ticket['trip_id']['departure_location'].toString()} → ${ticket['trip_id']['arrival_location'].toString()}"
+                        : ticket['trip_id'].toString(),
+                  ),
 
-              _buildDetailRow(
-                'Ghế',
-                ticket['seat'] is Map
-                    ? ticket['seat']['seat_number'].toString()
-                    : ticket['seat_id'].toString(),
+                  _buildDetailRow(
+                    'Ghế',
+                    ticket['seat'] is Map
+                        ? ticket['seat']['seat_number'].toString()
+                        : ticket['seat_id'].toString(),
+                  ),
+                  _buildDetailRow('Ngày mua', formatter.format(purchaseDate)),
+                  _buildDetailRow(
+                    'Giá',
+                    ticket['trip_id']['price'] != null
+                        ? NumberFormat.currency(
+                          locale: 'vi_VN',
+                          symbol: 'đ',
+                        ).format(ticket['trip_id']['price'])
+                        : 'Không có dữ liệu',
+                  ),
+                ],
               ),
-              _buildDetailRow('Ngày mua', formatter.format(purchaseDate)),
-              _buildDetailRow(
-                'Giá',
-                ticket['trip_id']['price'] != null
-                    ? NumberFormat.currency(
-                  locale: 'vi_VN',
-                  symbol: 'đ',
-                ).format(ticket['trip_id']['price'])
-                    : 'Không có dữ liệu',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Đóng', style: GoogleFonts.poppins()),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Đóng', style: GoogleFonts.poppins()),
-          ),
-        ],
-      ),
     );
   }
 
@@ -291,68 +500,68 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-        title: Text(
-          'Cập nhật trạng thái vé',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: Text('Đã xác nhận', style: GoogleFonts.poppins()),
-              value: 'COMPLETED',
-              groupValue: selectedStatus,
-              onChanged: (value) {
-                selectedStatus = value!;
-                Navigator.pop(context);
-                _showUpdateStatusDialog(context, {
-                  ...ticket,
-                  'ticket_status': selectedStatus,
-                });
-              },
+            title: Text(
+              'Cập nhật trạng thái vé',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
             ),
-            RadioListTile<String>(
-              title: Text('Đã Booked', style: GoogleFonts.poppins()),
-              value: 'BOOKED',
-              groupValue: selectedStatus,
-              onChanged: (value) {
-                selectedStatus = value!;
-                Navigator.pop(context);
-                _showUpdateStatusDialog(context, {
-                  ...ticket,
-                  'ticket_status': selectedStatus,
-                });
-              },
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<String>(
+                  title: Text('Đã xác nhận', style: GoogleFonts.poppins()),
+                  value: 'COMPLETED',
+                  groupValue: selectedStatus,
+                  onChanged: (value) {
+                    selectedStatus = value!;
+                    Navigator.pop(context);
+                    _showUpdateStatusDialog(context, {
+                      ...ticket,
+                      'ticket_status': selectedStatus,
+                    });
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text('Đã Booked', style: GoogleFonts.poppins()),
+                  value: 'BOOKED',
+                  groupValue: selectedStatus,
+                  onChanged: (value) {
+                    selectedStatus = value!;
+                    Navigator.pop(context);
+                    _showUpdateStatusDialog(context, {
+                      ...ticket,
+                      'ticket_status': selectedStatus,
+                    });
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text('Đã hủy', style: GoogleFonts.poppins()),
+                  value: 'CANCELLED',
+                  groupValue: selectedStatus,
+                  onChanged: (value) {
+                    selectedStatus = value!;
+                    Navigator.pop(context);
+                    _showUpdateStatusDialog(context, {
+                      ...ticket,
+                      'ticket_status': selectedStatus,
+                    });
+                  },
+                ),
+              ],
             ),
-            RadioListTile<String>(
-              title: Text('Đã hủy', style: GoogleFonts.poppins()),
-              value: 'CANCELLED',
-              groupValue: selectedStatus,
-              onChanged: (value) {
-                selectedStatus = value!;
-                Navigator.pop(context);
-                _showUpdateStatusDialog(context, {
-                  ...ticket,
-                  'ticket_status': selectedStatus,
-                });
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Hủy', style: GoogleFonts.poppins()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Hủy', style: GoogleFonts.poppins()),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _updateTicketStatus(ticket['_id'], selectedStatus);
+                  Navigator.pop(context);
+                },
+                child: Text('Cập nhật', style: GoogleFonts.poppins()),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              _updateTicketStatus(ticket['_id'], selectedStatus);
-              Navigator.pop(context);
-            },
-            child: Text('Cập nhật', style: GoogleFonts.poppins()),
-          ),
-        ],
-      ),
     );
   }
 
@@ -377,29 +586,29 @@ class _TicketManagementScreenState extends State<TicketManagementScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-        title: Text(
-          'Xác nhận xóa',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Bạn có chắc chắn muốn xóa vé này không? Hành động này không thể hoàn tác.',
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Hủy', style: GoogleFonts.poppins()),
+            title: Text(
+              'Xác nhận xóa',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              'Bạn có chắc chắn muốn xóa vé này không? Hành động này không thể hoàn tác.',
+              style: GoogleFonts.poppins(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Hủy', style: GoogleFonts.poppins()),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _deleteTicket(ticketId);
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: Text('Xóa', style: GoogleFonts.poppins()),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              _deleteTicket(ticketId);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Xóa', style: GoogleFonts.poppins()),
-          ),
-        ],
-      ),
     );
   }
 

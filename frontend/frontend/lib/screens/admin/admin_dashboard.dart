@@ -4,6 +4,8 @@ import 'package:frontend/screens/admin/seat_management_screen.dart';
 import 'package:frontend/screens/admin/trip_management_screen.dart';
 import 'package:frontend/screens/admin/user_management_screen.dart';
 import 'package:frontend/screens/admin/ticket_management_screen.dart';
+import 'package:frontend/screens/admin/payment_management_screen.dart';
+import 'package:frontend/screens/admin/vehicle_management_screen.dart';
 import 'package:frontend/utils/auth_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -36,6 +38,8 @@ class _AdminDashboardState extends State<AdminDashboard>
       const UserManagementScreen(),
       const SeatManagementScreen(),
       const LocationManagementScreen(),
+      const PaymentManagementScreen(),
+      const VehicleManagementScreen(),
     ];
 
     // Kiểm tra quyền admin khi vào trang
@@ -52,7 +56,9 @@ class _AdminDashboardState extends State<AdminDashboard>
     'Quản lý vé',
     'Quản lý người dùng',
     'Quản lý ghế',
-    'Quản lý dịa điểm',
+    'Quản lý địa điểm',
+    'Quản lý thanh toán',
+    'Quản lý phương tiện',
   ];
 
   @override
@@ -141,7 +147,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.directions_bus),
+                  leading: const Icon(Icons.event_seat),
                   title: const Text('Quản lý ghế'),
                   selected: _selectedIndex == 3,
                   onTap: () {
@@ -152,8 +158,8 @@ class _AdminDashboardState extends State<AdminDashboard>
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.directions_bus),
-                  title: const Text('Quản lý dịa điểm'),
+                  leading: const Icon(Icons.location_on),
+                  title: const Text('Quản lý địa điểm'),
                   selected: _selectedIndex == 4,
                   onTap: () {
                     setState(() {
@@ -162,6 +168,29 @@ class _AdminDashboardState extends State<AdminDashboard>
                     Navigator.pop(context);
                   },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.payment),
+                  title: const Text('Quản lý thanh toán'),
+                  selected: _selectedIndex == 5,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 5;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.directions_bus),
+                  title: const Text('Quản lý phương tiện'),
+                  selected: _selectedIndex == 6,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 6;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.home),

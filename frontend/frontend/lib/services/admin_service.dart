@@ -2,15 +2,21 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:dio/dio.dart';
 
 class AdminService extends ChangeNotifier {
   final String baseUrl = 'https://booking-app-1-bzfs.onrender.com';
   final _storage = const FlutterSecureStorage();
   bool _isLoading = false;
   String? _error;
+  late Dio _dio;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  AdminService() {
+    _dio = Dio();
+  }
 
   Future<String?> _getValidToken() async {
     var token = await _storage.read(key: 'accessToken');
@@ -103,9 +109,9 @@ class AdminService extends ChangeNotifier {
   }
 
   Future<dynamic> updateTrip(
-      String tripId,
-      Map<String, dynamic> tripData,
-      ) async {
+    String tripId,
+    Map<String, dynamic> tripData,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -402,9 +408,9 @@ class AdminService extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> updateTicketStatus(
-      String ticketId,
-      String status,
-      ) async {
+    String ticketId,
+    String status,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -535,9 +541,9 @@ class AdminService extends ChangeNotifier {
   }
 
   Future<dynamic> updateLocation(
-      String locationId,
-      Map<String, dynamic> locationData,
-      ) async {
+    String locationId,
+    Map<String, dynamic> locationData,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -608,7 +614,6 @@ class AdminService extends ChangeNotifier {
     }
   }
 
-  // Cập nhật phương thức createSeat để sử dụng status_seat thay vì is_available
   Future<dynamic> createSeat(Map<String, dynamic> seatData) async {
     _isLoading = true;
     _error = null;
@@ -645,11 +650,10 @@ class AdminService extends ChangeNotifier {
     }
   }
 
-  // Cập nhật phương thức updateSeat để sử dụng status_seat thay vì is_available
   Future<dynamic> updateSeat(
-      String seatId,
-      Map<String, dynamic> seatData,
-      ) async {
+    String seatId,
+    Map<String, dynamic> seatData,
+  ) async {
     _isLoading = true;
     _error = null;
 
@@ -714,6 +718,241 @@ class AdminService extends ChangeNotifier {
       _isLoading = false;
       _error = e.toString();
       print('Error in deleteSeat: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getPayments() async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load payments: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in getPayments: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> getPaymentById(String paymentId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/payments/$paymentId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+          'Failed to load payment details: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in getPaymentById: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> updatePaymentStatus(String paymentId, String status) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print(
+        'Calling PATCH $baseUrl/admin/payments/$paymentId with status: $status',
+      );
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/admin/payments/$paymentId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'payment_status': status}),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Failed to update payment status: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in updatePaymentStatus: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getVehicles() async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/vehicle'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load vehicles: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in getVehicles: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createVehicle(Map<String, dynamic> vehicleData) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling POST $baseUrl/admin/vehicles with data: $vehicleData');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/vehicles'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(vehicleData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+          'Failed to create vehicle: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in createVehicle: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> updateVehicle(
+    String vehicleId,
+    Map<String, dynamic> vehicleData,
+  ) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print(
+        'Calling PUT $baseUrl/admin/vehicles/$vehicleId with data: $vehicleData',
+      );
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/vehicles/$vehicleId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(vehicleData),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return jsonDecode(response.body);
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Failed to update vehicle: ${response.statusCode} - ${errorBody['message'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in updateVehicle: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteVehicle(String vehicleId) async {
+    _isLoading = true;
+    _error = null;
+
+    try {
+      final token = await _getValidToken();
+      print('Calling DELETE $baseUrl/admin/vehicles/$vehicleId');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/vehicles/$vehicleId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        _isLoading = false;
+        return true;
+      } else {
+        throw Exception('Failed to delete vehicle: ${response.statusCode}');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      print('Error in deleteVehicle: $e');
       rethrow;
     }
   }

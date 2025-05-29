@@ -16,6 +16,7 @@ class _SeatManagementScreenState extends State<SeatManagementScreen> {
   List<dynamic> trips = [];
   bool isLoading = true;
   bool isLoadingTrips = false;
+  String? selectedStatus;
   final _formKey = GlobalKey<FormState>();
   String? _selectedTripId;
   final _seatNumberController = TextEditingController();
@@ -316,6 +317,103 @@ class _SeatManagementScreenState extends State<SeatManagementScreen> {
     );
   }
 
+  List<dynamic> get filteredSeats {
+    if (selectedStatus == null) return seats;
+    return seats
+        .where((seat) => seat['status_seat'] == selectedStatus)
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Quản lý ghế',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadSeats,
+            tooltip: 'Làm mới',
+          ),
+        ],
+      ),
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Lọc theo trạng thái:',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        DropdownButton<String>(
+                          value: selectedStatus,
+                          hint: Text('Tất cả', style: GoogleFonts.poppins()),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: null,
+                              child: Text(
+                                'Tất cả',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ),
+                            DropdownMenuItem<String>(
+                              value: 'AVAILABLE',
+                              child: Text(
+                                'Có sẵn',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ),
+                            DropdownMenuItem<String>(
+                              value: 'BOOKED',
+                              child: Text(
+                                'Đã đặt',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ),
+                            DropdownMenuItem<String>(
+                              value: 'UNAVAILABLE',
+                              child: Text(
+                                'Không khả dụng',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              selectedStatus = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child:
+                        filteredSeats.isEmpty
+                            ? _buildEmptyState()
+                            : _buildSeatList(),
+                  ),
+                ],
+              ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddSeatDialog,
+        tooltip: 'Thêm ghế mới',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
   Widget _buildSeatList() {
     return RefreshIndicator(
       onRefresh: _loadSeats,
@@ -327,9 +425,9 @@ class _SeatManagementScreenState extends State<SeatManagementScreen> {
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
         ),
-        itemCount: seats.length,
+        itemCount: filteredSeats.length,
         itemBuilder: (context, index) {
-          final seat = seats[index];
+          final seat = filteredSeats[index];
           return Card(
             elevation: 2,
             child: InkWell(
@@ -437,35 +535,5 @@ class _SeatManagementScreenState extends State<SeatManagementScreen> {
           },
     );
     return '${trip['departure_location'] ?? 'Unknown'} - ${trip['arrival_location'] ?? 'Unknown'}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Quản lý ghế',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadSeats,
-            tooltip: 'Làm mới',
-          ),
-        ],
-      ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : seats.isEmpty
-              ? _buildEmptyState()
-              : _buildSeatList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddSeatDialog,
-        tooltip: 'Thêm ghế mới',
-        child: const Icon(Icons.add),
-      ),
-    );
   }
 }

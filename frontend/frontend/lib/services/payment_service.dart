@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 // import '../models/payment_model.dart';
 
 class PaymentService extends ChangeNotifier {
-  final String baseUrl = "https://booking-app-1-bzfs.onrender.com"; // replace!
+  final String baseUrl = "https://booking-app-1-bzfs.onrender.com";
   final _storage = FlutterSecureStorage();
   bool isLoading = false;
   List<Payment> _payments = [];

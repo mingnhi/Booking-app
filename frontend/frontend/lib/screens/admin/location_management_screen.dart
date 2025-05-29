@@ -15,6 +15,8 @@ class LocationManagementScreen extends StatefulWidget {
 class _LocationManagementScreenState extends State<LocationManagementScreen> {
   List<dynamic> locations = [];
   bool isLoading = true;
+  String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -31,6 +33,7 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
     _nameController.dispose();
     _descriptionController.dispose();
     _contactPhoneController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -254,14 +257,89 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
     );
   }
 
+  List<dynamic> get filteredLocations {
+    if (searchQuery.isEmpty) return locations;
+    return locations.where((location) {
+      final name = location['name']?.toString().toLowerCase() ?? '';
+      return name.contains(searchQuery.toLowerCase());
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Quản lý địa điểm',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadLocations,
+            tooltip: 'Làm mới',
+          ),
+        ],
+      ),
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm theo tên địa điểm',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon:
+                            searchQuery.isNotEmpty
+                                ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      searchQuery = '';
+                                    });
+                                  },
+                                )
+                                : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child:
+                        filteredLocations.isEmpty
+                            ? _buildEmptyState()
+                            : _buildLocationList(),
+                  ),
+                ],
+              ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddLocationDialog,
+        tooltip: 'Thêm địa điểm mới',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
   Widget _buildLocationList() {
     return RefreshIndicator(
       onRefresh: _loadLocations,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: locations.length,
+        itemCount: filteredLocations.length,
         itemBuilder: (context, index) {
-          final location = locations[index];
+          final location = filteredLocations[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
             child: Padding(
@@ -329,36 +407,6 @@ class _LocationManagementScreenState extends State<LocationManagementScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Quản lý địa điểm',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadLocations,
-            tooltip: 'Làm mới',
-          ),
-        ],
-      ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : locations.isEmpty
-              ? _buildEmptyState()
-              : _buildLocationList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddLocationDialog,
-        tooltip: 'Thêm địa điểm mới',
-        child: const Icon(Icons.add),
       ),
     );
   }

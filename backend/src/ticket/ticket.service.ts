@@ -57,6 +57,7 @@ export class TicketService {
 
     return populatedTicket;
   }
+  
 
   async findAll(): Promise<Ticket[]> {
     return this.ticketModel
@@ -173,5 +174,13 @@ export class TicketService {
       });
       if (!result) throw new NotFoundException('Không tìm thấy vé để xoá');
     }
+  }
+  async findTicketByUserId(userId: string): Promise<Ticket[]>{
+    return this.ticketModel
+      .find({ user_id: userId })
+      .populate('user_id', 'full_name phone_number')
+      .populate('trip_id', 'departure_location arrival_location price')
+      .populate('seat_id', 'seat_number')
+      .exec();
   }
 }

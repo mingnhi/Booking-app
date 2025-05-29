@@ -16,6 +16,5 @@ import { LocationModule } from 'src/location/location.module';
   ],
   controllers: [TripController],
   providers: [TripService],
-  exports: [TripService],
 })
 export class TripModule {}

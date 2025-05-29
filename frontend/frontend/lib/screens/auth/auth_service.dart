@@ -12,6 +12,7 @@ class AuthService extends ChangeNotifier {
   User? currentUser;
 
   AuthService() {
+    // Khôi phục trạng thái đăng nhập khi khởi tạo
     _restoreSession();
   }
 
